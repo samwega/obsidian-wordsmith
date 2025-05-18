@@ -7,6 +7,7 @@ test_vault := "$HOME/Vaults/writing-vault/"
 [macos]
 build-and-reload:
     #!/usr/bin/env zsh
+    node sync-manifest.js
     node .esbuild.mjs
 
     plugin_id=$(grep '"id"' "./manifest.json" | cut -d'"' -f4)
