@@ -1,17 +1,19 @@
-# Text Transformer
+# Text Transformer - AI Writing Assistant for Obsidian
+
+**Current Version:** 1.0.0
 
 [NOTE: the README is still in the process of being rewritten from the original,
-and may not accurately reflect the latest changes.]
+and may not yet accurately reflect the latest changes.]
 
-A powerful AI writing assistant, transforming selected text using both Default
-and Custom prompts. Individual changes can be accepted or rejected directly in
-the editor, similar to the suggested changes feature in word processing apps.
-Fully keyboard driven.
+A powerful AI writing assistant plugin for Obsidian, transforming selected text
+using both Default and Custom prompts. Individual changes can be accepted or
+rejected directly in the editor, similar to the suggested changes feature in
+word processing apps. Fully keyboard driven.
 
-Initially forked from
-[Obsidian Proofreader](https://github.com/chrisgrieser/obsidian-proofreader)
-by Christopher Grieser, Text Transformer is now developing to be a feature complete
-AI writing assistant.
+Initially forked from the excellent Obsidian Proofreader by Christopher Grieser,
+Text Transformer is now developing to be a feature complete AI writing assistant.
+If you are looking for a more focused proofreading tool, please check out the
+original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader).
 
 <img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
 

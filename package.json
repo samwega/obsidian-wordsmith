@@ -1,12 +1,15 @@
 {
-	"name": "Proofreader",
-	"description": "AI-based editor with command palette and custom prompts. Changes are inserted as suggestions directly in the editor, similar to suggested changes in word processing apps.",
-	"author": "Christopher Grieser",
-	"contributors": ["Alexander Glavan"],
-	"version": "1.2.0-alexander-prompt-palette.0",
+	"name": "Text Transformer",
+	"description": "Obsidian plugin: AI-based writing assistant with command palette and custom prompts. (Forked from obsidian-proofreader by Christopher Grieser)",
+	"author": "Alexander Glavan",
+	"version": "1.0.0",
 	"keywords": [],
 	"license": "MIT",
 	"main": "main.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/samwega/obsidian-text-transformer.git"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "latest",
 		"@types/diff": "^7.0.2",
