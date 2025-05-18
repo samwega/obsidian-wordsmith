@@ -25,7 +25,7 @@ export async function openAiRequest(
 			// biome-ignore lint/style/useNamingConvention: not by me
 			headers: { Authorization: "Bearer " + settings.openAiApiKey },
 			body: JSON.stringify({
-				model: settings.openAiModel,
+				model: settings.model,
 				messages: [
 					{ role: "developer", content: prompt.text },
 					{ role: "user", content: oldText },
@@ -50,7 +50,7 @@ export async function openAiRequest(
 
 	// DETERMINE OVERLENGTH & COST
 	// https://platform.openai.com/docs/guides/conversation-state?api-mode=responses#managing-context-for-text-generation
-	const modelSpec = MODEL_SPECS[settings.openAiModel];
+	const modelSpec = MODEL_SPECS[settings.model];
 
 	const outputTokensUsed = response.json?.usage?.completion_tokens || 0;
 	const isOverlength = outputTokensUsed >= modelSpec.maxOutputTokens;

@@ -3,6 +3,7 @@ import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 import { rejectChanges } from "./accept-reject-suggestions";
 import Proofreader from "./main";
 import { openAiRequest } from "./providers/openai";
+import { geminiRequest } from "./providers/gemini";
 import { ProofreaderPrompt, ProofreaderSettings } from "./settings";
 
 // DOCS https://github.com/kpdecker/jsdiff#readme
@@ -105,7 +106,13 @@ async function validateAndGetChangesAndNotify(
 	const notice = new Notice(msg, 0);
 
 	// perform request
-	const { newText, isOverlength, cost } = (await openAiRequest(settings, oldText, prompt)) || {};
+	let response;
+	if (settings.model.startsWith("gemini-")) {
+		response = await geminiRequest(settings, oldText, prompt);
+	} else {
+		response = await openAiRequest(settings, oldText, prompt);
+	}
+	const { newText, isOverlength, cost } = response || {};
 	notice.hide();
 	if (!newText) return;
 

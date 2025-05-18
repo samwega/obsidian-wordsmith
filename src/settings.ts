@@ -34,9 +34,32 @@ export const MODEL_SPECS = {
 			url: "https://platform.openai.com/docs/models/gpt-4.1-nano",
 		},
 	},
+	// Gemini models
+	"gemini-2.5-pro": {
+		displayText: "Gemini 2.5 Pro",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 3.5, output: 10.5 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://ai.google.dev/models/gemini",
+		},
+	},
+	"gemini-2.5-flash": {
+		displayText: "Gemini 2.5 Flash",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 0.5, output: 1.5 },
+		info: {
+			intelligence: 3,
+			speed: 5,
+			url: "https://ai.google.dev/models/gemini",
+		},
+	},
 };
 
-type OpenAiModels = keyof typeof MODEL_SPECS;
+type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
+type GeminiModels = "gemini-2.5-pro" | "gemini-2.5-flash";
+type SupportedModels = OpenAiModels | GeminiModels;
 
 //──────────────────────────────────────────────────────────────────────────────
 
@@ -102,7 +125,8 @@ export const DEFAULT_PROOFREADER_PROMPTS: ProofreaderPrompt[] = [
 
 export interface ProofreaderSettings {
 	openAiApiKey: string;
-	openAiModel: OpenAiModels;
+	geminiApiKey: string;
+	model: SupportedModels;
 	prompts: ProofreaderPrompt[]; // All prompts (default + custom)
 	preserveTextInsideQuotes: boolean;
 	preserveBlockquotes: boolean;
@@ -110,7 +134,8 @@ export interface ProofreaderSettings {
 
 export const DEFAULT_SETTINGS: ProofreaderSettings = {
 	openAiApiKey: "",
-	openAiModel: "gpt-4.1-nano",
+	geminiApiKey: "",
+	model: "gpt-4.1-nano",
 	prompts: DEFAULT_PROOFREADER_PROMPTS,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
@@ -143,6 +168,16 @@ export class ProofreaderSettingsMenu extends PluginSettingTab {
 			});
 		});
 
+		// Gemini API Key Setting
+		new Setting(containerEl).setName("Gemini API key").addText((input) => {
+			input.inputEl.type = "password";
+			input.inputEl.setCssProps({ width: "100%" });
+			input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
+				this.plugin.settings.geminiApiKey = value.trim();
+				await this.plugin.saveSettings();
+			});
+		});
+
 		// Model Setting
 		const modelDesc = `
 Use the 4.1 model for the best literary results (more expensive). The nano and mini models should be sufficient for basic proofreading, spelling, grammar, punctuation, etc. (both are very cheap).<br><br>
@@ -160,11 +195,11 @@ GPT 4.1 nano - intelligence = 2, speed = 5.
 			.addDropdown((dropdown) => {
 				for (const key in MODEL_SPECS) {
 					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
-					const display = MODEL_SPECS[key as OpenAiModels].displayText;
+					const display = MODEL_SPECS[key as SupportedModels].displayText;
 					dropdown.addOption(key, display);
 				}
-				dropdown.setValue(this.plugin.settings.openAiModel).onChange(async (value) => {
-					this.plugin.settings.openAiModel = value as OpenAiModels;
+				dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
+					this.plugin.settings.model = value as SupportedModels;
 					await this.plugin.saveSettings();
 				});
 			});

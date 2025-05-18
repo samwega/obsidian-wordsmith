@@ -98,9 +98,9 @@ export default class Proofreader extends Plugin {
 
 		// In case the plugin updates to newer models, ensure the user will not be
 		// left with an outdated model from the settings.
-		const outdatedModel = !Object.keys(MODEL_SPECS).includes(this.settings.openAiModel);
+		const outdatedModel = !Object.keys(MODEL_SPECS).includes(this.settings.model);
 		if (outdatedModel) {
-			this.settings.openAiModel = DEFAULT_SETTINGS.openAiModel;
+			this.settings.model = DEFAULT_SETTINGS.model;
 			await this.saveSettings();
 		}
 	}
