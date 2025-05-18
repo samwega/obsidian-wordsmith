@@ -2,9 +2,12 @@ import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { MODEL_SPECS, ProofreaderSettings } from "src/settings";
 import { logError } from "src/utils";
 
+import { ProofreaderPrompt } from "src/settings";
+
 export async function openAiRequest(
 	settings: ProofreaderSettings,
 	oldText: string,
+	prompt: ProofreaderPrompt,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.openAiApiKey) {
 		new Notice("Please set your OpenAI API key in the plugin settings.");
@@ -24,7 +27,7 @@ export async function openAiRequest(
 			body: JSON.stringify({
 				model: settings.openAiModel,
 				messages: [
-					{ role: "developer", content: settings.staticPrompt },
+					{ role: "developer", content: prompt.text },
 					{ role: "user", content: oldText },
 				],
 			}),

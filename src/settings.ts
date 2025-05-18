@@ -4,14 +4,14 @@ import Proofreader from "./main";
 // The `nano` and `mini` models are sufficiently good sufficiently good output
 // for the very focussed task of just fixing language
 export const MODEL_SPECS = {
-	"gpt-4.1-nano": {
-		displayText: "GPT 4.1 nano (recommended)",
+	"gpt-4.1": {
+		displayText: "GPT 4.1",
 		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.1, output: 0.4 },
+		costPerMillionTokens: { input: 2.0, output: 8.0 },
 		info: {
-			intelligence: 2,
-			speed: 5,
-			url: "https://platform.openai.com/docs/models/gpt-4.1-nano",
+			intelligence: 4,
+			speed: 3,
+			url: "https://platform.openai.com/docs/models/gpt-4.1",
 		},
 	},
 	"gpt-4.1-mini": {
@@ -24,14 +24,14 @@ export const MODEL_SPECS = {
 			url: "https://platform.openai.com/docs/models/gpt-4.1-mini",
 		},
 	},
-	"gpt-4.1": {
-		displayText: "GPT 4.1 (for tasks beyond proofreading)",
+	"gpt-4.1-nano": {
+		displayText: "GPT 4.1 nano",
 		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 2.0, output: 8.0 },
+		costPerMillionTokens: { input: 0.1, output: 0.4 },
 		info: {
-			intelligence: 4,
-			speed: 3,
-			url: "https://platform.openai.com/docs/models/gpt-4.1",
+			intelligence: 2,
+			speed: 5,
+			url: "https://platform.openai.com/docs/models/gpt-4.1-nano",
 		},
 	},
 };
@@ -40,16 +40,81 @@ type OpenAiModels = keyof typeof MODEL_SPECS;
 
 //──────────────────────────────────────────────────────────────────────────────
 
-export const DEFAULT_SETTINGS = {
+export interface ProofreaderPrompt {
+	id: string; // unique identifier
+	name: string; // display name
+	text: string; // the prompt text
+	isDefault: boolean; // true for default prompts
+	enabled: boolean; // if this prompt is active
+}
+
+export const DEFAULT_PROOFREADER_PROMPTS: ProofreaderPrompt[] = [
+	{
+		id: "improve",
+		name: "Improve",
+		text: "Act as a professional editor. Please make suggestions how to improve clarity, readability, grammar, and language of the following text. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "shorten",
+		name: "Shorten",
+		text: "Act as a professional editor. Shorten the following text while preserving its meaning and clarity. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "lengthen",
+		name: "Lengthen",
+		text: "Act as a professional editor. Expand and elaborate the following text for greater detail and depth, but do not add unrelated information. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "fix-grammar",
+		name: "Fix grammar",
+		text: "Act as a professional editor. Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "simplify-language",
+		name: "Simplify language",
+		text: "Act as a professional editor. Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "enhance-readability",
+		name: "Enhance readability",
+		text: "Act as a professional editor. Improve the readability and flow of the following text. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
+		id: "translate-english",
+		name: "Translate to English (autodetects language",
+		text: "Act as a professional translator. Automatically detect language and translate the following text to English, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+];
+
+export interface ProofreaderSettings {
+	openAiApiKey: string;
+	openAiModel: OpenAiModels;
+	prompts: ProofreaderPrompt[]; // All prompts (default + custom)
+	preserveTextInsideQuotes: boolean;
+	preserveBlockquotes: boolean;
+}
+
+export const DEFAULT_SETTINGS: ProofreaderSettings = {
 	openAiApiKey: "",
-	openAiModel: "gpt-4.1-nano" as OpenAiModels,
-	staticPrompt:
-		"Act as a professional editor. Please make suggestions how to improve clarity, readability, grammar, and language of the following text. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise. Output only the revised text and nothing else. The text is:",
+	openAiModel: "gpt-4.1-nano",
+	prompts: DEFAULT_PROOFREADER_PROMPTS,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
 };
-
-export type ProofreaderSettings = typeof DEFAULT_SETTINGS;
 
 //──────────────────────────────────────────────────────────────────────────────
 
@@ -64,56 +129,267 @@ export class ProofreaderSettingsMenu extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-		const settings = this.plugin.settings;
-
 		containerEl.empty();
 
+		containerEl.createEl("h2", { text: "Proofreader Settings" });
+
+		// API Key Setting
 		new Setting(containerEl).setName("OpenAI API key").addText((input) => {
-			input.inputEl.type = "password"; // obfuscates the field
+			input.inputEl.type = "password";
 			input.inputEl.setCssProps({ width: "100%" });
-			input
-				.setPlaceholder("sk-123456789…")
-				.setValue(settings.openAiApiKey)
-				.onChange(async (value) => {
-					settings.openAiApiKey = value.trim();
-					await this.plugin.saveSettings();
-				});
+			input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
+				this.plugin.settings.openAiApiKey = value.trim();
+				await this.plugin.saveSettings();
+			});
 		});
 
+		// Model Setting
+		const modelDesc = `
+Use the 4.1 model for the best literary results (more expensive). The nano and mini models should be sufficient for basic proofreading, spelling, grammar, punctuation, etc. (both are very cheap).<br><br>
+GPT 4.1 - intelligence = 4, speed = 3.<br>
+GPT 4.1 mini - intelligence = 3, speed = 4.<br>
+GPT 4.1 nano - intelligence = 2, speed = 5.
+`.trim();
+		const modelDescDiv = document.createElement("div");
+		modelDescDiv.innerHTML = modelDesc;
+		const frag = document.createDocumentFragment();
+		frag.appendChild(modelDescDiv);
 		new Setting(containerEl)
 			.setName("Model")
-			.setDesc(
-				"The nano model is slightly quicker and cheaper. " +
-					"The mini model is slightly higher quality, but also more expensive. " +
-					"Other models are both slower and more expensive; they should only be selected " +
-					"by advanced users who customize the prompt and intend to use this plugin for " +
-					"tasks beyond proofreading.",
-			)
+			.setDesc(frag)
 			.addDropdown((dropdown) => {
 				for (const key in MODEL_SPECS) {
 					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
 					const display = MODEL_SPECS[key as OpenAiModels].displayText;
 					dropdown.addOption(key, display);
 				}
-				dropdown.setValue(settings.openAiModel).onChange(async (value) => {
-					settings.openAiModel = value as OpenAiModels;
+				dropdown.setValue(this.plugin.settings.openAiModel).onChange(async (value) => {
+					this.plugin.settings.openAiModel = value as OpenAiModels;
 					await this.plugin.saveSettings();
 				});
 			});
+
+		// Prompt Management Section
+		containerEl.createEl("h3", { text: "Prompt Management" });
+		const promptList = containerEl.createEl("div", { cls: "prompt-list" });
+
+		// Section: Default Prompts
+		const defaultTitle = promptList.createEl("div", { text: "Default Prompts" });
+		defaultTitle.setAttr(
+			"style",
+			"color:#b6a84b;font-size:1.1em;font-weight:600;margin-bottom:2px;margin-top:8px;",
+		);
+
+		// Custom Prompts section heading and divider will be inserted dynamically if needed
+		let customTitle: HTMLDivElement | null = null;
+		let divider: HTMLDivElement | null = null;
+
+		// Helper for editing a custom prompt inline
+		const createEditPromptForm = (prompt: ProofreaderPrompt): HTMLDivElement => {
+			const form = document.createElement("div");
+			form.className = "add-prompt-form";
+			form.setAttribute(
+				"style",
+				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
+			);
+			const nameInput = form.appendChild(document.createElement("input"));
+			nameInput.type = "text";
+			nameInput.value = prompt.name;
+			nameInput.placeholder = "Prompt name";
+			nameInput.setAttribute(
+				"style",
+				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);width:100%;",
+			);
+			const textInput = form.appendChild(document.createElement("textarea"));
+			textInput.value = prompt.text;
+			textInput.placeholder = "Prompt text";
+			textInput.setAttribute(
+				"style",
+				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:29px;max-height:180px;width:100%;resize:vertical;",
+			);
+			const buttonRow = form.appendChild(document.createElement("div"));
+			buttonRow.setAttribute("style", "display:flex;gap:8px;justify-content:flex-end;");
+			const saveBtn = buttonRow.appendChild(document.createElement("button"));
+			saveBtn.textContent = "Save";
+			saveBtn.setAttribute(
+				"style",
+				"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
+			);
+			const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+			cancelBtn.textContent = "Cancel";
+			cancelBtn.setAttribute(
+				"style",
+				"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
+			);
+			saveBtn.onclick = async (): Promise<void> => {
+				const newName = (nameInput as HTMLInputElement).value.trim();
+				const newText = (textInput as HTMLTextAreaElement).value.trim();
+				if (!newName || !newText) return;
+				prompt.name = newName;
+				prompt.text = newText;
+				await this.plugin.saveSettings();
+				addPromptForm?.remove();
+				addPromptForm = null;
+				this.display();
+			};
+			cancelBtn.onclick = (): void => {
+				addPromptForm?.remove();
+				addPromptForm = null;
+			};
+			return form;
+		};
+
+		// Separate default and custom prompts
+		const defaultPrompts = this.plugin.settings.prompts.filter((p) => p.isDefault);
+		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
+
+		// Render default prompts
+		for (const prompt of defaultPrompts) {
+			new Setting(promptList).setName(prompt.name).addToggle((tg) => {
+				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+					prompt.enabled = value;
+					await this.plugin.saveSettings();
+				});
+			});
+		}
+
+		// Render custom prompts
+		if (customPrompts.length > 0) {
+			divider = promptList.createEl("div");
+			divider.setAttr(
+				"style",
+				"border-bottom:1px solid var(--background-modifier-border);margin:10px 0 10px 0;",
+			);
+			customTitle = promptList.createEl("div", { text: "Custom Prompts" });
+			customTitle.setAttr(
+				"style",
+				"color:#b6a84b;font-size:1.1em;font-weight:600;margin-top:8px;margin-bottom:2px;",
+			);
+		}
+		for (const prompt of customPrompts) {
+			const setting = new Setting(promptList).setName(prompt.name).addToggle((tg) => {
+				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+					prompt.enabled = value;
+					await this.plugin.saveSettings();
+				});
+			});
+			setting.addExtraButton((btn) => {
+				btn.setIcon("pencil")
+					.setTooltip("Edit")
+					.onClick((): void => {
+						if (addPromptForm) return;
+						addPromptForm = setting.settingEl.parentElement?.insertBefore(
+							createEditPromptForm(prompt),
+							setting.settingEl.nextSibling,
+						) as HTMLDivElement;
+					});
+			});
+			setting.addExtraButton((btn) => {
+				btn.setIcon("trash")
+					.setTooltip("Delete")
+					.onClick(async (): Promise<void> => {
+						const realIdx = this.plugin.settings.prompts.indexOf(prompt);
+						this.plugin.settings.prompts.splice(realIdx, 1);
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+		}
+
+		// Add Prompt Button with improved inline form
+		let addPromptForm: HTMLDivElement | null = null;
+		const addPromptSetting = new Setting(containerEl)
+			.setClass("add-prompt-setting")
+			.addButton((btn) => {
+				btn.setButtonText("Add Custom Prompt").setCta();
+				btn.onClick((): void => {
+					if (addPromptForm) return; // Already open
+					// Place the form after the button, not inside it
+					addPromptForm = addPromptSetting.settingEl.parentElement?.insertBefore(
+						createAddPromptForm(),
+						addPromptSetting.settingEl.nextSibling,
+					) as HTMLDivElement;
+				});
+			});
+
+		const createAddPromptForm = (): HTMLDivElement => {
+			const form = document.createElement("div");
+			form.className = "add-prompt-form";
+			form.setAttribute(
+				"style",
+				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
+			);
+			const nameInput = form.appendChild(document.createElement("input"));
+			nameInput.type = "text";
+			nameInput.placeholder = "Prompt name";
+			nameInput.setAttribute(
+				"style",
+				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);width:100%;",
+			);
+			const textInput = form.appendChild(document.createElement("textarea"));
+			textInput.placeholder = "Prompt text";
+			textInput.value =
+				'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:';
+			textInput.setAttribute(
+				"style",
+				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
+			);
+			const buttonRow = form.appendChild(document.createElement("div"));
+			buttonRow.setAttribute("style", "display:flex;gap:8px;justify-content:flex-end;");
+			const saveBtn = buttonRow.appendChild(document.createElement("button"));
+			saveBtn.textContent = "Save";
+			saveBtn.setAttribute(
+				"style",
+				"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
+			);
+			const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+			cancelBtn.textContent = "Cancel";
+			cancelBtn.setAttribute(
+				"style",
+				"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
+			);
+			saveBtn.onclick = async (): Promise<void> => {
+				const name = (nameInput as HTMLInputElement).value.trim();
+				const text = (textInput as HTMLTextAreaElement).value.trim();
+				if (!name || !text) return;
+				addPromptForm?.remove();
+				addPromptForm = null;
+				// Add the prompt
+				// @ts-ignore
+				this.plugin.settings.prompts.push({
+					id: `custom-${Date.now()}`,
+					name,
+					text,
+					isDefault: false,
+					enabled: true,
+				});
+				// @ts-ignore
+				await this.plugin.saveSettings();
+				// @ts-ignore
+				this.display();
+			};
+			cancelBtn.onclick = (): void => {
+				addPromptForm?.remove();
+				addPromptForm = null;
+			};
+			return form;
+		};
 
 		//────────────────────────────────────────────────────────────────────────
 		// CLEANUP OPTIONS
 		new Setting(containerEl)
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'No changes will be made to text inside quotation marks ("").' +
+				'No changes will be made to text inside quotation marks (""). ' +
 					"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.",
 			)
 			.addToggle((toggle) =>
-				toggle.setValue(settings.preserveTextInsideQuotes).onChange(async (value) => {
-					settings.preserveTextInsideQuotes = value;
-					await this.plugin.saveSettings();
-				}),
+				toggle
+					.setValue(this.plugin.settings.preserveTextInsideQuotes)
+					.onChange(async (value) => {
+						this.plugin.settings.preserveTextInsideQuotes = value;
+						await this.plugin.saveSettings();
+					}),
 			);
 		new Setting(containerEl)
 			.setName("Preserve text in blockquotes and callouts")
@@ -122,33 +398,11 @@ export class ProofreaderSettingsMenu extends PluginSettingTab {
 					"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.",
 			)
 			.addToggle((toggle) =>
-				toggle.setValue(settings.preserveBlockquotes).onChange(async (value) => {
-					settings.preserveBlockquotes = value;
+				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {
+					this.plugin.settings.preserveBlockquotes = value;
 					await this.plugin.saveSettings();
 				}),
 			);
-
-		//────────────────────────────────────────────────────────────────────────
-		// ADVANCED
-		new Setting(containerEl).setName("Advanced").setHeading();
-
-		new Setting(containerEl)
-			.setName("System prompt")
-			.setDesc(
-				"The LLM must respond ONLY with the updated text for this plugin to work. " +
-					"Most users do not need to change this setting. " +
-					"Only change this if you know what you are doing.",
-			)
-			.addTextArea((textarea) => {
-				textarea.inputEl.setCssProps({ width: "25vw", height: "15em" });
-				textarea
-					.setValue(settings.staticPrompt)
-					.setPlaceholder("Make suggestions based on…")
-					.onChange(async (value) => {
-						if (value.trim() === "") return;
-						settings.staticPrompt = value.trim();
-						await this.plugin.saveSettings();
-					});
-			});
+		// Removed invalid chained .setDesc()
 	}
 }

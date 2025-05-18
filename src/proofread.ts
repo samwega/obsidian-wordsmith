@@ -3,7 +3,7 @@ import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 import { rejectChanges } from "./accept-reject-suggestions";
 import Proofreader from "./main";
 import { openAiRequest } from "./providers/openai";
-import { ProofreaderSettings } from "./settings";
+import { ProofreaderPrompt, ProofreaderSettings } from "./settings";
 
 // DOCS https://github.com/kpdecker/jsdiff#readme
 function getDiffMarkdown(
@@ -70,6 +70,7 @@ async function validateAndGetChangesAndNotify(
 	plugin: Proofreader,
 	oldText: string,
 	scope: string,
+	prompt: ProofreaderPrompt,
 ): Promise<string | undefined> {
 	// GUARD valid start-text
 	if (oldText.trim() === "") {
@@ -104,7 +105,7 @@ async function validateAndGetChangesAndNotify(
 	const notice = new Notice(msg, 0);
 
 	// perform request
-	const { newText, isOverlength, cost } = (await openAiRequest(settings, oldText)) || {};
+	const { newText, isOverlength, cost } = (await openAiRequest(settings, oldText, prompt)) || {};
 	notice.hide();
 	if (!newText) return;
 
@@ -148,13 +149,21 @@ async function validateAndGetChangesAndNotify(
 
 //──────────────────────────────────────────────────────────────────────────────
 
-export async function proofreadDocument(plugin: Proofreader, editor: Editor): Promise<void> {
+export async function proofreadDocument(
+	plugin: Proofreader,
+	editor: Editor,
+	prompt?: ProofreaderPrompt,
+): Promise<void> {
 	const noteWithFrontmatter = editor.getValue();
 	const bodyStart = getFrontMatterInfo(noteWithFrontmatter).contentStart || 0;
 	const bodyEnd = noteWithFrontmatter.length;
 	const oldText = noteWithFrontmatter.slice(bodyStart);
 
-	const changes = await validateAndGetChangesAndNotify(plugin, oldText, "Document");
+	// Use provided prompt or fallback to first enabled/default
+	const usePrompt =
+		prompt || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
+
+	const changes = await validateAndGetChangesAndNotify(plugin, oldText, "Document", usePrompt);
 	if (!changes) return;
 
 	const bodyStartPos = editor.offsetToPos(bodyStart);
@@ -163,7 +172,11 @@ export async function proofreadDocument(plugin: Proofreader, editor: Editor): Pr
 	editor.setCursor(bodyStartPos); // to start of doc
 }
 
-export async function proofreadText(plugin: Proofreader, editor: Editor): Promise<void> {
+export async function proofreadText(
+	plugin: Proofreader,
+	editor: Editor,
+	prompt: ProofreaderPrompt,
+): Promise<void> {
 	const hasMultipleSelections = editor.listSelections().length > 1;
 	if (hasMultipleSelections) {
 		new Notice("Multiple selections are not supported.");
@@ -175,7 +188,7 @@ export async function proofreadText(plugin: Proofreader, editor: Editor): Promis
 	const oldText = selection || editor.getLine(cursor.line);
 	const scope = selection ? "Selection" : "Paragraph";
 
-	const changes = await validateAndGetChangesAndNotify(plugin, oldText, scope);
+	const changes = await validateAndGetChangesAndNotify(plugin, oldText, scope, prompt);
 	if (!changes) return;
 
 	if (selection) {

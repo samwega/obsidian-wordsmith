@@ -1,9 +1,12 @@
 import { Plugin } from "obsidian";
 import { acceptOrRejectInText, acceptOrRejectNextSuggestion } from "./accept-reject-suggestions";
+import { PromptPaletteModal } from "./prompt-palette";
 import { proofreadDocument, proofreadText } from "./proofread";
 import {
+	DEFAULT_PROOFREADER_PROMPTS,
 	DEFAULT_SETTINGS,
 	MODEL_SPECS,
+	ProofreaderPrompt,
 	ProofreaderSettings,
 	ProofreaderSettingsMenu,
 } from "./settings";
@@ -21,7 +24,19 @@ export default class Proofreader extends Plugin {
 		this.addCommand({
 			id: "proofread-selection-paragraph",
 			name: "Proofread selection/paragraph",
-			editorCallback: (editor): Promise<void> => proofreadText(this, editor),
+			editorCallback: (editor): Promise<void> => {
+				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
+				if (enabledPrompts.length === 1) {
+					return proofreadText(this, editor, enabledPrompts[0]);
+				}
+				// Show prompt selection modal
+				return new Promise((resolve) => {
+					const modal = new PromptPaletteModal(this.app, enabledPrompts, (prompt) => {
+						proofreadText(this, editor, prompt).then(resolve);
+					});
+					modal.open();
+				});
+			},
 			icon: "bot-message-square",
 		});
 		this.addCommand({
@@ -67,7 +82,19 @@ export default class Proofreader extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loaded = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+
+		// Merge in any new default prompts that do not already exist
+		if (!Array.isArray(this.settings.prompts)) {
+			this.settings.prompts = [];
+		}
+		const existingIds = new Set(this.settings.prompts.map((p: ProofreaderPrompt) => p.id));
+		for (const defPrompt of DEFAULT_PROOFREADER_PROMPTS) {
+			if (!existingIds.has(defPrompt.id)) {
+				this.settings.prompts.push({ ...defPrompt });
+			}
+		}
 
 		// In case the plugin updates to newer models, ensure the user will not be
 		// left with an outdated model from the settings.
