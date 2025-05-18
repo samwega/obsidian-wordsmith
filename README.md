@@ -1,11 +1,17 @@
-# Proofreader
-![Obsidian downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&label=downloads&query=%24%5B%22proofreader%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json&style=plastic)
-![GitHub download count](https://img.shields.io/github/downloads/chrisgrieser/obsidian-proofreader/total?label=GitHub%20Downloads&style=plastic)
-![Last release](https://img.shields.io/github/v/release/chrisgrieser/obsidian-proofreader?label=Latest%20Release&style=plastic)
+# Text Transformer
 
-AI-based proofreading and stylistic improvements for your writing. Changes are
-inserted as suggestions directly in the editor, similar to the suggested changes
-feature in word processing apps.
+[NOTE: the README is still in the process of being rewritten from the original,
+and may not accurately reflect the latest changes.]
+
+A powerful AI writing assistant, transforming selected text using both Default
+and Custom prompts. Individual changes can be accepted or rejected directly in
+the editor, similar to the suggested changes feature in word processing apps.
+Fully keyboard driven.
+
+Initially forked from
+[Obsidian Proofreader](https://github.com/chrisgrieser/obsidian-proofreader)
+by Christopher Grieser, Text Transformer is now developing to be a feature complete
+AI writing assistant.
 
 <img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
 
@@ -26,56 +32,63 @@ feature in word processing apps.
 <!-- tocstop -->
 
 ## Features
-- Suggested changes are inserted directly into the text: Additions as
-  `==highlights==` and removals as `~~strikethroughs~~`.
-- Accept or reject changes with just one hotkey.
-- Easy to use: No complicated plugin settings and AI parameters to configure.
 
-|                                       | Professional proofreading service               | Proofreader plugin                                                           |
-| ----------------------------------    | ----------------------------------------------- | ---------------------------------------------------------------------------- |
-| Cost for English text of 10,000 words | ~ $400, depending on the service                | ~ \$0.01 – $0.06[^1]                                                         |
-| Completion duration                   | up to 3 work days                               | about 5 minutes                                                              |
-| Input format                          | usually Microsoft Word (`.docx`)                | Markdown file in Obsidian                                                    |
-| Method of incorporating changes       | mostly mouse clicks                             | keyboard shortcuts                                                           |
-| Additional benefits                   | Editor makes general comments on writing style. | Plugin can also be used to quickly proofread single sentences or paragraphs. |
+- Send selected text to the AI and let it transform it. You can review, accept, or
+reject each suggestion individually (using hotkeys), or in batch, making it easy
+to maintain control over your document's content and quality.
+- Suggested changes are inserted directly into the text: Additions as `==highlights==`
+and removals as `~~strikethroughs~~`.
+- Customizable and feature rich. Create your own custom prompts!
+- This process streamlines editing, allowing you to quickly address grammar, style,
+structure, and clarity issues directly within your workflow.
+- The inline system is deeply integrated: you simply press the Hotkey to open the
+  command palette, where you can issue AI-powered writing commands such as:
+  * Improve, Shorten, Lengthen
+  * Fix grammar, syntax and punctuation
+  * Simplify language
+  * Enhance readability
+  * Refine Structure
+  * Any custom command you've created
+  * Translate to any language
 
-[^1]: Estimated pricing for the [GPT 4.1 nano
-	model](https://platform.openai.com/docs/models/) in April 2025. The plugin
-	developer is not responsible if the actual costs differ. You can track your
-	usage costs [on this page](https://platform.openai.com/usage).
+Estimated pricing for the [OpenAI models](https://platform.openai.com/docs/models/)
+in April 2025. The plugin developer is not responsible if the actual costs differ.
+You can track your usage costs [on this page](https://platform.openai.com/usage).
 
 > [!NOTE]
 > This plugin requires an **OpenAI API key** and incurs costs at OpenAI based on
 > usage. Network requests are made when running the proofreading command.
+> Planning on adding support for other LLMs in the future.
 
 ## Installation & setup
 
 ### Plugin installation
-[Install in Obsidian](https://obsidian.md/plugins?id=proofreader)
+[Install in Obsidian](https://obsidian.md/plugins?id=text-transformer)
 
 ### Get an OpenAI API key
 1. [Create an OpenAI account](https://auth.openai.com/create-account).
 2. Go to [this site](https://platform.openai.com/api-keys), and click `Create
    new secret key`.
 3. Copy the API key.
-4. In Obsidian, go to `Settings → Proofreader` and paste your API key there.
-
-## Usage
-1. Use the command `Proofread selection/paragraph` to check the selected
-   text. If there is no selection, the command will check the current paragraph.
-	* Alternatively, you can also check the whole document with `Proofread full
-	  document`. However, note that the quality of AI suggestions tends to
-	  decrease when proofreading too much text at once.
-2. The changes are automatically inserted.
-3. Accept/reject changes with the `Accept suggestions in selection/paragraph`.
-   Same as the proofreading command, the `accept` and `reject` commands affect
-   the current paragraph if there is no selection. Alternatively, you can also
-   only accept/reject the next suggestion after your cursor via `Accept next
-   suggestion`.
+4. In Obsidian, go to `Settings → Text Transformer` and paste your API key there.
 
 > [!TIP]
 > The usage costs should not be very high, nonetheless you can track them
 > [on this page](https://platform.openai.com/usage).
+
+## Usage
+1. Use the command `Proofread selection/paragraph`. This will open a dropdown menu
+from which you can select any of the prompts. Select the one you want to be applied
+to the selected text. If there is no selection, the command will check the current
+paragraph.
+	* Alternatively, you can also check the whole document with `Proofread full document`.
+	However, note that the quality of AI suggestions tends to decrease when
+	proofreading too much text at once.
+2. The changes are automatically inserted.
+3. Accept/reject changes with the `Accept suggestions in selection/paragraph` command.
+Same as the proofreading command, the `accept` and `reject` commands affect the
+current paragraph if there is no selection. Alternatively, you can also only
+accept/reject the next suggestion after your cursor via `Accept next suggestion`.
 
 ## Visual appearance of the changes
 You can add the following CSS snippet to make highlights and strikethroughs
@@ -84,19 +97,26 @@ to add CSS snippets.](https://help.obsidian.md/snippets))
 
 ```css
 .cm-strikethrough {
-	text-decoration-color: var(--color-red);
+    text-decoration: none !important; /* Removes the strikethrough line */
+    background-color: var(--color-red) !important;
+    border-radius: 3px !important;            /* Adds slightly rounded corners */
+    /* Optional: change text color for better contrast: */
+    color: white !important;
 }
 
 .cm-s-obsidian span.cm-highlight {
 	background-color: rgba(var(--color-green-rgb), 35%);
+	border-radius: 3px !important;
+	color: white !important;
 }
 ```
 
 ## Testimonials
 
 > I was paying $29 a month for type.ai until today, your plugin made me cancel
-> the subscription, because the only feature I wanted from there was this inline
+> the subscription, because the only feature I wanted from there was this
 > granular diffing which no other app offered, until Proofreader.
+>
 > [@samwega](https://github.com/chrisgrieser/obsidian-proofreader/discussions/1#discussioncomment-12972780)
 
 ## Plugin development
@@ -110,20 +130,8 @@ just check  # runs the pre-commit hook (without committing)
 ```
 
 > [!NOTE]
-> This repo uses a pre-commit hook, which prevents commits that do not build or
-> do not pass the checks.
+> This repo uses a pre-commit hook, which prevents commits that do not build
+> or do not pass the checks.
 
 ## About the developer
-In my day job, I am a sociologist studying the social mechanisms underlying the
-digital economy. For my PhD project, I investigate the governance of the app
-economy and how software ecosystems manage the tension between innovation and
-compatibility. If you are interested in this subject, feel free to get in touch.
-
-- [Website](https://chris-grieser.de/)
-- [ResearchGate](https://www.researchgate.net/profile/Christopher-Grieser)
-- [Mastodon](https://pkm.social/@pseudometa)
-- [LinkedIn](https://www.linkedin.com/in/christopher-grieser-ba693b17a/)
-
-<a href='https://ko-fi.com/Y8Y86SQ91' target='_blank'> <img height='36'
-style='border:0px;height:36px;' src='https://cdn.ko-fi.com/cdn/kofi1.png?v=3'
-border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+Coming soon!
