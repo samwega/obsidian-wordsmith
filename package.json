@@ -2,9 +2,7 @@
 	"name": "Proofreader",
 	"description": "AI-based editor with command palette and custom prompts. Changes are inserted as suggestions directly in the editor, similar to suggested changes in word processing apps.",
 	"author": "Christopher Grieser",
-	"contributors": [
-		"Alexander Glavan"
-	],
+	"contributors": ["Alexander Glavan"],
 	"version": "1.2.0-alexander-prompt-palette.0",
 	"keywords": [],
 	"license": "MIT",
