@@ -2,9 +2,6 @@ set quiet := true
 
 test_vault := "$HOME/Vaults/writing-vault/"
 
-#───────────────────────────────────────────────────────────────────────────────
-
-[macos]
 build-and-reload:
     #!/usr/bin/env zsh
     node sync-manifest.js
