@@ -1,32 +1,33 @@
+/* eslint-disable no-unused-vars */
 import { App, SuggestModal } from "obsidian";
-import { ProofreaderPrompt } from "./settings";
+import { TextTransformerPrompt } from "./settings";
 
-export class PromptPaletteModal extends SuggestModal<ProofreaderPrompt> {
-	private prompts: ProofreaderPrompt[];
-	private onChoose: (prompt: ProofreaderPrompt) => void;
+export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
+	private prompts: TextTransformerPrompt[];
+	private onChoose: (prompt: TextTransformerPrompt) => void;
 
 	constructor(
 		app: App,
-		prompts: ProofreaderPrompt[],
-		onChoose: (prompt: ProofreaderPrompt) => void,
+		prompts: TextTransformerPrompt[],
+		_onChoose: (prompt: TextTransformerPrompt) => void,
 	) {
 		super(app);
 		this.prompts = prompts;
-		this.onChoose = onChoose;
+		this.onChoose = _onChoose;
 		this.setPlaceholder("Select a prompt...");
 	}
 
-	getSuggestions(query: string): ProofreaderPrompt[] {
+	getSuggestions(query: string): TextTransformerPrompt[] {
 		const lower = query.toLowerCase();
 		return this.prompts.filter((p) => p.name.toLowerCase().includes(lower));
 	}
 
-	renderSuggestion(prompt: ProofreaderPrompt, el: HTMLElement): void {
-		el.createEl("div", { text: prompt.name });
-		el.createEl("small", { text: prompt.isDefault ? "Default" : "Custom" });
+	renderSuggestion(_prompt: TextTransformerPrompt, el: HTMLElement): void {
+		el.createEl("div", { text: _prompt.name });
+		el.createEl("small", { text: _prompt.isDefault ? "Default" : "Custom" });
 	}
 
-	onChooseSuggestion(prompt: ProofreaderPrompt): void {
+	onChooseSuggestion(prompt: TextTransformerPrompt): void {
 		this.onChoose(prompt);
 	}
 }

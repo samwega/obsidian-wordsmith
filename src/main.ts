@@ -1,38 +1,38 @@
 import { Plugin } from "obsidian";
 import { acceptOrRejectInText, acceptOrRejectNextSuggestion } from "./accept-reject-suggestions";
 import { PromptPaletteModal } from "./prompt-palette";
-import { proofreadDocument, proofreadText } from "./proofread";
 import {
-	DEFAULT_PROOFREADER_PROMPTS,
 	DEFAULT_SETTINGS,
+	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
 	MODEL_SPECS,
-	ProofreaderPrompt,
-	ProofreaderSettings,
-	ProofreaderSettingsMenu,
+	TextTransformerPrompt,
+	TextTransformerSettings,
+	TextTransformerSettingsMenu,
 } from "./settings";
+import { textTransformerDocument, textTransformerText } from "./textTransformer";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
-export default class Proofreader extends Plugin {
-	settings: ProofreaderSettings = DEFAULT_SETTINGS;
+export default class TextTransformer extends Plugin {
+	settings: TextTransformerSettings = DEFAULT_SETTINGS;
 
 	override async onload(): Promise<void> {
 		// settings
 		await this.loadSettings();
-		this.addSettingTab(new ProofreaderSettingsMenu(this));
+		this.addSettingTab(new TextTransformerSettingsMenu(this));
 
 		// commands
 		this.addCommand({
-			id: "proofread-selection-paragraph",
-			name: "Proofread selection/paragraph",
+			id: "textTransformer-selection-paragraph",
+			name: "Transform selection/paragraph",
 			editorCallback: (editor): Promise<void> => {
 				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 1) {
-					return proofreadText(this, editor, enabledPrompts[0]);
+					return textTransformerText(this, editor, enabledPrompts[0]);
 				}
 				// Show prompt selection modal
 				return new Promise((resolve) => {
 					const modal = new PromptPaletteModal(this.app, enabledPrompts, (prompt) => {
-						proofreadText(this, editor, prompt).then(resolve);
+						textTransformerText(this, editor, prompt).then(resolve);
 					});
 					modal.open();
 				});
@@ -40,9 +40,9 @@ export default class Proofreader extends Plugin {
 			icon: "bot-message-square",
 		});
 		this.addCommand({
-			id: "proofread-full-document",
-			name: "Proofread full document",
-			editorCallback: (editor): Promise<void> => proofreadDocument(this, editor),
+			id: "textTransformer-full-document",
+			name: "Text Transformer full document",
+			editorCallback: (editor): Promise<void> => textTransformerDocument(this, editor),
 			icon: "bot-message-square",
 		});
 		this.addCommand({
@@ -89,8 +89,8 @@ export default class Proofreader extends Plugin {
 		if (!Array.isArray(this.settings.prompts)) {
 			this.settings.prompts = [];
 		}
-		const existingIds = new Set(this.settings.prompts.map((p: ProofreaderPrompt) => p.id));
-		for (const defPrompt of DEFAULT_PROOFREADER_PROMPTS) {
+		const existingIds = new Set(this.settings.prompts.map((p: TextTransformerPrompt) => p.id));
+		for (const defPrompt of DEFAULT_TEXT_TRANSFORMER_PROMPTS) {
 			if (!existingIds.has(defPrompt.id)) {
 				this.settings.prompts.push({ ...defPrompt });
 			}

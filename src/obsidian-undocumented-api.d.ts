@@ -1,8 +1,11 @@
 import "obsidian";
-import { EditorView } from "@codemirror/view";
 
 declare module "obsidian" {
 	interface Editor {
-		cm: EditorView;
+		cm: {
+			coordsAtPos: (
+				pos: number,
+			) => { top: number; bottom: number; left: number; right: number } | null;
+		};
 	}
 }

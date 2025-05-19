@@ -1,0 +1,20 @@
+{
+	"default": true,
+	"MD004": { "style": "asterisk" },
+	"MD009": true,
+	"MD010": { "code_blocks": false },
+	"MD012": false,
+	"MD013": {
+		"line_length": 100,
+		"heading_line_length": 100,
+		"code_block_line_length": 100,
+		"code_blocks": true,
+		"tables": true,
+		"headings": true,
+		"headers": true,
+		"strict": false,
+		"stern": false
+	},
+	"MD033": false,
+	"MD041": false
+}

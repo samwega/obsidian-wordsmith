@@ -1,13 +1,13 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { MODEL_SPECS, ProofreaderSettings } from "src/settings";
+import { MODEL_SPECS, TextTransformerSettings } from "src/settings";
 import { logError } from "src/utils";
 
-import { ProofreaderPrompt } from "src/settings";
+import { TextTransformerPrompt } from "src/settings";
 
 export async function openAiRequest(
-	settings: ProofreaderSettings,
+	settings: TextTransformerSettings,
 	oldText: string,
-	prompt: ProofreaderPrompt,
+	prompt: TextTransformerPrompt,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.openAiApiKey) {
 		new Notice("Please set your OpenAI API key in the plugin settings.");
@@ -32,7 +32,7 @@ export async function openAiRequest(
 				],
 			}),
 		});
-		console.debug("[Proofreader plugin] OpenAI response", response);
+		console.debug("[TextTransformer plugin] OpenAI response", response);
 	} catch (error) {
 		if ((error as { status: number }).status === 401) {
 			const msg = "OpenAI API key is not valid. Please verify the key in the plugin settings.";

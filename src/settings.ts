@@ -1,5 +1,5 @@
 import { PluginSettingTab, Setting } from "obsidian";
-import Proofreader from "./main";
+import TextTransformer from "./main";
 
 // The `nano` and `mini` models are sufficiently good sufficiently good output
 // for the very focussed task of just fixing language
@@ -35,17 +35,7 @@ export const MODEL_SPECS = {
 		},
 	},
 	// Gemini models
-	"gemini-2.5-pro": {
-		displayText: "Gemini 2.5 Pro",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 3.5, output: 10.5 },
-		info: {
-			intelligence: 4,
-			speed: 4,
-			url: "https://ai.google.dev/models/gemini",
-		},
-	},
-	"gemini-2.5-flash": {
+	"gemini-2.5-flash-preview-04-17": {
 		displayText: "Gemini 2.5 Flash",
 		maxOutputTokens: 8192,
 		costPerMillionTokens: { input: 0.5, output: 1.5 },
@@ -55,15 +45,33 @@ export const MODEL_SPECS = {
 			url: "https://ai.google.dev/models/gemini",
 		},
 	},
+	"gemini-2.5-pro-preview-05-06": {
+		displayText: "Gemini 2.5 Pro",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 3.5, output: 10.5 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://ai.google.dev/models/gemini",
+		},
+	},
 };
 
 type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
-type GeminiModels = "gemini-2.5-pro" | "gemini-2.5-flash";
+type GeminiModels = "gemini-2.5-pro-preview-05-06" | "gemini-2.5-flash-preview-04-17";
+
 type SupportedModels = OpenAiModels | GeminiModels;
 
+// Maps friendly Gemini model names to API model IDs
+export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
+	"gemini-2.5-pro": "gemini-2.5-pro-preview-05-06",
+	"gemini-2.5-flash": "gemini-2.5-flash-preview-04-17",
+	"gemini-2.5-pro-preview-05-06": "gemini-2.5-pro-preview-05-06",
+	"gemini-2.5-flash-preview-04-17": "gemini-2.5-flash-preview-04-17",
+};
 //──────────────────────────────────────────────────────────────────────────────
 
-export interface ProofreaderPrompt {
+export interface TextTransformerPrompt {
 	id: string; // unique identifier
 	name: string; // display name
 	text: string; // the prompt text
@@ -71,7 +79,7 @@ export interface ProofreaderPrompt {
 	enabled: boolean; // if this prompt is active
 }
 
-export const DEFAULT_PROOFREADER_PROMPTS: ProofreaderPrompt[] = [
+export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "improve",
 		name: "Improve",
@@ -123,20 +131,20 @@ export const DEFAULT_PROOFREADER_PROMPTS: ProofreaderPrompt[] = [
 	},
 ];
 
-export interface ProofreaderSettings {
+export interface TextTransformerSettings {
 	openAiApiKey: string;
 	geminiApiKey: string;
 	model: SupportedModels;
-	prompts: ProofreaderPrompt[]; // All prompts (default + custom)
+	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
 	preserveTextInsideQuotes: boolean;
 	preserveBlockquotes: boolean;
 }
 
-export const DEFAULT_SETTINGS: ProofreaderSettings = {
+export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	openAiApiKey: "",
 	geminiApiKey: "",
 	model: "gpt-4.1-nano",
-	prompts: DEFAULT_PROOFREADER_PROMPTS,
+	prompts: DEFAULT_TEXT_TRANSFORMER_PROMPTS,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
 };
@@ -144,10 +152,10 @@ export const DEFAULT_SETTINGS: ProofreaderSettings = {
 //──────────────────────────────────────────────────────────────────────────────
 
 // DOCS https://docs.obsidian.md/Plugins/User+interface/Settings
-export class ProofreaderSettingsMenu extends PluginSettingTab {
-	plugin: Proofreader;
+export class TextTransformerSettingsMenu extends PluginSettingTab {
+	plugin: TextTransformer;
 
-	constructor(plugin: Proofreader) {
+	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
 		this.plugin = plugin;
 	}
@@ -156,7 +164,7 @@ export class ProofreaderSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Proofreader Settings" });
+		containerEl.createEl("h2", { text: "TextTransformer Settings" });
 
 		// API Key Setting
 		new Setting(containerEl).setName("OpenAI API key").addText((input) => {
@@ -180,10 +188,14 @@ export class ProofreaderSettingsMenu extends PluginSettingTab {
 
 		// Model Setting
 		const modelDesc = `
-Use the 4.1 model for the best literary results (more expensive). The nano and mini models should be sufficient for basic proofreading, spelling, grammar, punctuation, etc. (both are very cheap).<br><br>
-GPT 4.1 - intelligence = 4, speed = 3.<br>
-GPT 4.1 mini - intelligence = 3, speed = 4.<br>
-GPT 4.1 nano - intelligence = 2, speed = 5.
+Use GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
+Gemini 2.5 Flash is very fast and powerful.Gemini 2.5 Pro is a thinking model, slow and powerful (probably not needed).<br>
+Prices are estimates per 1000 tokens or 750 words.<br><br>
+GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01<br>
+GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002<br>
+GPT 4.1 nano - intelligence = 2, speed = 5. Price = $0.0005<br>
+Gemini 2.5 Flash - intelligence = 3, speed = 5. Price = $0.0005<br>
+Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 `.trim();
 		const modelDescDiv = document.createElement("div");
 		modelDescDiv.innerHTML = modelDesc;
@@ -220,7 +232,7 @@ GPT 4.1 nano - intelligence = 2, speed = 5.
 		let divider: HTMLDivElement | null = null;
 
 		// Helper for editing a custom prompt inline
-		const createEditPromptForm = (prompt: ProofreaderPrompt): HTMLDivElement => {
+		const createEditPromptForm = (prompt: TextTransformerPrompt): HTMLDivElement => {
 			const form = document.createElement("div");
 			form.className = "add-prompt-form";
 			form.setAttribute(
@@ -390,7 +402,6 @@ GPT 4.1 nano - intelligence = 2, speed = 5.
 				addPromptForm?.remove();
 				addPromptForm = null;
 				// Add the prompt
-				// @ts-ignore
 				this.plugin.settings.prompts.push({
 					id: `custom-${Date.now()}`,
 					name,
@@ -398,9 +409,7 @@ GPT 4.1 nano - intelligence = 2, speed = 5.
 					isDefault: false,
 					enabled: true,
 				});
-				// @ts-ignore
 				await this.plugin.saveSettings();
-				// @ts-ignore
 				this.display();
 			};
 			cancelBtn.onclick = (): void => {

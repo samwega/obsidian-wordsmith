@@ -8,6 +8,6 @@ export function logError(obj: unknown): void {
 	} else {
 		const hotkey = Platform.isMacOS ? "cmd+opt+i" : "ctrl+shift+i";
 		new Notice(`Error. Check the console for more details (${hotkey}).`);
-		console.error("[Proofreader plugin] error", obj);
+		console.error("[TextTransformer plugin] error", obj);
 	}
 }

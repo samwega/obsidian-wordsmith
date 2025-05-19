@@ -1,15 +1,15 @@
 {
-  "id": "proofreader",
-  "name": "Text Transformer",
-  "description": "AI-based proofreading and stylistic improvements for your writing. Changes are inserted as suggestions directly in the editor, similar to suggested changes in word processing apps.",
-  "version": "1.0.0",
-  "minAppVersion": "1.5.8",
-  "isDesktopOnly": false,
-  "author": "Alexander Glavan",
-  "authorUrl": "https://chris-grieser.de/",
-  "helpUrl": "https://github.com/chrisgrieser/obsidian-proofreader#readme",
-  "fundingUrl": {
-    "Ko-Fi": "https://ko-fi.com/pseudometa",
-    "PayPal": "https://www.paypal.me/ChrisGrieser"
-  }
+	"id": "text-transformer",
+	"name": "Text Transformer",
+	"description": "AI-based proofreading and stylistic improvements for your writing. Changes are inserted as suggestions directly in the editor, similar to suggested changes in word processing apps.",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.8",
+	"isDesktopOnly": false,
+	"author": "Alexander Glavan",
+	"authorUrl": "https://chris-grieser.de/",
+	"helpUrl": "https://github.com/chrisgrieser/obsidian-proofreader#readme",
+	"fundingUrl": {
+		"Ko-Fi": "https://ko-fi.com/pseudometa",
+		"PayPal": "https://www.paypal.me/ChrisGrieser"
+	}
 }

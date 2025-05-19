@@ -64,4 +64,4 @@ const gitCommands = [
 const gitProcess = spawn(gitCommands.join(" && "), [], { shell: true });
 gitProcess.stdout.on("data", (data) => console.info(data.toString().trim()));
 gitProcess.stderr.on("data", (data) => console.info(data.toString().trim()));
-gitProcess.on("error", (_err) => process.exit(1));
+gitProcess.on("error", () => process.exit(1));

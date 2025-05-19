@@ -21,29 +21,29 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 
 <!-- toc -->
 
-- [Features](#features)
-- [Installation & setup](#installation--setup)
-	* [Plugin installation](#plugin-installation)
-	* [Get an OpenAI API key](#get-an-openai-api-key)
-- [Usage](#usage)
-- [Visual appearance of the changes](#visual-appearance-of-the-changes)
-- [Testimonials](#testimonials)
-- [Plugin development](#plugin-development)
-- [About the developer](#about-the-developer)
+* [Features](#features)
+* [Installation & setup](#installation--setup)
+  * [Plugin installation](#plugin-installation)
+  * [Get an OpenAI API key](#get-an-openai-api-key)
+* [Usage](#usage)
+* [Visual appearance of the changes](#visual-appearance-of-the-changes)
+* [Testimonials](#testimonials)
+* [Plugin development](#plugin-development)
+* [About the developer](#about-the-developer)
 
 <!-- tocstop -->
 
 ## Features
 
-- Send selected text to the AI and let it transform it. You can review, accept, or
-reject each suggestion individually (using hotkeys), or in batch, making it easy
-to maintain control over your document's content and quality.
-- Suggested changes are inserted directly into the text: Additions as `==highlights==`
-and removals as `~~strikethroughs~~`.
-- Customizable and feature rich. Create your own custom prompts!
-- This process streamlines editing, allowing you to quickly address grammar, style,
-structure, and clarity issues directly within your workflow.
-- The inline system is deeply integrated: you simply press the Hotkey to open the
+* Send selected text to the AI and let it transform it. You can review, accept, or
+  reject each suggestion individually (using hotkeys), or in batch, making it easy
+  to maintain control over your document's content and quality.
+* Suggested changes are inserted directly into the text: Additions as `==highlights==`
+  and removals as `~~strikethroughs~~`.
+* Customizable and feature rich. Create your own custom prompts!
+* This process streamlines editing, allowing you to quickly address grammar, style,
+  structure, and clarity issues directly within your workflow.
+* The inline system is deeply integrated: you simply press the Hotkey to open the
   command palette, where you can issue AI-powered writing commands such as:
   * Improve, Shorten, Lengthen
   * Fix grammar, syntax and punctuation
@@ -65,12 +65,14 @@ You can track your usage costs [on this page](https://platform.openai.com/usage)
 ## Installation & setup
 
 ### Plugin installation
+
 [Install in Obsidian](https://obsidian.md/plugins?id=text-transformer)
 
 ### Get an OpenAI API key
+
 1. [Create an OpenAI account](https://auth.openai.com/create-account).
 2. Go to [this site](https://platform.openai.com/api-keys), and click `Create
-   new secret key`.
+new secret key`.
 3. Copy the API key.
 4. In Obsidian, go to `Settings → Text Transformer` and paste your API key there.
 
@@ -79,31 +81,34 @@ You can track your usage costs [on this page](https://platform.openai.com/usage)
 > [on this page](https://platform.openai.com/usage).
 
 ## Usage
+
 1. Use the command `Proofread selection/paragraph`. This will open a dropdown menu
-from which you can select any of the prompts. Select the one you want to be applied
-to the selected text. If there is no selection, the command will check the current
-paragraph.
-	* Alternatively, you can also check the whole document with `Proofread full document`.
-	However, note that the quality of AI suggestions tends to decrease when
-	proofreading too much text at once.
+   from which you can select any of the prompts. Select the one you want to be applied
+   to the selected text. If there is no selection, the command will check the current
+   paragraph.
+
+   * Alternatively, you can also check the whole document with `Proofread full document`.
+   However, note that the quality of AI suggestions tends to decrease when
+   proofreading too much text at once.
 2. The changes are automatically inserted.
 3. Accept/reject changes with the `Accept suggestions in selection/paragraph` command.
-Same as the proofreading command, the `accept` and `reject` commands affect the
-current paragraph if there is no selection. Alternatively, you can also only
-accept/reject the next suggestion after your cursor via `Accept next suggestion`.
+   Same as the proofreading command, the `accept` and `reject` commands affect the
+   current paragraph if there is no selection. Alternatively, you can also only
+   accept/reject the next suggestion after your cursor via `Accept next suggestion`.
 
 ## Visual appearance of the changes
+
 You can add the following CSS snippet to make highlights and strikethroughs
 appear like suggested changes, similar to the screenshot further above. ([How
 to add CSS snippets.](https://help.obsidian.md/snippets))
 
 ```css
 .cm-strikethrough {
-    text-decoration: none !important; /* Removes the strikethrough line */
-    background-color: var(--color-red) !important;
-    border-radius: 3px !important;            /* Adds slightly rounded corners */
-    /* Optional: change text color for better contrast: */
-    color: white !important;
+	text-decoration: none !important; /* Removes the strikethrough line */
+	background-color: var(--color-red) !important;
+	border-radius: 3px !important; /* Adds slightly rounded corners */
+	/* Optional: change text color for better contrast: */
+	color: white !important;
 }
 
 .cm-s-obsidian span.cm-highlight {
@@ -136,4 +141,5 @@ just check  # runs the pre-commit hook (without committing)
 > or do not pass the checks.
 
 ## About the developer
+
 Coming soon!

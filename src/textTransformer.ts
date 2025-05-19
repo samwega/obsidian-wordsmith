@@ -1,14 +1,14 @@
 import { Change, diffWords } from "diff";
 import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 import { rejectChanges } from "./accept-reject-suggestions";
-import Proofreader from "./main";
-import { openAiRequest } from "./providers/openai";
+import TextTransformer from "./main";
 import { geminiRequest } from "./providers/gemini";
-import { ProofreaderPrompt, ProofreaderSettings } from "./settings";
+import { openAiRequest } from "./providers/openai";
+import { TextTransformerPrompt, TextTransformerSettings } from "./settings";
 
 // DOCS https://github.com/kpdecker/jsdiff#readme
 function getDiffMarkdown(
-	settings: ProofreaderSettings,
+	settings: TextTransformerSettings,
 	oldText: string,
 	newText: string,
 	isOverlength?: boolean,
@@ -27,7 +27,7 @@ function getDiffMarkdown(
 		(diff.at(-1) as Change).removed = false;
 		const cutOffCallout =
 			"\n\n" +
-			"> [!INFO] End of proofreading\n" +
+			"> [!INFO] End of text transforming\n" +
 			"> The input text was too long. Text after this point is unchanged." +
 			"\n\n";
 		diff.splice(-2, 0, { added: false, removed: false, value: cutOffCallout });
@@ -68,10 +68,10 @@ function getDiffMarkdown(
 }
 
 async function validateAndGetChangesAndNotify(
-	plugin: Proofreader,
+	plugin: TextTransformer,
 	oldText: string,
 	scope: string,
-	prompt: ProofreaderPrompt,
+	prompt: TextTransformerPrompt,
 ): Promise<string | undefined> {
 	// GUARD valid start-text
 	if (oldText.trim() === "") {
@@ -81,7 +81,7 @@ async function validateAndGetChangesAndNotify(
 	if (oldText.match(/==|~~/)) {
 		const warnMsg =
 			`${scope} already has highlights or strikethroughs.\n\n` +
-			"Please accept/reject the changes before making another proofreading request.";
+			"Please accept/reject the changes before making another text transforming request.";
 		new Notice(warnMsg, 6000);
 		return;
 	}
@@ -91,13 +91,13 @@ async function validateAndGetChangesAndNotify(
 	const fileBefore = app.workspace.getActiveFile()?.path;
 	const longInput = oldText.length > 1500;
 	const veryLongInput = oldText.length > 15000;
-	// Proofreading a document likely takes longer, we want to keep the finishing
+	// Text transforming a document likely takes longer, we want to keep the finishing
 	// message in case the user went afk. (In the Notice API, duration 0 means
 	// keeping the notice until the user dismisses it.)
 	const notifDuration = longInput ? 0 : 4_000;
 
 	// notify on start
-	let msg = `🤖 ${scope} is being proofread…`;
+	let msg = `🤖 ${scope} is being text transformed…`;
 	if (longInput) {
 		msg += "\n\nDue to the length of the text, this may take a moment.";
 		if (veryLongInput) msg += " (A minute or longer.)";
@@ -106,7 +106,8 @@ async function validateAndGetChangesAndNotify(
 	const notice = new Notice(msg, 0);
 
 	// perform request
-	let response;
+	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
+	let response: ResponseType;
 	if (settings.model.startsWith("gemini-")) {
 		response = await geminiRequest(settings, oldText, prompt);
 	} else {
@@ -119,7 +120,8 @@ async function validateAndGetChangesAndNotify(
 	// check if active file changed
 	const fileAfter = app.workspace.getActiveFile()?.path;
 	if (fileBefore !== fileAfter) {
-		const errmsg = "⚠️ The active file changed since the proofread has been triggered. Aborting.";
+		const errmsg =
+			"⚠️ The active file changed since the text transformer has been triggered. Aborting.";
 		new Notice(errmsg, notifDuration);
 		return;
 	}
@@ -156,10 +158,10 @@ async function validateAndGetChangesAndNotify(
 
 //──────────────────────────────────────────────────────────────────────────────
 
-export async function proofreadDocument(
-	plugin: Proofreader,
+export async function textTransformerDocument(
+	plugin: TextTransformer,
 	editor: Editor,
-	prompt?: ProofreaderPrompt,
+	prompt?: TextTransformerPrompt,
 ): Promise<void> {
 	const noteWithFrontmatter = editor.getValue();
 	const bodyStart = getFrontMatterInfo(noteWithFrontmatter).contentStart || 0;
@@ -179,10 +181,10 @@ export async function proofreadDocument(
 	editor.setCursor(bodyStartPos); // to start of doc
 }
 
-export async function proofreadText(
-	plugin: Proofreader,
+export async function textTransformerText(
+	plugin: TextTransformer,
 	editor: Editor,
-	prompt: ProofreaderPrompt,
+	prompt: TextTransformerPrompt,
 ): Promise<void> {
 	const hasMultipleSelections = editor.listSelections().length > 1;
 	if (hasMultipleSelections) {
