@@ -54,9 +54,9 @@ or in batch, making it easy to maintain control over your document's content and
   * Enhance readability
   * Refine Structure
   * Any custom command you've created
-  * Translate to any language
+  * Translate to any language<br>
 
-  <img alt="Showcase" width=70% src="https://i.imgur.com/wpFvjlq.png">
+  <img alt="Showcase" width=90% src="https://i.imgur.com/wpFvjlq.png">
 
 > [!NOTE]
 > This plugin requires an **OpenAI API key** or **Gemini API key** and incurs costs
@@ -71,18 +71,19 @@ You can track your usage costs [on this page](https://makersuite.google.com/app/
 
 The plugin developer is not responsible if the actual costs differ.
 
-The following prices are estimates per 1000 tokens or 750 words:
-**GPT 4.1** - intelligence = 4, speed = 3. Price = $0.01
-**GPT 4.1 mini** - intelligence = 3, speed = 4. Price = $0.002
-**GPT 4.1 nano** - intelligence = 2, speed = 5. Price = $0.0005
-**Gemini 2.5 Flash** - intelligence = 3, speed = 5. Price = $0.0005
-**Gemini 2.5 Pro** - intelligence = 4, speed = thinking. Price = $0.011
-Use GPT 4.1 for the *best literary results*.
-Nano and Mini should be sufficient for basic text proofreading.
-Gemini 2.5 Flash is very fast and powerful.
-Gemini 2.5 Pro is a thinking model, slow and powerful (probably unnecessary).
 
-<img alt="Showcase" width=70% src="https://i.imgur.com/CP311N9.png">
+The following prices are estimates per 1000 tokens or 750 words:<br>
+**GPT 4.1** - intelligence = 4, speed = 3. Price = $0.01<br>
+**GPT 4.1 mini** - intelligence = 3, speed = 4. Price = $0.002<br>
+**GPT 4.1 nano** - intelligence = 2, speed = 5. Price = $0.0005<br>
+**Gemini 2.5 Flash** - intelligence = 3, speed = 5. Price = $0.0005<br>
+**Gemini 2.5 Pro** - intelligence = 4, speed = thinking. Price = $0.011<br>
+Use GPT 4.1 for the *best literary results*.<br>
+Nano and Mini should be sufficient for basic text proofreading.<br>
+Gemini 2.5 Flash is very fast and powerful.<br>
+Gemini 2.5 Pro is a thinking model, slow and powerful (probably unnecessary).<br>
+
+<img alt="Showcase" width=90% src="https://i.imgur.com/CP311N9.png">
 
 ## Installation & setup
 
