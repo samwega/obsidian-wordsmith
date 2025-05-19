@@ -1,10 +1,11 @@
 import { Change, diffWords } from "diff";
-import { Editor, Notice, getFrontMatterInfo } from "obsidian";
+import { Editor, Notice, getFrontMatterInfo, App } from "obsidian";
 import { rejectChanges } from "./accept-reject-suggestions";
 import TextTransformer from "./main";
 import { geminiRequest } from "./providers/gemini";
 import { openAiRequest } from "./providers/openai";
 import { TextTransformerPrompt, TextTransformerSettings } from "./settings";
+import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-control-panel";
 
 // DOCS https://github.com/kpdecker/jsdiff#readme
 function getDiffMarkdown(
@@ -13,50 +14,42 @@ function getDiffMarkdown(
 	newText: string,
 	isOverlength?: boolean,
 ): { textWithSuggestions: string; changeCount: number } {
-	// ENSURE SAME AMOUNT OF SURROUNDING WHITESPACE
-	// (A selection can have surrounding whitespace, but the AI response usually
-	// removes those. This results in the text effectively being trimmed.)
 	const leadingWhitespace = oldText.match(/^(\s*)/)?.[0] || "";
 	const trailingWhitespace = oldText.match(/(\s*)$/)?.[0] || "";
 	newText = newText.replace(/^(\s*)/, leadingWhitespace).replace(/(\s*)$/, trailingWhitespace);
 
-	// GET DIFF
 	const diff = diffWords(oldText, newText);
 	if (isOverlength) {
-		// do not remove text after cutoff-length
 		(diff.at(-1) as Change).removed = false;
-		const cutOffCallout =
-			"\n\n" +
-			"> [!INFO] End of text transforming\n" +
-			"> The input text was too long. Text after this point is unchanged." +
-			"\n\n";
+		const cutOffCallout = `
+
+> [!INFO] End of text transforming
+> The input text was too long. Text after this point is unchanged.
+
+`;
 		diff.splice(-2, 0, { added: false, removed: false, value: cutOffCallout });
 	}
 
-	// CONVERT DIFF TO TEXT
-	// with ==highlights== and ~~strikethrough~~ as suggestions
 	let textWithChanges = diff
 		.map((part) => {
 			if (!part.added && !part.removed) return part.value;
 			const withMarkup = part.added ? `==${part.value}==` : `~~${part.value}~~`;
-			return withMarkup.replace(/^(==|~~)(\s)/, "$2$1"); // prevent leading spaces as they make markup invalid
+			return withMarkup.replace(/^(==|~~)(\s)/, "$2$1");
 		})
 		.join("");
 
-	// CLEANUP
 	textWithChanges = textWithChanges
-		.replace(/~~\[\^\w+\]~~/g, "$1") // preserve footnotes
-		.replace(/~~"~~==[“”]==/g, '"') // preserve non-smart quotes
+		.replace(/~~\[\^\w+\]~~/g, "$1")
+		.replace(/~~"~~==[“”]==/g, '"')
 		.replace(/~~'~~==[‘’]==/g, "'")
-		.replace(/~~(.+?)(.{1,2})~~==(\1)==/g, "$1~~$2~~") // only removal of 1-2 char, e.g. plural-s
-		.replace(/~~(.+?)~~==(?:\1)(.{1,2})==/g, "$1==$2==") // only addition of 1-2 char
-		.replace(/ {2}(?!$)/gm, " "); // rare double spaces created by diff (not EoL due to 2-space-rule)
+		.replace(/~~(.+?)(.{1,2})~~==(\1)==/g, "$1~~$2~~")
+		.replace(/~~(.+?)~~==(?:\1)(.{1,2})==/g, "$1==$2==")
+		.replace(/ {2}(?!$)/gm, " ");
 
-	// PRESERVE QUOTES
 	if (settings.preserveBlockquotes) {
 		textWithChanges = textWithChanges
-			.replace(/^~~>~~/gm, ">") // if AI removes blockquote marker
-			.replace(/^~~(>[^~=]*)~~$/gm, "$1") // if AI removes blockquote itself
+			.replace(/^~~>~~/gm, ">")
+			.replace(/^~~(>[^~=]*)~~$/gm, "$1")
 			.replace(/^>.*/gm, (blockquote) => rejectChanges(blockquote));
 	}
 	if (settings.preserveTextInsideQuotes) {
@@ -73,51 +66,98 @@ async function validateAndGetChangesAndNotify(
 	scope: string,
 	prompt: TextTransformerPrompt,
 ): Promise<string | undefined> {
-	// GUARD valid start-text
 	if (oldText.trim() === "") {
 		new Notice(`${scope} is empty.`);
 		return;
 	}
 	if (oldText.match(/==|~~/)) {
-		const warnMsg =
-			`${scope} already has highlights or strikethroughs.\n\n` +
-			"Please accept/reject the changes before making another text transforming request.";
+		const warnMsg = `${scope} already has highlights or strikethroughs.
+Please accept/reject the changes before making another text transforming request.`;
 		new Notice(warnMsg, 6000);
 		return;
 	}
 
-	// parameters
 	const { app, settings } = plugin;
 	const fileBefore = app.workspace.getActiveFile()?.path;
 	const longInput = oldText.length > 1500;
 	const veryLongInput = oldText.length > 15000;
-	// Text transforming a document likely takes longer, we want to keep the finishing
-	// message in case the user went afk. (In the Notice API, duration 0 means
-	// keeping the notice until the user dismisses it.)
 	const notifDuration = longInput ? 0 : 4_000;
 
-	// notify on start
-	let msg = `🤖 ${scope} is being text transformed…`;
-	if (longInput) {
-		msg += "\n\nDue to the length of the text, this may take a moment.";
-		if (veryLongInput) msg += " (A minute or longer.)";
-		msg += "\n\nDo not go to a different file or change the original text in the meantime.";
+	let additionalContextForAI = "";
+	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+	let contextPanel: ContextControlPanel | null = null;
+	if (contextPanelLeaves.length > 0) {
+		const view = contextPanelLeaves[0].view;
+		if (view instanceof ContextControlPanel) {
+			contextPanel = view;
+		}
 	}
-	const notice = new Notice(msg, 0);
 
-	// perform request
+	const contextParts: string[] = [];
+	if (contextPanel) {
+		const customText = contextPanel.getCustomContextText();
+		const useWholeNote = contextPanel.getWholeNoteContextState();
+		const useDynamic = contextPanel.getDynamicContextState();
+
+		if (customText) {
+			contextParts.push(`--- Custom User-Provided Context Start ---
+${customText}
+--- Custom User-Provided Context End ---`);
+		}
+
+		if (useWholeNote) {
+			const currentFile = app.workspace.getActiveFile();
+			if (currentFile) {
+				const fileContent = await app.vault.cachedRead(currentFile);
+				let wholeNoteContext = fileContent;
+
+				if (scope !== "Document" && fileContent.includes(oldText)) {
+					const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
+					const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
+					wholeNoteContext = fileContent.replace(
+						oldText,
+						`${markerStart}${oldText}${markerEnd}`,
+					);
+				}
+				contextParts.push(`--- Whole Note Context Start (The text to be modified is marked as USER_SELECTED_TEXT_STARTING_HERE...USER_SELECTED_TEXT_ENDING_HERE or is the entirety of this content if the 'scope' was 'Document') ---
+${wholeNoteContext}
+--- Whole Note Context End ---`);
+			}
+		} else if (useDynamic) {
+			contextParts.push("--- Dynamic Context (Placeholder - Not Yet Implemented) ---");
+		}
+
+		if (contextParts.length > 0) {
+			additionalContextForAI = contextParts.join(`
+
+`);
+		}
+	}
+
+	let initialMsg = `🤖 ${scope} is being text transformed…`;
+	if (additionalContextForAI) {
+		initialMsg += " (with additional context)";
+	}
+	if (longInput) {
+		initialMsg += `
+
+Due to the length of the text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}
+
+Do not go to a different file or change the original text in the meantime.`;
+	}
+	const notice = new Notice(initialMsg, longInput ? 0 : 4000);
+
 	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
 	let response: ResponseType;
 	if (settings.model.startsWith("gemini-")) {
-		response = await geminiRequest(settings, oldText, prompt);
+		response = await geminiRequest(settings, oldText, prompt, additionalContextForAI);
 	} else {
-		response = await openAiRequest(settings, oldText, prompt);
+		response = await openAiRequest(settings, oldText, prompt, additionalContextForAI);
 	}
 	const { newText, isOverlength, cost } = response || {};
 	notice.hide();
 	if (!newText) return;
 
-	// check if active file changed
 	const fileAfter = app.workspace.getActiveFile()?.path;
 	if (fileBefore !== fileAfter) {
 		const errmsg =
@@ -126,7 +166,6 @@ async function validateAndGetChangesAndNotify(
 		return;
 	}
 
-	// check if diff is even needed
 	const { textWithSuggestions, changeCount } = getDiffMarkdown(
 		settings,
 		oldText,
@@ -138,25 +177,20 @@ async function validateAndGetChangesAndNotify(
 		return;
 	}
 
-	// notify on changes
 	if (isOverlength) {
-		const msg =
-			"Text is longer than the maximum output supported by the AI model.\n\n" +
-			"Suggestions are thus only made until the cut-off point.";
+		const msg = `Text is longer than the maximum output supported by the AI model.
+
+Suggestions are thus only made until the cut-off point.`;
 		new Notice(msg, 10_000);
 	}
 	const pluralS = changeCount === 1 ? "" : "s";
-	const msg2 = [
-		`🤖 ${changeCount} change${pluralS} made.`,
-		"",
-		`est. cost: $${cost?.toFixed(4)}`,
-	].join("\n");
+	const msg2 = `🤖 ${changeCount} change${pluralS} made.
+
+est. cost: $${cost?.toFixed(4)}`;
 	new Notice(msg2, notifDuration);
 
 	return textWithSuggestions;
 }
-
-//──────────────────────────────────────────────────────────────────────────────
 
 export async function textTransformerDocument(
 	plugin: TextTransformer,
@@ -164,21 +198,19 @@ export async function textTransformerDocument(
 	prompt?: TextTransformerPrompt,
 ): Promise<void> {
 	const noteWithFrontmatter = editor.getValue();
-	const bodyStart = getFrontMatterInfo(noteWithFrontmatter).contentStart || 0;
-	const bodyEnd = noteWithFrontmatter.length;
-	const oldText = noteWithFrontmatter.slice(bodyStart);
+	const { contentStart } = getFrontMatterInfo(noteWithFrontmatter);
+	const body = noteWithFrontmatter.slice(contentStart);
 
-	// Use provided prompt or fallback to first enabled/default
 	const usePrompt =
 		prompt || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
 
-	const changes = await validateAndGetChangesAndNotify(plugin, oldText, "Document", usePrompt);
+	const changes = await validateAndGetChangesAndNotify(plugin, body, "Document", usePrompt);
 	if (!changes) return;
 
-	const bodyStartPos = editor.offsetToPos(bodyStart);
-	const bodyEndPos = editor.offsetToPos(bodyEnd);
+	const bodyStartPos = editor.offsetToPos(contentStart);
+	const bodyEndPos = editor.offsetToPos(noteWithFrontmatter.length);
 	editor.replaceRange(changes, bodyStartPos, bodyEndPos);
-	editor.setCursor(bodyStartPos); // to start of doc
+	editor.setCursor(bodyStartPos);
 }
 
 export async function textTransformerText(
@@ -192,7 +224,7 @@ export async function textTransformerText(
 		return;
 	}
 
-	const cursor = editor.getCursor("from"); // `from` gives start if selection
+	const cursor = editor.getCursor("from");
 	const selection = editor.getSelection();
 	const oldText = selection || editor.getLine(cursor.line);
 	const scope = selection ? "Selection" : "Paragraph";
@@ -202,9 +234,12 @@ export async function textTransformerText(
 
 	if (selection) {
 		editor.replaceSelection(changes);
-		editor.setCursor(cursor); // to start of selection
 	} else {
 		editor.setLine(cursor.line, changes);
-		editor.setCursor({ line: cursor.line, ch: 0 }); // to start of paragraph
+	}
+	if (selection) {
+		editor.setCursor(editor.getCursor("from"));
+	} else {
+		editor.setCursor({ line: cursor.line, ch: 0 });
 	}
 }

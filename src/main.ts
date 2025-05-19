@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
 import { acceptOrRejectInText, acceptOrRejectNextSuggestion } from "./accept-reject-suggestions";
+import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-control-panel"; // Added import
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
@@ -19,6 +20,19 @@ export default class TextTransformer extends Plugin {
 		// settings
 		await this.loadSettings();
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
+
+		// Register the context control panel view
+		this.registerView(CONTEXT_CONTROL_VIEW_TYPE, (leaf) => new ContextControlPanel(leaf));
+
+		// Add a command to open the context control panel
+		this.addCommand({
+			id: "open-context-control-panel",
+			name: "Open AI Context Control Panel",
+			callback: () => {
+				this.activateView();
+			},
+			icon: "settings-2", // You might want to choose a more appropriate icon
+		});
 
 		// commands
 		this.addCommand({
@@ -71,6 +85,19 @@ export default class TextTransformer extends Plugin {
 		});
 
 		console.info(this.manifest.name + " Plugin loaded.");
+	}
+
+	async activateView() {
+		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+
+		await this.app.workspace.getRightLeaf(false)?.setViewState({
+			type: CONTEXT_CONTROL_VIEW_TYPE,
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)[0],
+		);
 	}
 
 	override onunload(): void {

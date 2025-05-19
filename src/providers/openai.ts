@@ -8,28 +8,47 @@ export async function openAiRequest(
 	settings: TextTransformerSettings,
 	oldText: string,
 	prompt: TextTransformerPrompt,
+	additionalContextForAI?: string,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.openAiApiKey) {
 		new Notice("Please set your OpenAI API key in the plugin settings.");
 		return;
 	}
 
-	// SEND REQUEST
+	let systemMessageContent = `You are an AI assistant helping with text transformation.`;
+
+	if (additionalContextForAI) {
+		systemMessageContent += `
+
+You will be provided with context (marked as --- Context Start --- and --- Context End ---).
+This context is for your awareness only. Do not comment on or alter the context itself.
+
+--- Context Start ---
+${additionalContextForAI}
+--- Context End ---`;
+	}
+
+	systemMessageContent += `
+
+User's transformation instruction: ${prompt.text}
+
+Apply this instruction ONLY to the user-provided text that follows.`;
+
+	const messages = [
+		{ role: "system", content: systemMessageContent },
+		{ role: "user", content: oldText },
+	];
+
 	let response: RequestUrlResponse;
 	try {
-		// DOCS https://platform.openai.com/docs/api-reference/chat
 		response = await requestUrl({
 			url: "https://api.openai.com/v1/chat/completions",
 			method: "POST",
 			contentType: "application/json",
-			// biome-ignore lint/style/useNamingConvention: not by me
 			headers: { Authorization: "Bearer " + settings.openAiApiKey },
 			body: JSON.stringify({
 				model: settings.model,
-				messages: [
-					{ role: "developer", content: prompt.text },
-					{ role: "user", content: oldText },
-				],
+				messages: messages,
 			}),
 		});
 		console.debug("[TextTransformer plugin] OpenAI response", response);
@@ -48,13 +67,9 @@ export async function openAiRequest(
 		return;
 	}
 
-	// DETERMINE OVERLENGTH & COST
-	// https://platform.openai.com/docs/guides/conversation-state?api-mode=responses#managing-context-for-text-generation
 	const modelSpec = MODEL_SPECS[settings.model];
-
 	const outputTokensUsed = response.json?.usage?.completion_tokens || 0;
 	const isOverlength = outputTokensUsed >= modelSpec.maxOutputTokens;
-
 	const inputTokensUsed = response.json?.usage?.prompt_tokens || 0;
 	const cost =
 		(inputTokensUsed * modelSpec.costPerMillionTokens.input) / 1e6 +

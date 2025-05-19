@@ -15,23 +15,40 @@ export async function geminiRequest(
 	settings: TextTransformerSettings,
 	oldText: string,
 	prompt: TextTransformerPrompt,
+	additionalContextForAI?: string,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.geminiApiKey) {
 		new Notice("Please set your Gemini API key in the plugin settings.");
 		return;
 	}
 
+	let fullPrompt = "";
+	if (additionalContextForAI) {
+		fullPrompt = `You will be provided with context (marked as --- Context Start --- and --- Context End ---) and a text to transform (marked as --- Text to Transform Start --- and --- Text to Transform End ---).
+Your task is to apply the specific instruction (e.g., summarize, improve, fix grammar) ONLY to the 'Text to Transform'. Do not comment on or alter the context itself. The context is for your awareness only.
+
+--- Context Start ---
+${additionalContextForAI}
+--- Context End ---
+
+`;
+	}
+
+	fullPrompt += `User's instruction: ${prompt.text}
+
+--- Text to Transform Start ---
+${oldText}
+--- Text to Transform End ---`;
+
 	let response: RequestUrlResponse;
 	try {
-		// DOCS: https://ai.google.dev/api/rest/v1beta/models/gemini-pro:generateContent
 		const modelId = GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
-		// Build the request body according to modelId
 		let requestBody: unknown;
 		if (modelId === "gemini-2.5-flash-preview-04-17") {
 			requestBody = {
 				contents: [
 					{
-						parts: [{ text: prompt.text + "\n" + oldText }],
+						parts: [{ text: fullPrompt }],
 					},
 				],
 				generationConfig: {
@@ -44,7 +61,7 @@ export async function geminiRequest(
 			requestBody = {
 				contents: [
 					{
-						parts: [{ text: prompt.text + "\n" + oldText }],
+						parts: [{ text: fullPrompt }],
 					},
 				],
 				// biome-ignore lint/style/useNamingConvention: required by Gemini API
@@ -72,12 +89,10 @@ export async function geminiRequest(
 		return;
 	}
 
-	// Handle Gemini API response
 	const candidates = response.json?.candidates;
 	const newText = candidates?.[0]?.content?.parts?.[0]?.text || "";
-	// Gemini API does not provide token usage/cost in the same way as OpenAI, so estimate
 	const modelSpec = MODEL_SPECS[settings.model];
-	const outputTokensUsed = newText.split(/\s+/).length; // crude estimate
+	const outputTokensUsed = newText.split(/\s+/).length;
 	const isOverlength = outputTokensUsed >= modelSpec.maxOutputTokens;
 	const cost = (outputTokensUsed * modelSpec.costPerMillionTokens.output) / 1e6;
 	return { newText, isOverlength, cost };
