@@ -1,5 +1,5 @@
 import { Change, diffWords } from "diff";
-import { Editor, Notice, getFrontMatterInfo, App } from "obsidian";
+import { Editor, Notice, getFrontMatterInfo, App, EditorSelectionOrCaret } from "obsidian"; // Added EditorSelectionOrCaret
 import { rejectChanges } from "./accept-reject-suggestions";
 import TextTransformer from "./main";
 import { geminiRequest } from "./providers/gemini";
@@ -62,6 +62,7 @@ function getDiffMarkdown(
 
 async function validateAndGetChangesAndNotify(
 	plugin: TextTransformer,
+	editor: Editor, // Added editor parameter
 	oldText: string,
 	scope: string,
 	prompt: TextTransformerPrompt,
@@ -94,6 +95,9 @@ Please accept/reject the changes before making another text transforming request
 	}
 
 	const contextParts: string[] = [];
+	const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
+	const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
+
 	if (contextPanel) {
 		const customText = contextPanel.getCustomContextText();
 		const useWholeNote = contextPanel.getWholeNoteContextState();
@@ -105,26 +109,65 @@ ${customText}
 --- Custom User-Provided Context End ---`);
 		}
 
-		if (useWholeNote) {
+		// Logic for Dynamic Context
+		if (useDynamic) { 
+			const linesToIncludeAround = 15; // Configurable: number of lines before and after
+			let selectionStartLine: number;
+			let selectionEndLine: number;
+
+			// Determine the line range of oldText
+			if (scope === "Selection") {
+				// For a true editor selection, get its start and end lines
+				const sel = editor.listSelections()[0]; 
+				selectionStartLine = Math.min(sel.anchor.line, sel.head.line);
+				selectionEndLine = Math.max(sel.anchor.line, sel.head.line);
+			} else { // Handles "Paragraph" (where oldText is a single line)
+				selectionStartLine = editor.getCursor("from").line;
+				selectionEndLine = selectionStartLine; // oldText is a single line
+			}
+
+			const docFirstLine = 0;
+			const docLastLine = editor.lastLine();
+
+			const contextStartLine = Math.max(docFirstLine, selectionStartLine - linesToIncludeAround);
+			const contextEndLine = Math.min(docLastLine, selectionEndLine + linesToIncludeAround);
+
+			let dynamicContextLines: string[] = [];
+			for (let i = contextStartLine; i <= contextEndLine; i++) {
+				dynamicContextLines.push(editor.getLine(i));
+			}
+			let dynamicContextText = dynamicContextLines.join("
+");
+			
+			// Mark oldText within the dynamic context
+			// This replace should work even if oldText is multi-line from a selection,
+			// or a single line from a paragraph context, as long as oldText is a direct substring.
+			if (dynamicContextText.includes(oldText)) {
+				dynamicContextText = dynamicContextText.replace(oldText, `${markerStart}${oldText}${markerEnd}`);
+			} else {
+                // Fallback or warning if oldText (e.g. complex selection) isn't found directly. 
+                // For simple paragraph scope, this should ideally not happen.
+                console.warn("TextTransformer: oldText not found in dynamic context for marking. Context sent without marker for oldText.");
+            }
+
+			contextParts.push(`--- Dynamic Context Start (Original text to transform is marked if found) ---
+${dynamicContextText}
+--- Dynamic Context End ---`);
+
+		} else if (useWholeNote) { // Only use whole note if dynamic is not active
 			const currentFile = app.workspace.getActiveFile();
 			if (currentFile) {
 				const fileContent = await app.vault.cachedRead(currentFile);
 				let wholeNoteContext = fileContent;
 
+				// Mark oldText within the whole note context if not transforming the whole document
 				if (scope !== "Document" && fileContent.includes(oldText)) {
-					const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
-					const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
-					wholeNoteContext = fileContent.replace(
-						oldText,
-						`${markerStart}${oldText}${markerEnd}`,
-					);
+					wholeNoteContext = fileContent.replace(oldText, `${markerStart}${oldText}${markerEnd}`);
 				}
-				contextParts.push(`--- Whole Note Context Start (The text to be modified is marked as USER_SELECTED_TEXT_STARTING_HERE...USER_SELECTED_TEXT_ENDING_HERE or is the entirety of this content if the 'scope' was 'Document') ---
+				contextParts.push(`--- Whole Note Context Start (Original text to transform is marked if not entire document) ---
 ${wholeNoteContext}
 --- Whole Note Context End ---`);
 			}
-		} else if (useDynamic) {
-			contextParts.push("--- Dynamic Context (Placeholder - Not Yet Implemented) ---");
 		}
 
 		if (contextParts.length > 0) {
@@ -204,7 +247,8 @@ export async function textTransformerDocument(
 	const usePrompt =
 		prompt || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
 
-	const changes = await validateAndGetChangesAndNotify(plugin, body, "Document", usePrompt);
+	// Pass editor to validateAndGetChangesAndNotify
+	const changes = await validateAndGetChangesAndNotify(plugin, editor, body, "Document", usePrompt);
 	if (!changes) return;
 
 	const bodyStartPos = editor.offsetToPos(contentStart);
@@ -229,7 +273,8 @@ export async function textTransformerText(
 	const oldText = selection || editor.getLine(cursor.line);
 	const scope = selection ? "Selection" : "Paragraph";
 
-	const changes = await validateAndGetChangesAndNotify(plugin, oldText, scope, prompt);
+	// Pass editor to validateAndGetChangesAndNotify
+	const changes = await validateAndGetChangesAndNotify(plugin, editor, oldText, scope, prompt);
 	if (!changes) return;
 
 	if (selection) {
