@@ -54,8 +54,8 @@ or in batch, making it easy to maintain control over your document's content and
   * Enhance readability
   * Refine Structure
   * Any custom command you've created
-  * Translate to any language<br>
-
+  * Translate to any language
+<br>
   <img alt="Showcase" width=90% src="https://i.imgur.com/wpFvjlq.png">
 
 > [!NOTE]
@@ -70,15 +70,15 @@ Estimated pricing for the [Gemini models](https://ai.google.dev/gemini-api/docs/
 You can track your usage costs [on this page](https://makersuite.google.com/app/usage).
 
 The plugin developer is not responsible if the actual costs differ.
+<br>
 
-
-The following prices are estimates per 1000 tokens or 750 words:<br>
+The following are [prices estimates] per 1000 tokens or 750 words:<br><br>
 **GPT 4.1** - intelligence = 4, speed = 3. Price = $0.01<br>
 **GPT 4.1 mini** - intelligence = 3, speed = 4. Price = $0.002<br>
 **GPT 4.1 nano** - intelligence = 2, speed = 5. Price = $0.0005<br>
 **Gemini 2.5 Flash** - intelligence = 3, speed = 5. Price = $0.0005<br>
 **Gemini 2.5 Pro** - intelligence = 4, speed = thinking. Price = $0.011<br>
-Use GPT 4.1 for the *best literary results*.<br>
+<br>Use GPT 4.1 for the *best literary results*.<br>
 Nano and Mini should be sufficient for basic text proofreading.<br>
 Gemini 2.5 Flash is very fast and powerful.<br>
 Gemini 2.5 Pro is a thinking model, slow and powerful (probably unnecessary).<br>
