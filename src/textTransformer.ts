@@ -136,8 +136,7 @@ ${customText}
 			for (let i = contextStartLine; i <= contextEndLine; i++) {
 				dynamicContextLines.push(editor.getLine(i));
 			}
-			let dynamicContextText = dynamicContextLines.join("
-");
+			let dynamicContextText = dynamicContextLines.join("\\n");
 			
 			// Mark oldText within the dynamic context
 			// This replace should work even if oldText is multi-line from a selection,
