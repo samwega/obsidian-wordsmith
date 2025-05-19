@@ -1,9 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** 1.0.0
-
-[NOTE: the README is still in the process of being rewritten from the original,
-and may not yet accurately reflect the latest changes.]
+**Current Version:** 1.1.0
 
 A powerful AI writing assistant plugin for Obsidian, transforming selected text
 using both Default and Custom prompts. Individual changes can be accepted or
@@ -15,7 +12,12 @@ Text Transformer is now developing to be a feature complete AI writing assistant
 If you are looking for a more focused proofreading tool, please check out the
 original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader).
 
+[NOTE: the README is still in the process of being rewritten from the original,
+and may not yet accurately reflect the latest changes.]
+
 <img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
+
+<img alt="Showcase" width=70% src="https://i.imgur.com/3raRn13.png">
 
 ## Table of contents
 
@@ -25,6 +27,7 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 * [Installation & setup](#installation--setup)
   * [Plugin installation](#plugin-installation)
   * [Get an OpenAI API key](#get-an-openai-api-key)
+  * [Get a Gemini API key](#get-a-gemini-api-key)
 * [Usage](#usage)
 * [Visual appearance of the changes](#visual-appearance-of-the-changes)
 * [Testimonials](#testimonials)
@@ -35,9 +38,9 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 
 ## Features
 
-* Send selected text to the AI and let it transform it. You can review, accept, or
-  reject each suggestion individually (using hotkeys), or in batch, making it easy
-  to maintain control over your document's content and quality.
+* Send selected text to the AI and let it transform it based on your prompt of choice.
+You can review, accept, or reject each suggestion individually (using hotkeys),
+or in batch, making it easy to maintain control over your document's content and quality.
 * Suggested changes are inserted directly into the text: Additions as `==highlights==`
   and removals as `~~strikethroughs~~`.
 * Customizable and feature rich. Create your own custom prompts!
@@ -53,6 +56,8 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
   * Any custom command you've created
   * Translate to any language
 
+  <img alt="Showcase" width=70% src="https://i.imgur.com/wpFvjlq.png">
+
 > [!NOTE]
 > This plugin requires an **OpenAI API key** or **Gemini API key** and incurs costs
 > at OpenAI or Google based on usage. Network requests are made when running the
@@ -67,15 +72,17 @@ You can track your usage costs [on this page](https://makersuite.google.com/app/
 The plugin developer is not responsible if the actual costs differ.
 
 The following prices are estimates per 1000 tokens or 750 words:
-GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01
-GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002
-GPT 4.1 nano - intelligence = 2, speed = 5. Price = $0.0005
-Gemini 2.5 Flash - intelligence = 3, speed = 5. Price = $0.0005
-Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011
-Use GPT 4.1 for the best literary results.
+**GPT 4.1** - intelligence = 4, speed = 3. Price = $0.01
+**GPT 4.1 mini** - intelligence = 3, speed = 4. Price = $0.002
+**GPT 4.1 nano** - intelligence = 2, speed = 5. Price = $0.0005
+**Gemini 2.5 Flash** - intelligence = 3, speed = 5. Price = $0.0005
+**Gemini 2.5 Pro** - intelligence = 4, speed = thinking. Price = $0.011
+Use GPT 4.1 for the *best literary results*.
 Nano and Mini should be sufficient for basic text proofreading.
-Gemini 2.5 Flash is very fast and powerful.Gemini 2.5 Pro is a thinking model,
-slow and powerful (probably not needed).
+Gemini 2.5 Flash is very fast and powerful.
+Gemini 2.5 Pro is a thinking model, slow and powerful (probably unnecessary).
+
+<img alt="Showcase" width=70% src="https://i.imgur.com/CP311N9.png">
 
 ## Installation & setup
 
@@ -91,25 +98,36 @@ new secret key`.
 3. Copy the API key.
 4. In Obsidian, go to `Settings → Text Transformer` and paste your API key there.
 
+### Get a Gemini API key
+
+1. [Create an AI Studio account](https://aistudio.google.com).
+2. Go to [this page](https://aistudio.google.com/app/apikey), and click `Create
+new secret key`.
+3. Copy the API key.
+4. In Obsidian, go to `Settings → Text Transformer` and paste your API key there.
+
 > [!TIP]
 > The usage costs should not be very high, nonetheless you can track them
 > [on this page](https://platform.openai.com/usage).
 
 ## Usage
 
-1. Use the command `Proofread selection/paragraph`. This will open a dropdown menu
+Recommended hotkeys (but you can use anything you like):
+<img alt="Showcase" width=70% src="https://i.imgur.com/UvprMpv.png">
+
+1. Use the command `Transform selection/paragraph`. This will open a dropdown menu
    from which you can select any of the prompts. Select the one you want to be applied
    to the selected text. If there is no selection, the command will check the current
    paragraph.
 
-   * Alternatively, you can also check the whole document with `Proofread full document`.
+   * Alternatively, you can also check the whole document with `Transform full document`.
    However, note that the quality of AI suggestions tends to decrease when
-   proofreading too much text at once.
+   transforming too much text at once.
 2. The changes are automatically inserted.
 3. Accept/reject changes with the `Accept suggestions in selection/paragraph` command.
-   Same as the proofreading command, the `accept` and `reject` commands affect the
-   current paragraph if there is no selection. Alternatively, you can also only
-   accept/reject the next suggestion after your cursor via `Accept next suggestion`.
+   Same as the transform command, the `accept` and `reject` commands affect the
+   current paragraph if there is no selection. Accept/reject each individual
+   suggestion after your cursor via `Accept/Reject next suggestion`.
 
 ## Visual appearance of the changes
 
