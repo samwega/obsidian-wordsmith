@@ -8,7 +8,7 @@ and may not yet accurately reflect the latest changes.]
 A powerful AI writing assistant plugin for Obsidian, transforming selected text
 using both Default and Custom prompts. Individual changes can be accepted or
 rejected directly in the editor, similar to the suggested changes feature in
-word processing apps. Fully keyboard driven.
+word processing apps. Supports GPT 4.1, and Gemini 2.5 models. Fully keyboard driven.
 
 Initially forked from the excellent Obsidian Proofreader by Christopher Grieser,
 Text Transformer is now developing to be a feature complete AI writing assistant.
@@ -53,14 +53,29 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
   * Any custom command you've created
   * Translate to any language
 
+> [!NOTE]
+> This plugin requires an **OpenAI API key** or **Gemini API key** and incurs costs
+> at OpenAI or Google based on usage. Network requests are made when running the
+> proofreading command.
+
 Estimated pricing for the [OpenAI models](https://platform.openai.com/docs/models/)
-in April 2025. The plugin developer is not responsible if the actual costs differ.
 You can track your usage costs [on this page](https://platform.openai.com/usage).
 
-> [!NOTE]
-> This plugin requires an **OpenAI API key** and incurs costs at OpenAI based on
-> usage. Network requests are made when running the proofreading command.
-> Planning on adding support for other LLMs in the future.
+Estimated pricing for the [Gemini models](https://ai.google.dev/gemini-api/docs/pricing)
+You can track your usage costs [on this page](https://makersuite.google.com/app/usage).
+
+The plugin developer is not responsible if the actual costs differ.
+
+The following prices are estimates per 1000 tokens or 750 words:
+GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01
+GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002
+GPT 4.1 nano - intelligence = 2, speed = 5. Price = $0.0005
+Gemini 2.5 Flash - intelligence = 3, speed = 5. Price = $0.0005
+Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011
+Use GPT 4.1 for the best literary results.
+Nano and Mini should be sufficient for basic text proofreading.
+Gemini 2.5 Flash is very fast and powerful.Gemini 2.5 Pro is a thinking model,
+slow and powerful (probably not needed).
 
 ## Installation & setup
 
