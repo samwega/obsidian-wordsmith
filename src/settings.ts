@@ -305,7 +305,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		const defaultPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
 		defaultPromptsGrid.style.display = "grid";
 		defaultPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
-		defaultPromptsGrid.style.gap = "10px";
+		defaultPromptsGrid.style.gap = "0px"; // Adjusted gap for borders
 		
 		defaultPrompts.forEach((prompt, index) => {
 			const settingContainer = defaultPromptsGrid.createEl("div");
@@ -339,7 +339,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			const customPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
 			customPromptsGrid.style.display = "grid";
 			customPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
-			customPromptsGrid.style.gap = "10px";
+			customPromptsGrid.style.gap = "0px"; // Adjusted gap for borders
 
 			customPrompts.forEach((prompt, index) => {
 				const settingContainer = customPromptsGrid.createEl("div");
@@ -350,12 +350,8 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 				} else {
 					settingContainer.style.paddingLeft = "10px";
 				}
-				const setting = new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
-					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						prompt.enabled = value;
-						await this.plugin.saveSettings();
-					});
-				});
+				const setting = new Setting(settingContainer).setName(prompt.name);
+				
 				setting.addExtraButton((btn) => {
 					btn.setIcon("pencil")
 						.setTooltip("Edit")
@@ -371,11 +367,19 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 					btn.setIcon("trash")
 						.setTooltip("Delete")
 						.onClick(async (): Promise<void> => {
-							const realIdx = this.plugin.settings.prompts.indexOf(prompt);
-							this.plugin.settings.prompts.splice(realIdx, 1);
-							await this.plugin.saveSettings();
-							this.display();
+							const realIdx = this.plugin.settings.prompts.findIndex(p => p.id === prompt.id);
+							if (realIdx > -1) {
+								this.plugin.settings.prompts.splice(realIdx, 1);
+								await this.plugin.saveSettings();
+								this.display();
+							}
 						});
+				});
+				setting.addToggle((tg) => {
+					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+						prompt.enabled = value;
+						await this.plugin.saveSettings();
+					});
 				});
 			});
 		}
@@ -389,25 +393,27 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 
 
 		const customPromptDesc = addPromptFooter.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
-		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-bottom: 0px; margin-right: 10px; flex-grow: 1;");
+		customPromptDesc.style.fontSize = "var(--font-ui-smaller)";
+		customPromptDesc.style.color = "var(--text-muted)";
+		customPromptDesc.style.marginBottom = "0px";
+		customPromptDesc.style.marginRight = "10px";
+		customPromptDesc.style.flexGrow = "1";
 
 
 		const addPromptSetting = new Setting(addPromptFooter)
-			.setClass("add-prompt-setting-footer") // Added a class for potential specific styling
+			.setClass("add-prompt-setting-footer") 
 			.addButton((btn) => {
 				btn.setButtonText("Add Custom Prompt").setCta();
 				btn.onClick((): void => {
 					if (addPromptForm) return; 
-					// Ensure the form is inserted before the footer element itself or at the end of containerEl if footer is last.
-					// This places the form *above* the line with the button and description.
 					addPromptForm = containerEl.insertBefore(
 						createAddPromptForm(),
 						addPromptFooter 
 					) as HTMLDivElement;
 				});
 			});
-		// Remove any default margins from the setting to let flexbox control spacing
 		addPromptSetting.settingEl.style.margin = "0";
+		addPromptSetting.settingEl.style.borderTop = "none";
 		
 		const createAddPromptForm = (): HTMLDivElement => {
 			const form = document.createElement("div");
@@ -425,7 +431,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			);
 			const textInput = form.appendChild(document.createElement("textarea"));
 			textInput.placeholder = "Prompt text";
-			textInput.value = '\'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:\'';
+			textInput.value = 'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:';
 			textInput.setAttribute(
 				"style",
 				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
@@ -477,8 +483,8 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'\'No changes will be made to text inside quotation marks (""). \'' +
-					'\"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes."\'',
+				'No changes will be made to text inside quotation marks ("").' +
+					'Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -491,8 +497,8 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text in blockquotes and callouts")
 			.setDesc(
-				"No changes will be made to lines beginning with `>`. " +
-					"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.",
+				'No changes will be made to lines beginning with `>`. ' +
+					'Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
 			)
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {
