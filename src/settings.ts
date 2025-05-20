@@ -235,10 +235,17 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 
 		// Prompt Management Section
 		containerEl.createEl("h3", { text: "Prompt Management" });
-		const promptList = containerEl.createEl("div", { cls: "prompt-list" });
+		const promptListContainer = containerEl.createEl("div", { cls: "prompt-list-container" });
+		promptListContainer.style.display = "grid";
+		promptListContainer.style.gridTemplateColumns = "1fr 1fr";
+		promptListContainer.style.gap = "10px";
+		
+		const leftColumn = promptListContainer.createEl("div", { cls: "prompt-column" });
+		const rightColumn = promptListContainer.createEl("div", { cls: "prompt-column" });
+
 
 		// Section: Default Prompts
-		const defaultTitle = promptList.createEl("div", { text: "Default Prompts" });
+		const defaultTitle = leftColumn.createEl("div", { text: "Default Prompts" });
 		defaultTitle.setAttr(
 			"style",
 			"color:#b6a84b;font-size:1.1em;font-weight:600;margin-bottom:2px;margin-top:8px;",
@@ -308,30 +315,37 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
 
 		// Render default prompts
-		for (const prompt of defaultPrompts) {
-			new Setting(promptList).setName(prompt.name).addToggle((tg) => {
+		const defaultPromptsMidpoint = Math.ceil(defaultPrompts.length / 2);
+		defaultPrompts.forEach((prompt, index) => {
+			const targetColumn = index < defaultPromptsMidpoint ? leftColumn : rightColumn;
+			new Setting(targetColumn).setName(prompt.name).addToggle((tg) => {
 				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
 					prompt.enabled = value;
 					await this.plugin.saveSettings();
 				});
 			});
-		}
+		});
 
 		// Render custom prompts
 		if (customPrompts.length > 0) {
-			divider = promptList.createEl("div");
+			const targetColumnForCustomTitle = customPrompts.length <= defaultPrompts.length / 2 ? leftColumn : rightColumn;
+			
+			divider = targetColumnForCustomTitle.createEl("div");
 			divider.setAttr(
 				"style",
 				"border-bottom:1px solid var(--background-modifier-border);margin:10px 0 10px 0;",
 			);
-			customTitle = promptList.createEl("div", { text: "Custom Prompts" });
+			customTitle = targetColumnForCustomTitle.createEl("div", { text: "Custom Prompts" });
 			customTitle.setAttr(
 				"style",
 				"color:#b6a84b;font-size:1.1em;font-weight:600;margin-top:8px;margin-bottom:2px;",
 			);
 		}
-		for (const prompt of customPrompts) {
-			const setting = new Setting(promptList).setName(prompt.name).addToggle((tg) => {
+		
+		const customPromptsMidpoint = Math.ceil(customPrompts.length / 2);
+		customPrompts.forEach((prompt, index) => {
+			const targetColumn = index < customPromptsMidpoint ? leftColumn : rightColumn;
+			const setting = new Setting(targetColumn).setName(prompt.name).addToggle((tg) => {
 				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
 					prompt.enabled = value;
 					await this.plugin.saveSettings();
@@ -358,10 +372,12 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 						this.display();
 					});
 			});
-		}
-// Add Custom Prompt Button description
-const customPromptDesc = containerEl.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
-customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px;")
+		});
+
+		// Add Custom Prompt Button description
+		const customPromptDesc = containerEl.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
+		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px; grid-column: span 2;"); // Span across both columns
+
 
 		// Add Prompt Button with improved inline form
 		let addPromptForm: HTMLDivElement | null = null;
@@ -378,13 +394,15 @@ customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color
 					) as HTMLDivElement;
 				});
 			});
+		addPromptSetting.settingEl.style.gridColumn = "span 2"; // Span across both columns
+
 
 		const createAddPromptForm = (): HTMLDivElement => {
 			const form = document.createElement("div");
 			form.className = "add-prompt-form";
 			form.setAttribute(
 				"style",
-				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
+				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;grid-column: span 2;", // Span across both columns
 			);
 			const nameInput = form.appendChild(document.createElement("input"));
 			nameInput.type = "text";
@@ -440,7 +458,11 @@ customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color
 
 		//────────────────────────────────────────────────────────────────────────
 		// CLEANUP OPTIONS
-		new Setting(containerEl)
+		const cleanupOptionsContainer = containerEl.createEl("div");
+		cleanupOptionsContainer.style.gridColumn = "span 2"; // Span across both columns
+
+
+		new Setting(cleanupOptionsContainer)
 			.setName("Preserve text inside quotes")
 			.setDesc(
 				'\'No changes will be made to text inside quotation marks (""). \'' +
@@ -454,7 +476,7 @@ customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color
 						await this.plugin.saveSettings();
 					}),
 			);
-		new Setting(containerEl)
+		new Setting(cleanupOptionsContainer)
 			.setName("Preserve text in blockquotes and callouts")
 			.setDesc(
 				"No changes will be made to lines beginning with `>`. " +
