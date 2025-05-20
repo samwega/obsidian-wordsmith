@@ -104,26 +104,21 @@ Please accept/reject the changes before making another text transforming request
 		const useDynamic = contextPanel.getDynamicContextState();
 
 		if (customText) {
-			contextParts.push(`--- Custom User-Provided Context Start ---
-${customText}
---- Custom User-Provided Context End ---`);
+			contextParts.push(`--- Custom User-Provided Context Start ---${customText}--- Custom User-Provided Context End ---`);
 		}
 
-		// Logic for Dynamic Context
 		if (useDynamic) { 
-			const linesToIncludeAround = plugin.settings.dynamicContextLineCount; // Configurable: number of lines before and after
+			const linesToIncludeAround = plugin.settings.dynamicContextLineCount; 
 			let selectionStartLine: number;
 			let selectionEndLine: number;
 
-			// Determine the line range of oldText
 			if (scope === "Selection") {
-				// For a true editor selection, get its start and end lines
 				const sel = editor.listSelections()[0]; 
 				selectionStartLine = Math.min(sel.anchor.line, sel.head.line);
 				selectionEndLine = Math.max(sel.anchor.line, sel.head.line);
-			} else { // Handles "Paragraph" (where oldText is a single line)
+			} else { 
 				selectionStartLine = editor.getCursor("from").line;
-				selectionEndLine = selectionStartLine; // oldText is a single line
+				selectionEndLine = selectionStartLine; 
 			}
 
 			const docFirstLine = 0;
@@ -136,41 +131,31 @@ ${customText}
 			for (let i = contextStartLine; i <= contextEndLine; i++) {
 				dynamicContextLines.push(editor.getLine(i));
 			}
-			let dynamicContextText = dynamicContextLines.join('\n');
+			let dynamicContextText = dynamicContextLines.join('\\');
 			
-			// Mark oldText within the dynamic context
-			// This replace should work even if oldText is multi-line from a selection,
-			// or a single line from a paragraph context, as long as oldText is a direct substring.
 			if (dynamicContextText.includes(oldText)) {
 				dynamicContextText = dynamicContextText.replace(oldText, `${markerStart}${oldText}${markerEnd}`);
 			} else {
-                // Fallback or warning if oldText (e.g. complex selection) isn't found directly. 
-                // For simple paragraph scope, this should ideally not happen.
                 console.warn("TextTransformer: oldText not found in dynamic context for marking. Context sent without marker for oldText.");
             }
 
-			contextParts.push(`--- Dynamic Context Start (Original text to transform is marked if found) ---
-${dynamicContextText}
---- Dynamic Context End ---`);
+			contextParts.push(`--- Dynamic Context Start (Original text to transform is marked if found) ---${dynamicContextText}--- Dynamic Context End ---`);
 
-		} else if (useWholeNote) { // Only use whole note if dynamic is not active
+		} else if (useWholeNote) { 
 			const currentFile = app.workspace.getActiveFile();
 			if (currentFile) {
 				const fileContent = await app.vault.cachedRead(currentFile);
 				let wholeNoteContext = fileContent;
 
-				// Mark oldText within the whole note context if not transforming the whole document
 				if (scope !== "Document" && fileContent.includes(oldText)) {
 					wholeNoteContext = fileContent.replace(oldText, `${markerStart}${oldText}${markerEnd}`);
 				}
-				contextParts.push(`--- Whole Note Context Start (Original text to transform is marked if not entire document) ---
-${wholeNoteContext}
---- Whole Note Context End ---`);
+				contextParts.push(`--- Whole Note Context Start (Original text to transform is marked if not entire document) ---${wholeNoteContext}--- Whole Note Context End ---`);
 			}
 		}
 
 		if (contextParts.length > 0) {
-			additionalContextForAI = contextParts.join('\n\n');
+			additionalContextForAI = contextParts.join('\\n');
 		}
 	}
 
@@ -187,12 +172,25 @@ Do not go to a different file or change the original text in the meantime.`;
 	}
 	const notice = new Notice(initialMsg, longInput ? 0 : 4000);
 
+	// Create a working copy of the prompt to avoid modifying the original settings object
+	let promptForRequest: TextTransformerPrompt = { ...prompt };
+
+	if (promptForRequest.id === "translate") {
+		const targetLanguageSetting = plugin.settings.translationLanguage?.trim();
+		if (targetLanguageSetting) {
+			promptForRequest.text = promptForRequest.text.replace("{language}", targetLanguageSetting);
+		} else {
+			// If the language input is empty, instruct AI to choose a suitable language
+			promptForRequest.text = promptForRequest.text.replace("{language}", "any suitable language based on the provided text");
+		}
+	}
+
 	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
 	let response: ResponseType;
 	if (settings.model.startsWith("gemini-")) {
-		response = await geminiRequest(settings, oldText, prompt, additionalContextForAI);
+		response = await geminiRequest(settings, oldText, promptForRequest, additionalContextForAI);
 	} else {
-		response = await openAiRequest(settings, oldText, prompt, additionalContextForAI);
+		response = await openAiRequest(settings, oldText, promptForRequest, additionalContextForAI);
 	}
 	const { newText, isOverlength, cost } = response || {};
 	notice.hide();
@@ -244,7 +242,6 @@ export async function textTransformerDocument(
 	const usePrompt =
 		prompt || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
 
-	// Pass editor to validateAndGetChangesAndNotify
 	const changes = await validateAndGetChangesAndNotify(plugin, editor, body, "Document", usePrompt);
 	if (!changes) return;
 
@@ -270,7 +267,6 @@ export async function textTransformerText(
 	const oldText = selection || editor.getLine(cursor.line);
 	const scope = selection ? "Selection" : "Paragraph";
 
-	// Pass editor to validateAndGetChangesAndNotify
 	const changes = await validateAndGetChangesAndNotify(plugin, editor, oldText, scope, prompt);
 	if (!changes) return;
 
