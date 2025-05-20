@@ -138,6 +138,7 @@ export interface TextTransformerSettings {
 	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
 	preserveTextInsideQuotes: boolean;
 	preserveBlockquotes: boolean;
+	dynamicContextLineCount: number; // New setting
 }
 
 export const DEFAULT_SETTINGS: TextTransformerSettings = {
@@ -147,6 +148,7 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	prompts: DEFAULT_TEXT_TRANSFORMER_PROMPTS,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
+	dynamicContextLineCount: 3, // New setting default
 };
 
 //──────────────────────────────────────────────────────────────────────────────
@@ -215,6 +217,21 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 					await this.plugin.saveSettings();
 				});
 			});
+		
+		// Dynamic Context Line Count Setting
+		new Setting(containerEl)
+			.setName("Dynamic context lines")
+			.setDesc("Number of lines to include before and after the selection/paragraph for dynamic context (e.g., 0-50). Default is 3.")
+			.addText(text => text
+				.setPlaceholder("3")
+				.setValue(this.plugin.settings.dynamicContextLineCount.toString())
+				.onChange(async (value) => {
+					const numValue = parseInt(value);
+					if (!isNaN(numValue) && numValue >= 0 && numValue <= 50) { 
+						this.plugin.settings.dynamicContextLineCount = numValue;
+						await this.plugin.saveSettings();
+					}
+				}));
 
 		// Prompt Management Section
 		containerEl.createEl("h3", { text: "Prompt Management" });
@@ -376,7 +393,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			const textInput = form.appendChild(document.createElement("textarea"));
 			textInput.placeholder = "Prompt text";
 			textInput.value =
-				'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:';
+				'''Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:''';
 			textInput.setAttribute(
 				"style",
 				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
@@ -424,7 +441,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl)
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'No changes will be made to text inside quotation marks (""). ' +
+				'''No changes will be made to text inside quotation marks (""). ''' +
 					"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.",
 			)
 			.addToggle((toggle) =>

@@ -1,5 +1,5 @@
 import { Change, diffWords } from "diff";
-import { Editor, Notice, getFrontMatterInfo, App, EditorSelectionOrCaret } from "obsidian"; // Added EditorSelectionOrCaret
+import { Editor, Notice, getFrontMatterInfo } from "obsidian"; // Added EditorSelectionOrCaret
 import { rejectChanges } from "./accept-reject-suggestions";
 import TextTransformer from "./main";
 import { geminiRequest } from "./providers/gemini";
@@ -111,7 +111,7 @@ ${customText}
 
 		// Logic for Dynamic Context
 		if (useDynamic) { 
-			const linesToIncludeAround = 15; // Configurable: number of lines before and after
+			const linesToIncludeAround = plugin.settings.dynamicContextLineCount; // Configurable: number of lines before and after
 			let selectionStartLine: number;
 			let selectionEndLine: number;
 
@@ -136,7 +136,7 @@ ${customText}
 			for (let i = contextStartLine; i <= contextEndLine; i++) {
 				dynamicContextLines.push(editor.getLine(i));
 			}
-			let dynamicContextText = dynamicContextLines.join("\\n");
+			let dynamicContextText = dynamicContextLines.join('\n');
 			
 			// Mark oldText within the dynamic context
 			// This replace should work even if oldText is multi-line from a selection,
@@ -170,9 +170,7 @@ ${wholeNoteContext}
 		}
 
 		if (contextParts.length > 0) {
-			additionalContextForAI = contextParts.join(`
-
-`);
+			additionalContextForAI = contextParts.join('\n\n');
 		}
 	}
 
