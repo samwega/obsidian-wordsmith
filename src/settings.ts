@@ -104,7 +104,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "fix-grammar",
 		name: "Fix grammar",
-		text: "Act as a professional editor. Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
+		text: "Act as a professional proofreader. Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 	},
@@ -124,7 +124,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "translate-english",
-		name: "Translate to English (autodetects language",
+		name: "Translate to English (autodetects language)",
 		text: "Act as a professional translator. Automatically detect language and translate the following text to English, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
@@ -359,6 +359,9 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 					});
 			});
 		}
+// Add Custom Prompt Button description
+const customPromptDesc = containerEl.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
+customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px;")
 
 		// Add Prompt Button with improved inline form
 		let addPromptForm: HTMLDivElement | null = null;
