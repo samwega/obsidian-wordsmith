@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** 1.2.1
+**Current Version:** 1.2.2
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -15,6 +15,18 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 
 <img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
 <img alt="Showcase" width=70% src="https://i.imgur.com/3raRn13.png">
+
+## ✨ What's New in v1.2.1 & v1.2.2 ✨
+
+These updates bring significant UI enhancements, a new dynamic translator feature, and a powerful new default prompt:
+
+*   **Revamped Settings UI:**
+    *   Implemented a **two-column layout** for Prompt Settings and Prompt Management for a more organized view.
+    *   Enhanced the overall settings UI with **collapsible sections**, improved styling, and unified API Key and Model settings for better clarity and ease of use.
+    *   Reordered settings sections for a more logical flow.
+*   **Dynamic Translator with Language Input:** The "Translate" prompt is now more dynamic, allowing users to specify the target language directly within the prompt flow, and it now includes an input field for the target language.
+*   **New Default Prompt - "Mind the Context!":** This prompt instructs the model to do what the context says, and revises the text strictly based on the directives provided in the context. For instance, you can add any rule on the fly in the Custom Context box.
+*   **Bug Fixes:** Addressed issues related to the translator input box display.
 
 ## ✨ What's New in v1.2.0 ✨
 
@@ -100,8 +112,10 @@ a suite of powerful AI capabilities:
 
 *   **Versatile Text Transformations via Prompt Palette:** Improve clarity,
     shorten or lengthen text, fix grammar, simplify language, enhance
-    readability, translate, and more. Select from a range of built-in prompts
-    or your own creations through an intuitive palette.
+    readability, translate (with dynamic language input), utilize contextual
+    instructions (e.g., the "Mind the Context!" prompt), and more. Select
+    from a range of built-in prompts or your own creations through an
+    intuitive palette.
 *   **Inline Suggestion Review:** AI-generated changes are displayed directly in
     your editor as `==highlights==` (additions) and `~~strikethroughs~~`
     (removals). Accept or reject each change individually or in batches.
