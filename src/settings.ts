@@ -269,16 +269,29 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			const setting = new Setting(settingContainer);
 
 			if (prompt.id === "translate") {
-				const currentLanguage = this.plugin.settings.translationLanguage || prompt.defaultLanguage || "English";
-				setting.setName(prompt.name.replace("{language}", currentLanguage));
+				// Keep the setting name static in the UI
+				setting.setName("Translate to:"); 
 
 				setting.addText(text => text
 					.setPlaceholder("E.g., Spanish")
 					.setValue(this.plugin.settings.translationLanguage || prompt.defaultLanguage || "English")
 					.onChange(async (value) => {
-						this.plugin.settings.translationLanguage = value.trim();
+						const newLang = value.trim();
+						this.plugin.settings.translationLanguage = newLang;
+
+						// Update the name of the prompt object in settings for the command palette
+						const translatePromptObj = this.plugin.settings.prompts.find(p => p.id === "translate");
+						if (translatePromptObj) {
+							if (newLang) {
+								translatePromptObj.name = `Translate to ${newLang} (autodetects source language)`;
+							} else {
+								// Revert to original name structure with default language if input is empty
+								const defaultLang = prompt.defaultLanguage || "English";
+								translatePromptObj.name = `Translate to ${defaultLang} (autodetects source language)`;
+							}
+						}
 						await this.plugin.saveSettings();
-						this.display(); 
+						// DO NOT call this.display() here to avoid focus loss
 					}));
 				
 				setting.addToggle((tg) => {
