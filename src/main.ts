@@ -4,12 +4,14 @@ import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-contro
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
-	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	MODEL_SPECS,
-	TextTransformerPrompt,
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
 } from "./settings";
+import {
+    MODEL_SPECS,
+    TextTransformerPrompt,
+    DEFAULT_TEXT_TRANSFORMER_PROMPTS
+} from "./settings-data";
 import { textTransformerDocument, textTransformerText } from "./textTransformer";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
