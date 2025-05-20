@@ -1,10 +1,12 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import {
-	GEMINI_MODEL_ID_MAP,
-	MODEL_SPECS,
 	TextTransformerPrompt,
 	TextTransformerSettings,
 } from "src/settings";
+import {
+    GEMINI_MODEL_ID_MAP,
+    MODEL_SPECS
+} from "src/settings-data";
 import { logError } from "src/utils";
 
 /**
