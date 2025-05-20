@@ -392,8 +392,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			);
 			const textInput = form.appendChild(document.createElement("textarea"));
 			textInput.placeholder = "Prompt text";
-			textInput.value =
-				'''Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:''';
+			textInput.value = '\'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:\'';
 			textInput.setAttribute(
 				"style",
 				"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
@@ -441,8 +440,8 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl)
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'''No changes will be made to text inside quotation marks (""). ''' +
-					"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.",
+				'\'No changes will be made to text inside quotation marks (""). \'' +
+					'\"Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes."\'',
 			)
 			.addToggle((toggle) =>
 				toggle
