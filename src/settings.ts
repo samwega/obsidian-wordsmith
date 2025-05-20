@@ -307,13 +307,14 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		defaultPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
 		defaultPromptsGrid.style.gap = "10px";
 		
-		const defaultPromptsMidpoint = Math.ceil(defaultPrompts.length / 2);
 		defaultPrompts.forEach((prompt, index) => {
-			// Create a container for each Setting if direct grid placement is problematic
 			const settingContainer = defaultPromptsGrid.createEl("div");
-			if (index >= defaultPromptsMidpoint) {
-				// This is a conceptual way to target the second column
-				// Actual column assignment is handled by grid flow
+			// Apply border to the right of the first column elements and padding
+			if (index % 2 === 0) {
+				settingContainer.style.borderRight = "1px solid var(--background-modifier-border)";
+				settingContainer.style.paddingRight = "10px";
+			} else {
+				settingContainer.style.paddingLeft = "10px";
 			}
 			new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
 				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
@@ -340,10 +341,15 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			customPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
 			customPromptsGrid.style.gap = "10px";
 
-			const customPromptsMidpoint = Math.ceil(customPrompts.length / 2);
 			customPrompts.forEach((prompt, index) => {
 				const settingContainer = customPromptsGrid.createEl("div");
-				// Conceptual targeting for columns, actual placement by grid flow
+				// Apply border to the right of the first column elements and padding
+				if (index % 2 === 0) {
+					settingContainer.style.borderRight = "1px solid var(--background-modifier-border)";
+					settingContainer.style.paddingRight = "10px";
+				} else {
+					settingContainer.style.paddingLeft = "10px";
+				}
 				const setting = new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
 					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
 						prompt.enabled = value;
@@ -355,7 +361,6 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 						.setTooltip("Edit")
 						.onClick((): void => {
 							if (addPromptForm) return;
-							// Ensure form is inserted correctly relative to the setting container
 							addPromptForm = settingContainer.parentElement?.insertBefore(
 								createEditPromptForm(prompt),
 								settingContainer.nextSibling,
@@ -375,25 +380,34 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			});
 		}
 		
-		// Add Custom Prompt Button description
-		const customPromptDesc = containerEl.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
-		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px;");
+		// Wrapper for description and button
+		const addPromptFooter = containerEl.createEl("div");
+		addPromptFooter.style.display = "flex";
+		addPromptFooter.style.alignItems = "center";
+		addPromptFooter.style.justifyContent = "space-between";
+		addPromptFooter.style.marginTop = "10px";
 
 
-		// Add Prompt Button with improved inline form
-		// let addPromptForm: HTMLDivElement | null = null; // Already declared above
-		const addPromptSetting = new Setting(containerEl)
-			.setClass("add-prompt-setting")
+		const customPromptDesc = addPromptFooter.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
+		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-bottom: 0px; margin-right: 10px; flex-grow: 1;");
+
+
+		const addPromptSetting = new Setting(addPromptFooter)
+			.setClass("add-prompt-setting-footer") // Added a class for potential specific styling
 			.addButton((btn) => {
 				btn.setButtonText("Add Custom Prompt").setCta();
 				btn.onClick((): void => {
-					if (addPromptForm) return; // Already open
-					addPromptForm = containerEl.insertBefore( // Insert into containerEl directly
+					if (addPromptForm) return; 
+					// Ensure the form is inserted before the footer element itself or at the end of containerEl if footer is last.
+					// This places the form *above* the line with the button and description.
+					addPromptForm = containerEl.insertBefore(
 						createAddPromptForm(),
-						addPromptSetting.settingEl.nextSibling, 
+						addPromptFooter 
 					) as HTMLDivElement;
 				});
 			});
+		// Remove any default margins from the setting to let flexbox control spacing
+		addPromptSetting.settingEl.style.margin = "0";
 		
 		const createAddPromptForm = (): HTMLDivElement => {
 			const form = document.createElement("div");
