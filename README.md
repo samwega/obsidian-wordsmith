@@ -49,7 +49,8 @@ streamlines prompt management:
 - [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
 - [AI Providers & Models](#ai-providers--models)
 - [Installation & Setup](#installation--setup)
-  - [Plugin Installation](#plugin-installation)
+  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+  - [Manual Installation](#manual-installation)
   - [API Key Setup (OpenAI & Gemini)](#api-key-setup-openai--gemini)
 - [Usage](#usage)
   - [Core Commands](#core-commands)
@@ -191,13 +192,31 @@ Choose the model that best fits your task and budget in the plugin settings.
 
 ## Installation & Setup
 
-### Plugin Installation
+### Plugin Installation (via Community Store)
 
-1.  Search for "Text Transformer" in Obsidian's community plugin browser.
-2.  Install the plugin.
-3.  Enable the plugin in your Obsidian settings under "Community plugins".
+Coming soon! We are working on getting Text Transformer added to the official
+Obsidian community plugin store.
 
-Alternatively, [install via the Obsidian plugin store](https://obsidian.md/plugins?id=text-transformer).
+In the meantime, please use the [Manual Installation](#manual-installation)
+method below.
+
+### Manual Installation
+
+For users who prefer to install manually or are using a version not yet in the
+community store:
+
+1.  Go to the [Releases page](https://github.com/samwega/obsidian-text-transformer/releases)
+    on GitHub.
+2.  Find the latest release and download the `main.js`, `manifest.json`, and
+    `styles.css` (if present) files from the "Assets" section.
+3.  In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
+4.  Create a new folder named `text-transformer`.
+5.  Copy the downloaded `main.js`, `manifest.json`, and `styles.css` files into
+    this new `text-transformer` folder.
+6.  Reload Obsidian (e.g., close and reopen the app, or use the "Reload app
+    without saving" command).
+7.  Go to `Settings` -> `Community plugins`, find "Text Transformer" in your
+    list of installed plugins, and enable it.
 
 ### API Key Setup (OpenAI & Gemini)
 
@@ -267,18 +286,36 @@ Once suggestions are inserted:
 
 ### Using the AI Context Control Panel
 
-Access the AI Context Control Panel from the Obsidian sidebar (its icon is a
-book with a cog).
+The AI Context Control Panel allows you to manage what contextual information is
+sent to the AI with your text.
 
-*   **Dynamic Context:** Toggle on to automatically include a configurable
-    number of lines (paragraphs) surrounding your selection/current paragraph
-    as context for the AI. Adjust the line count in the plugin settings
+**How to Open the Panel:**
+
+The AI Context Control Panel is an `ItemView` that typically opens in one of your
+Obsidian sidebars. Here’s how to access it:
+
+1. **Plugin Enable State:** Make sure the Text Transformer plugin is enabled in
+    `Settings` -> `Community plugins`. The icon and panel will only be
+    available if the plugin is active.
+2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
+for the command `"Text Transformer: Open AI Context Control Panel"`.
+
+Once the panel is open, you can drag its icon to reorder is, or
+drag the panel itself to different parts of your workspace (e.g., left
+sidebar, right sidebar, or even as a new tab in the main workspace).
+
+**Panel Options:**
+
+Once open, you can use the toggles for:
+*   **Dynamic Context:** Toggle on to automatically include a configurable number
+    of lines (paragraphs) surrounding your selection/current paragraph as
+    context for the AI. Adjust the line count in the plugin settings
     (`Settings → Text Transformer → Dynamic context lines`).
 *   **Entire Note as Context:** Toggle on to send the entire content of the
     current note as context.
 *   **Custom Context:** Toggle on and paste any specific text into the provided
-    text area to use as context. This overrides Dynamic and Entire Note
-    context if active.
+    text area to use as context. This overrides Dynamic and Entire Note context
+    if active.
 
 ## Customizing Prompts
 
