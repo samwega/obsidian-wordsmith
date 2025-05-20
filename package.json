@@ -3,7 +3,7 @@
 	"type": "module",
 	"description": "Obsidian plugin: AI-based text transformation assistant with command palette and custom prompts. (Forked from obsidian-proofreader by Christopher Grieser)",
 	"author": "Alexander Glavan",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"keywords": [],
 	"license": "MIT",
 	"main": "main.js",

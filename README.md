@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** 1.2.0
+**Current Version:** 1.2.1
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
