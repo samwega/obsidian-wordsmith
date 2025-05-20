@@ -141,6 +141,8 @@ a suite of powerful AI capabilities:
 *   **Process Entire Documents or Paragraphs:** Apply transformations to
     selected text, the current paragraph, or the entire document.
 
+<img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/WhRKgB1.png">
+
 ## How It Works: Inline Suggestions
 
 The core strength of Text Transformer lies in its intuitive inline suggestion
@@ -160,7 +162,7 @@ system:
 This seamless process allows for rapid iteration and refinement of your writing
 without ever leaving your Obsidian workspace.
 
-<img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/wpFvjlq.png">
+<img alt="Showcase of model settings" width=90% src="https://i.imgur.com/sfBHIIx.png">
 
 ## AI Providers & Models
 
@@ -202,7 +204,7 @@ discrepancies.)
 
 Choose the model that best fits your task and budget in the plugin settings.
 
-<img alt="Showcase of model settings" width=90% src="https://i.imgur.com/CP311N9.png">
+<img alt="Showcase of recommended hotkeys" width=70% src="https://i.imgur.com/l5Qpw2K.png">
 
 ## Installation & Setup
 
@@ -267,7 +269,7 @@ To get your API key(s):
 Text Transformer is designed for a keyboard-centric workflow. Configure your
 preferred hotkeys in Obsidian's settings for the commands below.
 
-<img alt="Showcase of recommended hotkeys" width=70% src="https://i.imgur.com/UvprMpv.png">
+<img alt="Showcase of recommended hotkeys" width=70% src="https://i.imgur.com/MJX4Lrt.png">
 
 ### Core Commands
 
