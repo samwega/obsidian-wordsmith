@@ -345,7 +345,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		addPromptFooter.style.justifyContent = "space-between";
 		addPromptFooter.style.marginTop = "10px";
 
-		const customPromptDesc = addPromptFooter.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
+		const customPromptDesc = addPromptFooter.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in your-vault/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
 		customPromptDesc.style.fontSize = "var(--font-ui-smaller)";
 		customPromptDesc.style.color = "var(--text-muted)";
 		customPromptDesc.style.marginBottom = "0px";
@@ -372,7 +372,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		new Setting(containerEl)
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'No changes will be made to text inside quotation marks ("").<br> Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
+				'Asks AI to ignore text in quotation marks (""). AI may not always comply.',
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -385,7 +385,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		new Setting(containerEl)
 			.setName("Preserve text in blockquotes and callouts")
 			.setDesc(
-				'No changes will be made to lines beginning with `>`. <br> Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
+				'Asks AI to ignore lines beginning with `>`. AI may not always comply.',
 			)
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {
