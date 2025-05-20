@@ -119,6 +119,13 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		enabled: true,
 	},
 	{
+		id: "mind-the-context",
+		name: "Mind the Context!",
+		text: "Act as a professional editor. You will receive a text selection, and a context. Do to the text whatever the context says, strictly. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+	},
+	{
 		id: "translate",
 		name: "Translate to {language} (autodetects source language)",
 		text: "Act as a professional translator. Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",

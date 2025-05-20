@@ -200,7 +200,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		);
 		const textInput = form.appendChild(document.createElement("textarea"));
 		textInput.placeholder = "Prompt text";
-		textInput.value = 'Act as a professional editor. [replace this with your prompt, including the square brackets; change the rest too if you know what you are doing; replace "professional editor" with your desired role, for example "italian translator" if you want AI to translate to Italian - then of course replace "revised" with "translated" or whatever may be the case]. Output only the revised text and nothing else. The text is:';
+		textInput.value = 'Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:';
 		textInput.setAttribute(
 			"style",
 			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
@@ -283,11 +283,11 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 						const translatePromptObj = this.plugin.settings.prompts.find(p => p.id === "translate");
 						if (translatePromptObj) {
 							if (newLang) {
-								translatePromptObj.name = `Translate to ${newLang} (autodetects source language)`;
+								translatePromptObj.name = `Translate to ${newLang}—autodetects source language`;
 							} else {
 								// Revert to original name structure with default language if input is empty
 								const defaultLang = prompt.defaultLanguage || "English";
-								translatePromptObj.name = `Translate to ${defaultLang} (autodetects source language)`;
+								translatePromptObj.name = `Translate to ${defaultLang}—autodetects source language`;
 							}
 						}
 						await this.plugin.saveSettings();
