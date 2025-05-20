@@ -36,7 +36,35 @@ streamlines prompt management:
     explaining how to manually edit default prompts by modifying the
     `data.json` file (requires an Obsidian reload after changes).
 
-## ✨ What's New in v1.1.0 ✨
+## Table of contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Release History](#release-history)
+  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
+  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+- [Features](#features)
+- [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
+- [AI Providers & Models](#ai-providers--models)
+- [Installation & Setup](#installation--setup)
+  - [Plugin Installation](#plugin-installation)
+  - [API Key Setup (OpenAI & Gemini)](#api-key-setup-openai--gemini)
+- [Usage](#usage)
+  - [Core Commands](#core-commands)
+  - [Managing Suggestions](#managing-suggestions)
+  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+- [Customizing Prompts](#customizing-prompts)
+- [Visual Appearance of Changes](#visual-appearance-of-changes)
+- [Plugin Development](#plugin-development)
+- [About the Developer](#about-the-developer)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Release History
+
+### ✨ What's New in v1.1.0 ✨
 
 Version 1.1.0 expanded your AI model horizons:
 
@@ -47,35 +75,32 @@ Version 1.1.0 expanded your AI model horizons:
 *   **Seamless Model Selection:** The settings panel was updated to easily switch
     between your preferred OpenAI and Gemini models.
 
-## Table of contents
+### ✨ What's New in v1.0.0 ✨
 
-<!-- toc -->
+Version 1.0.0 marked the initial major transformation from the original
+Proofreader plugin, introducing core functionalities that define Text
+Transformer today:
 
-* [Features](#features)
-* [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
-* [AI Providers & Models](#ai-providers--models)
-* [Installation & Setup](#installation--setup)
-  * [Plugin Installation](#plugin-installation)
-  * [API Key Setup (OpenAI & Gemini)](#api-key-setup-openai--gemini)
-* [Usage](#usage)
-  * [Core Commands](#core-commands)
-  * [Managing Suggestions](#managing-suggestions)
-  * [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
-* [Customizing Prompts](#customizing-prompts)
-* [Visual Appearance of Changes](#visual-appearance-of-changes)
-* [Plugin Development](#plugin-development)
-* [About the Developer](#about-the-developer)
-
-<!-- tocstop -->
+*   **Introducing the Prompt Palette:** Moved beyond a single proofreading
+    instruction to a versatile palette. Users can select from a variety of
+    predefined prompts to transform text in multiple ways (e.g., Improve,
+    Shorten, Lengthen, Fix Grammar).
+*   **Custom Prompts Unleashed:** Empowered users to create and save their own
+    unique prompts. This allows for a highly personalized AI writing assistant
+    tailored to specific needs and styles.
+*   **Foundation for a Multi-Feature AI Assistant:** This version laid the
+    groundwork for Text Transformer to become a comprehensive AI writing tool,
+    moving beyond basic proofreading to a wider range of text manipulations.
 
 ## Features
 
 Text Transformer empowers you to refine your text directly within Obsidian using
 a suite of powerful AI capabilities:
 
-*   **Versatile Text Transformations:** Improve clarity, shorten or lengthen text,
-    fix grammar, simplify language, enhance readability, translate, and more
-    using a range of built-in prompts.
+*   **Versatile Text Transformations via Prompt Palette:** Improve clarity,
+    shorten or lengthen text, fix grammar, simplify language, enhance
+    readability, translate, and more. Select from a range of built-in prompts
+    or your own creations through an intuitive palette.
 *   **Inline Suggestion Review:** AI-generated changes are displayed directly in
     your editor as `==highlights==` (additions) and `~~strikethroughs~~`
     (removals). Accept or reject each change individually or in batches.
@@ -108,7 +133,8 @@ system:
 
 1.  **Invoke AI:** Select text (or place your cursor in a paragraph) and
     trigger a transformation command via hotkey or the command palette.
-2.  **Choose Your Prompt:** Select from default or your custom-created prompts.
+2.  **Choose Your Prompt:** Select from default or your custom-created prompts
+    using the Prompt Palette.
 3.  **See Instant Changes:** The AI processes your text, and suggestions appear
     directly in your editor – additions are highlighted (`==like this==`) and
     deletions are struck through (`~~like this~~`).
