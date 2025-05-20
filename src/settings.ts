@@ -168,8 +168,28 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "TextTransformer Settings" });
 
-		// API Key Setting
-		new Setting(containerEl).setName("OpenAI API key").addText((input) => {
+		// API Key Section Toggle
+		const apiKeySection = containerEl.createDiv();
+		apiKeySection.style.display = "none"; // Hidden by default
+
+		new Setting(containerEl)
+			.setName("API Key Settings")
+			.setDesc("Click to expand/collapse API key settings")
+			.addButton((button) => {
+				button.setButtonText("Show").onClick(() => {
+					if (apiKeySection.style.display === "none") {
+						apiKeySection.style.display = "block";
+						button.setButtonText("Hide");
+					} else {
+						apiKeySection.style.display = "none";
+						button.setButtonText("Show");
+					}
+				});
+			});
+		
+
+		// OpenAI API Key Setting
+		new Setting(apiKeySection).setName("OpenAI API key").addText((input) => {
 			input.inputEl.type = "password";
 			input.inputEl.setCssProps({ width: "100%" });
 			input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
@@ -179,7 +199,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		});
 
 		// Gemini API Key Setting
-		new Setting(containerEl).setName("Gemini API key").addText((input) => {
+		new Setting(apiKeySection).setName("Gemini API key").addText((input) => {
 			input.inputEl.type = "password";
 			input.inputEl.setCssProps({ width: "100%" });
 			input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
@@ -187,7 +207,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			});
 		});
-
+		
 		// Model Setting
 		const modelDesc = `
 GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
@@ -201,11 +221,13 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 `.trim();
 		const modelDescDiv = document.createElement("div");
 		modelDescDiv.innerHTML = modelDesc;
-		const frag = document.createDocumentFragment();
-		frag.appendChild(modelDescDiv);
-		new Setting(containerEl)
+		modelDescDiv.style.display = "none"; // Hidden by default
+		modelDescDiv.style.marginTop = "10px";
+
+
+		const modelSetting = new Setting(containerEl)
 			.setName("Model")
-			.setDesc(frag)
+			.setDesc("Select the model to use. Click the name to see details.")
 			.addDropdown((dropdown) => {
 				for (const key in MODEL_SPECS) {
 					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
@@ -218,6 +240,23 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 				});
 			});
 		
+		// Make the setting name clickable to toggle description
+		const modelNameEl = modelSetting.nameEl;
+		modelNameEl.style.cursor = "pointer";
+		modelNameEl.onClickEvent(() => {
+			if (modelDescDiv.style.display === "none") {
+				modelDescDiv.style.display = "block";
+				modelSetting.setDesc("Select the model to use. Click the name to hide details.");
+			} else {
+				modelDescDiv.style.display = "none";
+				modelSetting.setDesc("Select the model to use. Click the name to see details.");
+			}
+		});
+		
+		// Insert the model description div after the setting
+		modelSetting.settingEl.insertAdjacentElement('afterend', modelDescDiv);
+
+
 		// Dynamic Context Line Count Setting
 		new Setting(containerEl)
 			.setName("Dynamic context lines")
@@ -483,8 +522,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text inside quotes")
 			.setDesc(
-				'No changes will be made to text inside quotation marks ("").' +
-					'Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
+				'No changes will be made to text inside quotation marks ("").<br> Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -497,8 +535,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text in blockquotes and callouts")
 			.setDesc(
-				'No changes will be made to lines beginning with `>`. ' +
-					'Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
+				'No changes will be made to lines beginning with `>`. <br> Note that this prevention is not perfect, as the AI will sometimes suggest changes across quotes.',
 			)
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {

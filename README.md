@@ -28,8 +28,8 @@ streamlines prompt management:
         inform the AI.
     *   **Custom Context:** Provide your own specific text snippets through a
         dedicated input area for precise context.
-    *   *Note: Dynamic and Entire Note context options are mutually exclusive to
-        ensure clarity.*
+    *   *Note: Dynamic and Entire Note context options are mutually exclusive
+        to ensure clarity.*
 *   **New Setting - Dynamic Context Lines:** Fine-tune the amount of surrounding
     text (number of paragraphs) used by the Dynamic Context feature.
 *   **Prompt Management Update:** Added a helpful note in the settings page
@@ -51,7 +51,7 @@ streamlines prompt management:
 - [Installation & Setup](#installation--setup)
   - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
   - [Manual Installation](#manual-installation)
-  - [API Key Setup (OpenAI & Gemini)](#api-key-setup-openai--gemini)
+  - [API Key Setup](#api-key-setup)
 - [Usage](#usage)
   - [Core Commands](#core-commands)
   - [Managing Suggestions](#managing-suggestions)
@@ -205,8 +205,8 @@ method below.
 For users who prefer to install manually or are using a version not yet in the
 community store:
 
-1.  Go to the [Releases page](https://github.com/samwega/obsidian-text-transformer/releases)
-    on GitHub.
+1.  Go to the [Releases page]
+    (https://github.com/samwega/obsidian-text-transformer/releases) on GitHub.
 2.  Find the latest release and download the `main.js`, `manifest.json`, and
     `styles.css` (if present) files from the "Assets" section.
 3.  In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
@@ -218,30 +218,30 @@ community store:
 7.  Go to `Settings` -> `Community plugins`, find "Text Transformer" in your
     list of installed plugins, and enable it.
 
-### API Key Setup (OpenAI & Gemini)
+### API Key Setup
 
 You'll need at least one API key to use Text Transformer.
 
-**To get an OpenAI API key:**
+To get your API key(s):
 
-1.  [Create an OpenAI account](https://auth.openai.com/create-account) if you
-    don't have one.
-2.  Navigate to your [API keys page](https://platform.openai.com/api-keys).
-3.  Click `Create new secret key`, give it a name (e.g., "Obsidian Text
-    Transformer"), and copy the key.
-4.  In Obsidian, go to `Settings → Text Transformer` and paste your API key
-    into the "OpenAI API Key" field.
+1.  **OpenAI:** (Optional)
+    *   [Create an OpenAI account](https://auth.openai.com/create-account)
+        if you don't have one.
+    *   Go to your [API keys page](https://platform.openai.com/api-keys).
+    *   Click `Create new secret key`, name it (e.g., "Obsidian Text
+        Transformer"), and copy the key.
 
-**To get a Gemini API key:**
+2.  **Google Gemini:** (Optional)
+    *   Ensure you have a Google account and visit
+        [Google AI Studio](https://aistudio.google.com).
+    *   Navigate to the [API key page](https://aistudio.google.com/app/apikey)
+        (you might need to create a project first).
+    *   Click `Create API key in new project` or `Create API key` in an
+        existing project. Copy the key.
 
-1.  Ensure you have a Google account. Visit
-    [Google AI Studio](https://aistudio.google.com).
-2.  Navigate to the [API key page](https://aistudio.google.com/app/apikey) (you
-    might need to create a project first).
-3.  Click `Create API key in new project` or `Create API key` in an existing
-    project. Copy the key.
-4.  In Obsidian, go to `Settings → Text Transformer` and paste your API key
-    into the "Gemini API Key" field.
+3.  In Obsidian, go to `Settings → Text Transformer` and paste your copied
+    API key(s) into the respective "OpenAI API Key" and/or "Gemini API Key"
+    fields.
 
 > [!TIP]
 > It's wise to monitor your API usage to avoid unexpected costs. Links to
@@ -298,10 +298,10 @@ Obsidian sidebars. Here’s how to access it:
     `Settings` -> `Community plugins`. The icon and panel will only be
     available if the plugin is active.
 2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
-for the command `"Text Transformer: Open AI Context Control Panel"`.
+    for the command `"Text Transformer: Open AI Context Control Panel"`.
 
 Once the panel is open, you can drag its icon to reorder is, or
-drag the panel itself to different parts of your workspace (e.g., left
+drag the panel itself to different parts of your workspace (e.e., left
 sidebar, right sidebar, or even as a new tab in the main workspace).
 
 **Panel Options:**
