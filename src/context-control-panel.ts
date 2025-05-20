@@ -16,19 +16,19 @@ export class ContextControlPanel extends ItemView {
         super(leaf);
     }
 
-    getViewType(): string {
+    override getViewType(): string {
         return CONTEXT_CONTROL_VIEW_TYPE;
     }
 
-    getDisplayText(): string {
+    override getDisplayText(): string {
         return "AI Context Control";
     }
 
-    getIcon(): string {
+    override getIcon(): string {
         return "book-type";
     }
 
-    async onOpen() {
+    override async onOpen() {
         const container = this.contentEl;
         container.empty();
         
@@ -45,7 +45,7 @@ export class ContextControlPanel extends ItemView {
         new Setting(container)
             .setName("Dynamic context")
             .setDesc(
-                "Automatically include surrounding paragraphs as context (e.g., 15 lines around selection). WIP.", // Updated desc slightly
+                "Automatically include surrounding paragraphs as context. More expensive!", // Updated desc slightly
             )
             .addToggle((toggle) => {
                 this.dynamicContextToggleComponent = toggle; // Store component
@@ -62,7 +62,7 @@ export class ContextControlPanel extends ItemView {
         // 2. Entire Note Context Toggle
         new Setting(container)
             .setName("Entire note as context")
-            .setDesc("Uses the whole current note as context.")
+            .setDesc("More expensive!")
             .addToggle((toggle) => {
                 this.wholeNoteContextToggleComponent = toggle; // Store component
                 toggle.setValue(this.useWholeNoteContext).onChange(async (value) => {
@@ -78,7 +78,7 @@ export class ContextControlPanel extends ItemView {
         // 3. Custom Context Toggle (Independent)
         new Setting(container)
             .setName("Custom context")
-            .setDesc("Manually provide text as context in the input box below.")
+            .setDesc("Provide text as context in the input box below.")
             .addToggle((toggle) =>
                 toggle.setValue(this.useCustomContext).onChange(async (value) => {
                     this.useCustomContext = value;
@@ -90,7 +90,7 @@ export class ContextControlPanel extends ItemView {
         const textAreaContainer = container.createDiv("tt-custom-context-container");
         const customContextTextArea = new TextAreaComponent(textAreaContainer)
             .setPlaceholder(`Paste your custom context here...
-Supports [[wikilinks]] to include other notes.`)
+Adding [[wikilinks]] support to include other notes soon.`)
             .setValue(this.customContextText)
             .onChange(async (value) => {
                 this.customContextText = value;
@@ -103,7 +103,7 @@ Supports [[wikilinks]] to include other notes.`)
 
     }
 
-    async onClose() {
+    override async onClose() {
         // Perform any cleanup needed when the view is closed
         this.dynamicContextToggleComponent = null;
         this.wholeNoteContextToggleComponent = null;

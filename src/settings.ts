@@ -190,8 +190,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		// Model Setting
 		const modelDesc = `
-Use GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
-Gemini 2.5 Flash is very fast and powerful.Gemini 2.5 Pro is a thinking model, slow and powerful (probably not needed).<br>
+GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
+Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).<br>
 Prices are estimates per 1000 tokens or 750 words.<br><br>
 GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01<br>
 GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002<br>
@@ -221,13 +221,13 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		// Dynamic Context Line Count Setting
 		new Setting(containerEl)
 			.setName("Dynamic context lines")
-			.setDesc("Number of lines to include before and after the selection/paragraph for dynamic context (e.g., 0-50). Default is 3.")
+			.setDesc("Number of lines to include before and after the selection/paragraph for dynamic context (between 1 and 21). Keep in mind a whole paragraph is a line in Obsidian, so you may be sending a lot of context. Default is 1.")
 			.addText(text => text
-				.setPlaceholder("3")
+				.setPlaceholder("1")
 				.setValue(this.plugin.settings.dynamicContextLineCount.toString())
 				.onChange(async (value) => {
 					const numValue = parseInt(value);
-					if (!isNaN(numValue) && numValue >= 0 && numValue <= 50) { 
+					if (!isNaN(numValue) && numValue >= 1 && numValue <= 21) { 
 						this.plugin.settings.dynamicContextLineCount = numValue;
 						await this.plugin.saveSettings();
 					}
