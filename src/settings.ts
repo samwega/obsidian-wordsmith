@@ -34,59 +34,74 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
+		const apiModelSetting = new Setting(containerEl)
+			.setName("API Keys & Model");
+		
+		// Remove default borders for the main collapsible line
+		apiModelSetting.settingEl.style.borderTop = "none";
+		apiModelSetting.settingEl.style.borderBottom = "none";
+		
 		const apiModelSectionContents = containerEl.createDiv();
 		apiModelSectionContents.style.display = "none"; // Hidden by default
-		apiModelSectionContents.style.marginTop = "10px";
+		apiModelSectionContents.style.marginTop = "0px"; // Adjusted margin
+		apiModelSectionContents.style.paddingLeft = "25px"; // Indent content
 
-		const apiModelSetting = new Setting(containerEl)
-			.setName("API Keys & Model")
-			.setDesc("Click to expand/collapse API key and model settings.")
-			.addButton((button) => {
+
+		apiModelSetting.addButton((button) => {
 				button.setButtonText("Show").onClick(() => {
 					if (apiModelSectionContents.style.display === "none") {
 						apiModelSectionContents.style.display = "block";
 						button.setButtonText("Hide");
-						apiModelSetting.setDesc("Click to expand/collapse API key and model settings.");
 					} else {
 						apiModelSectionContents.style.display = "none";
 						button.setButtonText("Show");
-						apiModelSetting.setDesc("Click to expand/collapse API key and model settings.");
 					}
 				});
 			});
 
-		new Setting(apiModelSetting.settingEl)
-			.addDropdown((dropdown) => {
-				for (const key in MODEL_SPECS) {
-					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
-					const display = MODEL_SPECS[key as SupportedModels].displayText;
-					dropdown.addOption(key, display);
-				}
-				dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
-					this.plugin.settings.model = value as SupportedModels;
+		apiModelSetting.addDropdown((dropdown) => {
+			for (const key in MODEL_SPECS) {
+				if (!Object.hasOwn(MODEL_SPECS, key)) continue;
+				const display = MODEL_SPECS[key as SupportedModels].displayText;
+				dropdown.addOption(key, display);
+			}
+			dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
+				this.plugin.settings.model = value as SupportedModels;
+				await this.plugin.saveSettings();
+			});
+		});
+		
+		// Adjust flex properties for layout
+		apiModelSetting.nameEl.style.flex = "1"; // Let the name take available space
+		apiModelSetting.controlEl.style.flex = "0 0 auto"; // Don't let controls grow/shrink, use auto width
+		apiModelSetting.controlEl.style.marginLeft = "10px"; // Add some space between name and controls
+		apiModelSetting.settingEl.style.display = "flex";
+		apiModelSetting.settingEl.style.alignItems = "center";
+
+
+		const openaiSetting = new Setting(apiModelSectionContents)
+			.setName("OpenAI API key")
+			.addText((input) => {
+				input.inputEl.type = "password";
+				input.inputEl.setCssProps({ width: "100%" });
+				input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
+					this.plugin.settings.openAiApiKey = value.trim();
 					await this.plugin.saveSettings();
 				});
 			});
-		apiModelSetting.nameEl.style.flexGrow = "0";
-		apiModelSetting.controlEl.style.marginLeft = "auto";
+		openaiSetting.settingEl.style.borderTop = "none"; // Remove top border
 
-		new Setting(apiModelSectionContents).setName("OpenAI API key").addText((input) => {
-			input.inputEl.type = "password";
-			input.inputEl.setCssProps({ width: "100%" });
-			input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
-				this.plugin.settings.openAiApiKey = value.trim();
-				await this.plugin.saveSettings();
+		const geminiSetting = new Setting(apiModelSectionContents)
+			.setName("Gemini API key")
+			.addText((input) => {
+				input.inputEl.type = "password";
+				input.inputEl.setCssProps({ width: "100%" });
+				input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
+					this.plugin.settings.geminiApiKey = value.trim();
+					await this.plugin.saveSettings();
+				});
 			});
-		});
-
-		new Setting(apiModelSectionContents).setName("Gemini API key").addText((input) => {
-			input.inputEl.type = "password";
-			input.inputEl.setCssProps({ width: "100%" });
-			input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
-				this.plugin.settings.geminiApiKey = value.trim();
-				await this.plugin.saveSettings();
-			});
-		});
+		geminiSetting.settingEl.style.borderTop = "none"; // Remove top border
 
 		const modelDesc = `
 GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
@@ -100,8 +115,8 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 `.trim();
 		const modelDescDiv = apiModelSectionContents.createEl("div");
 		modelDescDiv.innerHTML = modelDesc;
-		modelDescDiv.style.marginTop = "10px";
-		modelDescDiv.style.paddingLeft = "10px";
+		modelDescDiv.style.marginTop = "10px"; // Spacing above description
+		// modelDescDiv.style.paddingLeft = "10px"; // Already handled by apiModelSectionContents padding
 		modelDescDiv.style.color = "var(--text-muted)";
 		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
 	}
@@ -382,4 +397,4 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 }
 
 export { DEFAULT_SETTINGS };
-export type { TextTransformerSettings };
+export type { TextTransformerSettings, TextTransformerPrompt };
