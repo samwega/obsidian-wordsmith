@@ -168,66 +168,30 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "TextTransformer Settings" });
 
-		// API Key Section Toggle
-		const apiKeySection = containerEl.createDiv();
-		apiKeySection.style.display = "none"; // Hidden by default
+		// Unified API Keys & Model Section
+		const apiModelSectionContents = containerEl.createDiv();
+		apiModelSectionContents.style.display = "none"; // Hidden by default
+		apiModelSectionContents.style.marginTop = "10px"; // Add some space below the button/dropdown
 
-		new Setting(containerEl)
-			.setName("API Key Settings")
-			.setDesc("Click to expand/collapse API key settings")
+		const apiModelSetting = new Setting(containerEl)
+			.setName("API Keys & Model")
+			.setDesc("Click to expand/collapse API key and model settings.")
 			.addButton((button) => {
 				button.setButtonText("Show").onClick(() => {
-					if (apiKeySection.style.display === "none") {
-						apiKeySection.style.display = "block";
+					if (apiModelSectionContents.style.display === "none") {
+						apiModelSectionContents.style.display = "block";
 						button.setButtonText("Hide");
+						apiModelSetting.setDesc("Click to expand/collapse API key and model settings.");
 					} else {
-						apiKeySection.style.display = "none";
+						apiModelSectionContents.style.display = "none";
 						button.setButtonText("Show");
+						apiModelSetting.setDesc("Click to expand/collapse API key and model settings.");
 					}
 				});
 			});
-		
 
-		// OpenAI API Key Setting
-		new Setting(apiKeySection).setName("OpenAI API key").addText((input) => {
-			input.inputEl.type = "password";
-			input.inputEl.setCssProps({ width: "100%" });
-			input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
-				this.plugin.settings.openAiApiKey = value.trim();
-				await this.plugin.saveSettings();
-			});
-		});
-
-		// Gemini API Key Setting
-		new Setting(apiKeySection).setName("Gemini API key").addText((input) => {
-			input.inputEl.type = "password";
-			input.inputEl.setCssProps({ width: "100%" });
-			input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
-				this.plugin.settings.geminiApiKey = value.trim();
-				await this.plugin.saveSettings();
-			});
-		});
-		
-		// Model Setting
-		const modelDesc = `
-GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
-Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).<br>
-Prices are estimates per 1000 tokens or 750 words.<br><br>
-GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01<br>
-GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002<br>
-GPT 4.1 nano - intelligence = 2, speed = 5. Price = $0.0005<br>
-Gemini 2.5 Flash - intelligence = 3, speed = 5. Price = $0.0005<br>
-Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
-`.trim();
-		const modelDescDiv = document.createElement("div");
-		modelDescDiv.innerHTML = modelDesc;
-		modelDescDiv.style.display = "none"; // Hidden by default
-		modelDescDiv.style.marginTop = "10px";
-
-
-		const modelSetting = new Setting(containerEl)
-			.setName("Model")
-			.setDesc("Select the model to use. Click the name to see details.")
+		// Model Setting Dropdown (Part of the main setting, but controls are inside the toggleable div)
+		new Setting(apiModelSetting.settingEl) // Add to the same setting line
 			.addDropdown((dropdown) => {
 				for (const key in MODEL_SPECS) {
 					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
@@ -240,21 +204,47 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 				});
 			});
 		
-		// Make the setting name clickable to toggle description
-		const modelNameEl = modelSetting.nameEl;
-		modelNameEl.style.cursor = "pointer";
-		modelNameEl.onClickEvent(() => {
-			if (modelDescDiv.style.display === "none") {
-				modelDescDiv.style.display = "block";
-				modelSetting.setDesc("Select the model to use. Click the name to hide details.");
-			} else {
-				modelDescDiv.style.display = "none";
-				modelSetting.setDesc("Select the model to use. Click the name to see details.");
-			}
+		apiModelSetting.nameEl.style.flexGrow = "0"; // Prevent title from taking all space
+		apiModelSetting.controlEl.style.marginLeft = "auto"; // Push dropdown to the right
+
+
+		// OpenAI API Key Setting (inside toggleable div)
+		new Setting(apiModelSectionContents).setName("OpenAI API key").addText((input) => {
+			input.inputEl.type = "password";
+			input.inputEl.setCssProps({ width: "100%" });
+			input.setValue(this.plugin.settings.openAiApiKey).onChange(async (value) => {
+				this.plugin.settings.openAiApiKey = value.trim();
+				await this.plugin.saveSettings();
+			});
+		});
+
+		// Gemini API Key Setting (inside toggleable div)
+		new Setting(apiModelSectionContents).setName("Gemini API key").addText((input) => {
+			input.inputEl.type = "password";
+			input.inputEl.setCssProps({ width: "100%" });
+			input.setValue(this.plugin.settings.geminiApiKey || "").onChange(async (value) => {
+				this.plugin.settings.geminiApiKey = value.trim();
+				await this.plugin.saveSettings();
+			});
 		});
 		
-		// Insert the model description div after the setting
-		modelSetting.settingEl.insertAdjacentElement('afterend', modelDescDiv);
+		// Model Description (inside toggleable div)
+		const modelDesc = `
+GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
+Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).<br>
+Prices are estimates per 1000 tokens or 750 words.<br><br>
+GPT 4.1 - intelligence = 4, speed = 3. Price = $0.01<br>
+GPT 4.1 mini - intelligence = 3, speed = 4. Price = $0.002<br>
+GPT 4.1 nano - intelligence = 2, speed = 5. Price = $0.0005<br>
+Gemini 2.5 Flash - intelligence = 3, speed = 5. Price = $0.0005<br>
+Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
+`.trim();
+		const modelDescDiv = apiModelSectionContents.createEl("div");
+		modelDescDiv.innerHTML = modelDesc;
+		modelDescDiv.style.marginTop = "10px";
+		modelDescDiv.style.paddingLeft = "10px"; // Indent to align with setting text
+		modelDescDiv.style.color = "var(--text-muted)";
+		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
 
 
 		// Dynamic Context Line Count Setting
