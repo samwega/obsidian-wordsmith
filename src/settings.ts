@@ -235,27 +235,9 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 
 		// Prompt Management Section
 		containerEl.createEl("h3", { text: "Prompt Management" });
-		const promptListContainer = containerEl.createEl("div", { cls: "prompt-list-container" });
-		promptListContainer.style.display = "grid";
-		promptListContainer.style.gridTemplateColumns = "1fr 1fr";
-		promptListContainer.style.gap = "10px";
-		
-		const leftColumn = promptListContainer.createEl("div", { cls: "prompt-column" });
-		const rightColumn = promptListContainer.createEl("div", { cls: "prompt-column" });
-
-
-		// Section: Default Prompts
-		const defaultTitle = leftColumn.createEl("div", { text: "Default Prompts" });
-		defaultTitle.setAttr(
-			"style",
-			"color:#b6a84b;font-size:1.1em;font-weight:600;margin-bottom:2px;margin-top:8px;",
-		);
-
-		// Custom Prompts section heading and divider will be inserted dynamically if needed
-		let customTitle: HTMLDivElement | null = null;
-		let divider: HTMLDivElement | null = null;
 
 		// Helper for editing a custom prompt inline
+		let addPromptForm: HTMLDivElement | null = null; // Moved declaration up
 		const createEditPromptForm = (prompt: TextTransformerPrompt): HTMLDivElement => {
 			const form = document.createElement("div");
 			form.className = "add-prompt-form";
@@ -314,11 +296,26 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 		const defaultPrompts = this.plugin.settings.prompts.filter((p) => p.isDefault);
 		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
 
-		// Render default prompts
+		// Section: Default Prompts
+		const defaultTitle = containerEl.createEl("div", { text: "Default Prompts" });
+		defaultTitle.setAttr(
+			"style",
+			"color:#b6a84b;font-size:1.1em;font-weight:600;margin-bottom:2px;margin-top:8px;",
+		);
+		const defaultPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
+		defaultPromptsGrid.style.display = "grid";
+		defaultPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
+		defaultPromptsGrid.style.gap = "10px";
+		
 		const defaultPromptsMidpoint = Math.ceil(defaultPrompts.length / 2);
 		defaultPrompts.forEach((prompt, index) => {
-			const targetColumn = index < defaultPromptsMidpoint ? leftColumn : rightColumn;
-			new Setting(targetColumn).setName(prompt.name).addToggle((tg) => {
+			// Create a container for each Setting if direct grid placement is problematic
+			const settingContainer = defaultPromptsGrid.createEl("div");
+			if (index >= defaultPromptsMidpoint) {
+				// This is a conceptual way to target the second column
+				// Actual column assignment is handled by grid flow
+			}
+			new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
 				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
 					prompt.enabled = value;
 					await this.plugin.saveSettings();
@@ -326,83 +323,84 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 			});
 		});
 
-		// Render custom prompts
+		// Section: Custom Prompts
 		if (customPrompts.length > 0) {
-			const targetColumnForCustomTitle = customPrompts.length <= defaultPrompts.length / 2 ? leftColumn : rightColumn;
-			
-			divider = targetColumnForCustomTitle.createEl("div");
+			const divider = containerEl.createEl("div");
 			divider.setAttr(
 				"style",
 				"border-bottom:1px solid var(--background-modifier-border);margin:10px 0 10px 0;",
 			);
-			customTitle = targetColumnForCustomTitle.createEl("div", { text: "Custom Prompts" });
+			const customTitle = containerEl.createEl("div", { text: "Custom Prompts" });
 			customTitle.setAttr(
 				"style",
 				"color:#b6a84b;font-size:1.1em;font-weight:600;margin-top:8px;margin-bottom:2px;",
 			);
-		}
-		
-		const customPromptsMidpoint = Math.ceil(customPrompts.length / 2);
-		customPrompts.forEach((prompt, index) => {
-			const targetColumn = index < customPromptsMidpoint ? leftColumn : rightColumn;
-			const setting = new Setting(targetColumn).setName(prompt.name).addToggle((tg) => {
-				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-					prompt.enabled = value;
-					await this.plugin.saveSettings();
+			const customPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
+			customPromptsGrid.style.display = "grid";
+			customPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
+			customPromptsGrid.style.gap = "10px";
+
+			const customPromptsMidpoint = Math.ceil(customPrompts.length / 2);
+			customPrompts.forEach((prompt, index) => {
+				const settingContainer = customPromptsGrid.createEl("div");
+				// Conceptual targeting for columns, actual placement by grid flow
+				const setting = new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
+					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+						prompt.enabled = value;
+						await this.plugin.saveSettings();
+					});
+				});
+				setting.addExtraButton((btn) => {
+					btn.setIcon("pencil")
+						.setTooltip("Edit")
+						.onClick((): void => {
+							if (addPromptForm) return;
+							// Ensure form is inserted correctly relative to the setting container
+							addPromptForm = settingContainer.parentElement?.insertBefore(
+								createEditPromptForm(prompt),
+								settingContainer.nextSibling,
+							) as HTMLDivElement;
+						});
+				});
+				setting.addExtraButton((btn) => {
+					btn.setIcon("trash")
+						.setTooltip("Delete")
+						.onClick(async (): Promise<void> => {
+							const realIdx = this.plugin.settings.prompts.indexOf(prompt);
+							this.plugin.settings.prompts.splice(realIdx, 1);
+							await this.plugin.saveSettings();
+							this.display();
+						});
 				});
 			});
-			setting.addExtraButton((btn) => {
-				btn.setIcon("pencil")
-					.setTooltip("Edit")
-					.onClick((): void => {
-						if (addPromptForm) return;
-						addPromptForm = setting.settingEl.parentElement?.insertBefore(
-							createEditPromptForm(prompt),
-							setting.settingEl.nextSibling,
-						) as HTMLDivElement;
-					});
-			});
-			setting.addExtraButton((btn) => {
-				btn.setIcon("trash")
-					.setTooltip("Delete")
-					.onClick(async (): Promise<void> => {
-						const realIdx = this.plugin.settings.prompts.indexOf(prompt);
-						this.plugin.settings.prompts.splice(realIdx, 1);
-						await this.plugin.saveSettings();
-						this.display();
-					});
-			});
-		});
-
+		}
+		
 		// Add Custom Prompt Button description
 		const customPromptDesc = containerEl.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in [your-vault]/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
-		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px; grid-column: span 2;"); // Span across both columns
+		customPromptDesc.setAttribute("style", "font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 10px; margin-bottom: 5px;");
 
 
 		// Add Prompt Button with improved inline form
-		let addPromptForm: HTMLDivElement | null = null;
+		// let addPromptForm: HTMLDivElement | null = null; // Already declared above
 		const addPromptSetting = new Setting(containerEl)
 			.setClass("add-prompt-setting")
 			.addButton((btn) => {
 				btn.setButtonText("Add Custom Prompt").setCta();
 				btn.onClick((): void => {
 					if (addPromptForm) return; // Already open
-					// Place the form after the button, not inside it
-					addPromptForm = addPromptSetting.settingEl.parentElement?.insertBefore(
+					addPromptForm = containerEl.insertBefore( // Insert into containerEl directly
 						createAddPromptForm(),
-						addPromptSetting.settingEl.nextSibling,
+						addPromptSetting.settingEl.nextSibling, 
 					) as HTMLDivElement;
 				});
 			});
-		addPromptSetting.settingEl.style.gridColumn = "span 2"; // Span across both columns
-
-
+		
 		const createAddPromptForm = (): HTMLDivElement => {
 			const form = document.createElement("div");
 			form.className = "add-prompt-form";
 			form.setAttribute(
 				"style",
-				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;grid-column: span 2;", // Span across both columns
+				"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
 			);
 			const nameInput = form.appendChild(document.createElement("input"));
 			nameInput.type = "text";
@@ -458,11 +456,11 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 
 		//────────────────────────────────────────────────────────────────────────
 		// CLEANUP OPTIONS
-		const cleanupOptionsContainer = containerEl.createEl("div");
-		cleanupOptionsContainer.style.gridColumn = "span 2"; // Span across both columns
+		// const cleanupOptionsContainer = containerEl.createEl("div"); // No longer spanning grid items
+		// cleanupOptionsContainer.style.gridColumn = "span 2"; 
 
 
-		new Setting(cleanupOptionsContainer)
+		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text inside quotes")
 			.setDesc(
 				'\'No changes will be made to text inside quotation marks (""). \'' +
@@ -476,7 +474,7 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 						await this.plugin.saveSettings();
 					}),
 			);
-		new Setting(cleanupOptionsContainer)
+		new Setting(containerEl) // Add directly to containerEl
 			.setName("Preserve text in blockquotes and callouts")
 			.setDesc(
 				"No changes will be made to lines beginning with `>`. " +
@@ -488,6 +486,5 @@ Gemini 2.5 Pro - intelligence = 4, speed = thinking. Price = $0.011<br>
 					await this.plugin.saveSettings();
 				}),
 			);
-		// Removed invalid chained .setDesc()
 	}
 }
