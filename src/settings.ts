@@ -6,12 +6,10 @@ import {
     TextTransformerPrompt,
     TextTransformerSettings,
     DEFAULT_SETTINGS,
-    // DEFAULT_TEXT_TRANSFORMER_PROMPTS // Not directly used in this file anymore after refactor
 } from "./settings-data";
 
 //──────────────────────────────────────────────────────────────────────────────
 
-// DOCS https://docs.obsidian.md/Plugins/User+interface/Settings
 export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
@@ -29,7 +27,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
-		this._renderDynamicContextSection(containerEl); // Moved this section
+		this._renderDynamicContextSection(containerEl);
 		this._renderCleanupOptionsSection(containerEl);
 	}
 
@@ -37,15 +35,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const apiModelSetting = new Setting(containerEl)
 			.setName("API Keys & Model");
 		
-		// Remove default borders for the main collapsible line
 		apiModelSetting.settingEl.style.borderTop = "none";
 		apiModelSetting.settingEl.style.borderBottom = "none";
 		
 		const apiModelSectionContents = containerEl.createDiv();
-		apiModelSectionContents.style.display = "none"; // Hidden by default
-		apiModelSectionContents.style.marginTop = "0px"; // Adjusted margin
-		apiModelSectionContents.style.paddingLeft = "25px"; // Indent content
-
+		apiModelSectionContents.style.display = "none"; 
+		apiModelSectionContents.style.marginTop = "0px"; 
+		apiModelSectionContents.style.paddingLeft = "25px"; 
 
 		apiModelSetting.addButton((button) => {
 				button.setButtonText("Show").onClick(() => {
@@ -71,13 +67,11 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		});
 		
-		// Adjust flex properties for layout
-		apiModelSetting.nameEl.style.flex = "1"; // Let the name take available space
-		apiModelSetting.controlEl.style.flex = "0 0 auto"; // Don't let controls grow/shrink, use auto width
-		apiModelSetting.controlEl.style.marginLeft = "10px"; // Add some space between name and controls
+		apiModelSetting.nameEl.style.flex = "1"; 
+		apiModelSetting.controlEl.style.flex = "0 0 auto";
+		apiModelSetting.controlEl.style.marginLeft = "10px"; 
 		apiModelSetting.settingEl.style.display = "flex";
 		apiModelSetting.settingEl.style.alignItems = "center";
-
 
 		const openaiSetting = new Setting(apiModelSectionContents)
 			.setName("OpenAI API key")
@@ -89,7 +83,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
-		openaiSetting.settingEl.style.borderTop = "none"; // Remove top border
+		openaiSetting.settingEl.style.borderTop = "none";
 
 		const geminiSetting = new Setting(apiModelSectionContents)
 			.setName("Gemini API key")
@@ -101,7 +95,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
-		geminiSetting.settingEl.style.borderTop = "none"; // Remove top border
+		geminiSetting.settingEl.style.borderTop = "none";
 
 		const modelDesc = `
 GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
@@ -115,8 +109,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 `.trim();
 		const modelDescDiv = apiModelSectionContents.createEl("div");
 		modelDescDiv.innerHTML = modelDesc;
-		modelDescDiv.style.marginTop = "10px"; // Spacing above description
-		// modelDescDiv.style.paddingLeft = "10px"; // Already handled by apiModelSectionContents padding
+		modelDescDiv.style.marginTop = "10px"; 
 		modelDescDiv.style.color = "var(--text-muted)";
 		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
 	}
@@ -273,12 +266,39 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			} else {
 				settingContainer.style.paddingLeft = "10px";
 			}
-			new Setting(settingContainer).setName(prompt.name).addToggle((tg) => {
-				tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-					prompt.enabled = value;
-					await this.plugin.saveSettings();
+			const setting = new Setting(settingContainer);
+
+			if (prompt.id === "translate") {
+				const currentLanguage = this.plugin.settings.translationLanguage || prompt.defaultLanguage || "English";
+				setting.setName(prompt.name.replace("{language}", currentLanguage));
+
+				setting.addText(text => text
+					.setPlaceholder("E.g., Spanish")
+					.setValue(this.plugin.settings.translationLanguage || prompt.defaultLanguage || "English")
+					.onChange(async (value) => {
+						this.plugin.settings.translationLanguage = value.trim();
+						await this.plugin.saveSettings();
+						this.display(); 
+					}));
+				
+				setting.addToggle((tg) => {
+					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						if (p) p.enabled = value;
+						await this.plugin.saveSettings();
+					});
 				});
-			});
+
+			} else { 
+				setting.setName(prompt.name);
+				setting.addToggle((tg) => {
+					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						if (p) p.enabled = value;
+						await this.plugin.saveSettings();
+					});
+				});
+			}
 		});
 
 		if (customPrompts.length > 0) {
@@ -332,7 +352,8 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				});
 				setting.addToggle((tg) => {
 					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						prompt.enabled = value;
+						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						if (p) p.enabled = value;
 						await this.plugin.saveSettings();
 					});
 				});
