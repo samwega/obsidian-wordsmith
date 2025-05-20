@@ -1,9 +1,25 @@
-# npm
-node_modules
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log
 
-# external source maps
-*.js.map
-
-# obsidian
-data.json
+# Build output
 main.js
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.vscode/
+.idea/
+
+# IDX specific files
+.idx/
+
+# Log files
+*.log
+
+# Coverage reports (example, if you add later)
+# coverage/
+# .nyc_output/

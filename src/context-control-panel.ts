@@ -91,7 +91,7 @@ export class ContextControlPanel extends ItemView {
         const customContextTextArea = new TextAreaComponent(textAreaContainer)
             .setPlaceholder(`Paste your custom context here...
 You can also add rules in here, try "Spell everything backwards."
-[[wikilinks]] support to include other notes coming soon.`)
+Coming soon: [[wikilinks]] support.`)
             .setValue(this.customContextText)
             .onChange(async (value) => {
                 this.customContextText = value;
