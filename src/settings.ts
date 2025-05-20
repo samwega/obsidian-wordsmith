@@ -106,12 +106,12 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const modelDesc = `
 GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
 Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).<br><br>
-**Prices are estimates per 1000 tokens or 750 words:**<br>
-**GPT 4.1** - intelligence = 4, speed = 3. Price = $0.01<br>
-**GPT 4.1 mini** - intelligence = 3, speed = 4. Price = $0.002<br>
-**GPT 4.1 nano** - intelligence = 2, speed = 5. Price = $0.0005<br>
-**Gemini 2.5 Flash** - intelligence = 3, speed = 5. Price = $0.0005<br>
-**Gemini 2.5 Pro** - intelligence = 4, speed = thinking. Price = $0.011<br>
+<strong>Prices are estimates per 1000 tokens or 750 words:</strong><br>
+<strong>GPT 4.1</strong> - intelligence = 4, speed = 3. Price = $0.01<br>
+<strong>GPT 4.1 mini</strong> - intelligence = 3, speed = 4. Price = $0.002<br>
+<strong>GPT 4.1 nano</strong> - intelligence = 2, speed = 5. Price = $0.0005<br>
+<strong>Gemini 2.5 Flash</strong> - intelligence = 3, speed = 5. Price = $0.0005<br>
+<strong>Gemini 2.5 Pro</strong> - intelligence = 4, speed = thinking. Price = $0.011<br>
 `.trim();
 		const modelDescDiv = apiModelSectionContents.createEl("div");
 		modelDescDiv.innerHTML = modelDesc;
