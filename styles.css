@@ -1,15 +1,12 @@
-/* In styles.css */
+/* styles.css */
 .text-transformer-added {
-    /* Example: Light green background or use Obsidian theme variables */
-    background-color: var(--color-green-translucent, rgba(0, 255, 0, 0.15));
-    /* Add a subtle border or underline if desired */
-    /* border-bottom: 1px solid var(--color-green); */
+	background-color: var(--color-green-translucent, rgba(144, 238, 144, 0.4));
+	/* border-bottom: 1px solid var(--color-green, green); */ /* Optional */
 }
 
 .text-transformer-removed {
-    /* Example: Light red background with strikethrough, or use Obsidian theme variables */
-    background-color: var(--color-red-translucent, rgba(255, 0, 0, 0.15));
-    text-decoration: line-through;
-    text-decoration-color: var(--text-normal); /* Or a specific red */
-    /* text-decoration-color: var(--color-red); */
+	background-color: var(--color-red-translucent, rgba(255, 182, 193, 0.4));
+	text-decoration: line-through;
+	text-decoration-color: var(--text-faint, #777); /* Or a more prominent color if you prefer */
+	/* color: var(--text-muted); */ /* Optional: if you want the text itself to be more faint */
 }

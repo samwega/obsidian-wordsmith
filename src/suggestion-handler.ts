@@ -1,173 +1,213 @@
 // src/suggestion-handler.ts
 import { Editor, Notice } from "obsidian";
 import { EditorView } from "@codemirror/view";
-import { EditorSelection, TransactionSpec, StateEffect } from "@codemirror/state"; // Added TransactionSpec, StateEffect
+import { EditorSelection, TransactionSpec, StateEffect } from "@codemirror/state";
 
 import { suggestionStateField, resolveSuggestionEffect, SuggestionMark, clearAllSuggestionsEffect } from "./suggestion-state";
 
 function getCmEditorView(editor: Editor): EditorView | null {
-    const cmInstance = editor.cm;
-    return cmInstance instanceof EditorView ? cmInstance : null;
+	// @ts-expect-error: editor.cm
+	const cmInstance = editor.cm;
+	return cmInstance instanceof EditorView ? cmInstance : null;
 }
 
+// This was the findNextSuggestionMark when things were working without the loop after TypeError fix
 function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMark | null {
-    const marks = cm.state.field(suggestionStateField);
-    if (!marks || marks.length === 0) return null;
+	const marks = cm.state.field(suggestionStateField, false);
+	if (!marks || marks.length === 0) return null;
 
-    const searchStartPos = fromPos !== undefined ? fromPos : cm.state.selection.main.head;
-    const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
+	const searchStartPos = fromPos !== undefined ? fromPos : cm.state.selection.main.head;
+	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
 
-    for (const mark of sortedMarks) {
-        if (mark.from >= searchStartPos) return mark;
-    }
-    return sortedMarks.length > 0 ? sortedMarks[0] : null;
+	for (const mark of sortedMarks) {
+		if (mark.from >= searchStartPos) return mark;
+	}
+	return sortedMarks.length > 0 ? sortedMarks[0] : null;
 }
+
 
 function isPositionVisible(cm: EditorView, pos: number): boolean {
-    const coords = cm.coordsAtPos(pos);
-    if (!coords) return false;
-    const viewRect = cm.scrollDOM.getBoundingClientRect(); // Use scrollDOM for accurate viewport
-    // Check if the coordinate is within the visible area of the scrollDOM
-    return coords.top >= viewRect.top && coords.top <= viewRect.bottom &&
-           coords.left >= viewRect.left && coords.left <= viewRect.right;
+	const coords = cm.coordsAtPos(pos);
+	if (!coords) {
+		// console.warn(`TextTransformer: coordsAtPos(${pos}) returned null.`); // Optional: for debugging visibility issues
+		return false;
+	}
+	const scrollDOM = cm.scrollDOM;
+	return coords.top >= 0 && coords.bottom <= scrollDOM.clientHeight &&
+	coords.left >= 0 && coords.right <= scrollDOM.clientWidth &&
+	coords.top < scrollDOM.clientHeight && coords.bottom > 0;
 }
-
 
 export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'reject'): void {
-    const cm = getCmEditorView(editor);
-    if (!cm) { new Notice("CodeMirror 6 view not found."); return; }
+	const cm = getCmEditorView(editor);
+	if (!cm) { new Notice("Modern editor version required."); return; }
 
-    const marks = cm.state.field(suggestionStateField);
-    if (!marks || marks.length === 0) { new Notice("No suggestions to resolve.", 3000); return; }
+	const currentMarksInState = cm.state.field(suggestionStateField, false);
+	if (!currentMarksInState || currentMarksInState.length === 0) {
+		new Notice("No suggestions to resolve.", 3000);
+		return;
+	}
 
-    const cursorHead = cm.state.selection.main.head;
-    let targetMark = findNextSuggestionMark(cm, cursorHead);
+	const currentSelection = cm.state.selection.main;
+	let targetMark = findNextSuggestionMark(cm, currentSelection.head);
 
-    if (!targetMark) { new Notice("Could not find a next suggestion.", 3000); return; }
-    
-    if (!isPositionVisible(cm, targetMark.from)) {
-        cm.dispatch({
-            effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
-            selection: EditorSelection.cursor(targetMark.from)
-        });
-        new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
-        return;
-    }
+	if (!targetMark) {
+		new Notice("Could not find a next suggestion.", 3000);
+		return;
+	}
 
-    let textChange: { from: number; to: number; insert: string } | undefined = undefined;
-    let newCursorPos = targetMark.from;
+	// If the cursor is empty and already at the start of the found mark,
+	// we assume we are "on" it, possibly due to a previous scroll action by this command.
+	// In this case, we bypass the visibility check to avoid getting stuck
+	// if isPositionVisible has issues (e.g., coordsAtPos returns null or inaccurate values after scroll).
+	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
-    if (action === 'accept') {
-        if (targetMark.type === 'removed') {
-            textChange = { from: targetMark.from, to: targetMark.to, insert: "" };
-        }
-    } else { // 'reject'
-        if (targetMark.type === 'added') {
-            textChange = { from: targetMark.from, to: targetMark.to, insert: "" };
-        } else { // 'removed' rejected means keep text, cursor might go to end of it
-             newCursorPos = targetMark.to;
-        }
-    }
+	if (!effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
+		cm.dispatch({
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
+						selection: EditorSelection.cursor(targetMark.from)
+		});
+		new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
+		return;
+	}
 
-    const transactionSpec: TransactionSpec = {
-        effects: resolveSuggestionEffect.of({ id: targetMark.id })
-    };
+	let textChangeSpec: { from: number; to: number; insert: string } | undefined = undefined;
+	let newCursorPosAfterResolve = targetMark.from;
 
-    if (textChange) {
-        transactionSpec.changes = textChange;
-        transactionSpec.selection = EditorSelection.cursor(textChange.from);
-    } else {
-        transactionSpec.selection = EditorSelection.cursor(newCursorPos);
-    }
-    cm.dispatch(cm.state.update(transactionSpec));
+	if (action === 'accept') {
+		if (targetMark.type === 'removed') {
+			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
+		}
+	} else { // action === 'reject'
+		if (targetMark.type === 'added') {
+			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
+		} else { // type === 'removed' (and action is 'reject')
+			newCursorPosAfterResolve = targetMark.to;
+		}
+	}
 
-    const remainingMarks = cm.state.field(suggestionStateField).filter(m => m.id !== targetMark!.id);
-    if (remainingMarks.length === 0) {
-        new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
-    } else {
-        new Notice(`Suggestion ${action}ed. ${remainingMarks.length} remaining.`, 3000);
-        const nextAfterResolve = findNextSuggestionMark(cm, cm.state.selection.main.head);
-        if (nextAfterResolve) {
-            cm.dispatch({ // Separate transaction for scrolling if needed
-                effects: EditorView.scrollIntoView(nextAfterResolve.from, { y: "center", yMargin: 50 }),
-                selection: EditorSelection.cursor(nextAfterResolve.from)
-            });
-        }
-    }
+	const transactionSpec: TransactionSpec = {
+		effects: resolveSuggestionEffect.of({ id: targetMark.id })
+	};
+
+	if (textChangeSpec) {
+		transactionSpec.changes = textChangeSpec;
+		newCursorPosAfterResolve = textChangeSpec.from; // For deletions, cursor goes to start of deleted region
+	}
+	// For accept 'added', cursor stays at targetMark.from (original start of added text)
+	// For reject 'removed', cursor moves to targetMark.to (original end of removed text)
+	// This logic seems fine for advancing.
+
+	transactionSpec.selection = EditorSelection.cursor(newCursorPosAfterResolve);
+
+	cm.dispatch(cm.state.update(transactionSpec));
+
+	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
+
+	if (marksAfterResolution.length === 0) {
+		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
+	} else {
+		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
+
+		// Find the next suggestion using the updated cm.state and cursor position
+		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
+
+		if (nextSuggestionToFocus) {
+			// Auto-focus or scroll to the next suggestion
+			// The 'effectivelyOnTarget' bypass is not used here as this is proactive focusing,
+			// not a response to "press again".
+			if (!isPositionVisible(cm, nextSuggestionToFocus.from)) {
+				cm.dispatch({
+					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, { y: "center", yMargin: 50 }),
+								selection: EditorSelection.cursor(nextSuggestionToFocus.from)
+				});
+			} else {
+				cm.dispatch({
+					selection: EditorSelection.cursor(nextSuggestionToFocus.from)
+				});
+			}
+		}
+	}
 }
 
-
 export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept' | 'reject'): void {
-    const cm = getCmEditorView(editor);
-    if (!cm) { new Notice("CodeMirror 6 view not found."); return; }
+	const cm = getCmEditorView(editor);
+	if (!cm) { new Notice("Modern editor version required."); return; }
 
-    const currentCmSelection = cm.state.selection.main;
-    if (currentCmSelection.empty) {
-        new Notice("No text selected. Use 'Accept/Reject Next' or select text containing suggestions.");
-        return;
-    }
+	const currentCmSelection = cm.state.selection.main;
+	if (currentCmSelection.empty) {
+		new Notice("No text selected. Use 'Accept/Reject Next' or select text containing suggestions.");
+		return;
+	}
 
-    const allMarks = cm.state.field(suggestionStateField);
-    const marksInSelection = allMarks.filter(mark =>
-        mark.from < currentCmSelection.to && mark.to > currentCmSelection.from
-    );
+	const allMarks = cm.state.field(suggestionStateField, false);
+	if (!allMarks || allMarks.length === 0) { new Notice("No suggestions found in the document.", 3000); return; }
 
-    if (marksInSelection.length === 0) { new Notice("No suggestions found in the current selection.", 3000); return; }
+	const marksInSelection = allMarks.filter(mark =>
+	mark.from < currentCmSelection.to && mark.to > currentCmSelection.from
+	);
 
-    const changesArray: { from: number; to: number; insert: string }[] = [];
-    const effectsArray: StateEffect<{ id: string; }>[] = marksInSelection.map(mark => resolveSuggestionEffect.of({ id: mark.id }));
-    const sortedMarksInSelection = [...marksInSelection].sort((a, b) => b.from - a.from);
+	if (marksInSelection.length === 0) { new Notice("No suggestions found in the current selection.", 3000); return; }
 
-    for (const mark of sortedMarksInSelection) {
-        if (action === 'accept') {
-            if (mark.type === 'removed') {
-                changesArray.push({ from: mark.from, to: mark.to, insert: "" });
-            }
-        } else { // 'reject'
-            if (mark.type === 'added') {
-                changesArray.push({ from: mark.from, to: mark.to, insert: "" });
-            }
-        }
-    }
-    
-    const transactionSpec: TransactionSpec = {
-        effects: effectsArray,
-        selection: EditorSelection.cursor(currentCmSelection.from)
-    };
-    if (changesArray.length > 0) {
-        transactionSpec.changes = changesArray;
-    }
-    cm.dispatch(cm.state.update(transactionSpec));
+	const changesArray: { from: number; to: number; insert: string }[] = [];
+	const effectsArray: StateEffect<{ id: string; }>[] = marksInSelection.map(mark => resolveSuggestionEffect.of({ id: mark.id }));
+	const sortedMarksInSelection = [...marksInSelection].sort((a, b) => b.from - a.from); // Sort descending for safe deletions
 
-    new Notice(`${marksInSelection.length} suggestion(s) in selection ${action}ed.`, 3000);
-    const remainingMarksAfterOp = cm.state.field(suggestionStateField).filter(m => !marksInSelection.find(ms => ms.id === m.id));
-    if (remainingMarksAfterOp.length === 0 && marksInSelection.length > 0) {
-        new Notice(`All suggestions resolved!`, 2000);
-    }
+	for (const mark of sortedMarksInSelection) {
+		if (action === 'accept') {
+			if (mark.type === 'removed') {
+				changesArray.push({ from: mark.from, to: mark.to, insert: "" });
+			}
+		} else { // action === 'reject'
+			if (mark.type === 'added') {
+				changesArray.push({ from: mark.from, to: mark.to, insert: "" });
+			}
+		}
+	}
+
+	const transactionSpec: TransactionSpec = {
+		effects: effectsArray,
+		selection: EditorSelection.cursor(currentCmSelection.from) // Restore selection to start of original selection
+	};
+	if (changesArray.length > 0) {
+		transactionSpec.changes = changesArray;
+	}
+	cm.dispatch(cm.state.update(transactionSpec));
+
+	new Notice(`${marksInSelection.length} suggestion(s) in selection ${action}ed.`, 3000);
+	const remainingMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
+	if (remainingMarksAfterOp.length === 0 && marksInSelection.length > 0) {
+		new Notice(`All suggestions resolved!`, 2000);
+	}
 }
 
 export function clearAllActiveSuggestionsCM6(editor: Editor): void {
-    const cm = getCmEditorView(editor);
-    if (!cm) { new Notice("CodeMirror 6 view not found."); return; }
+	const cm = getCmEditorView(editor);
+	if (!cm) { new Notice("Modern editor version required."); return; }
 
-    const marks = cm.state.field(suggestionStateField);
-    if (!marks || marks.length === 0) { new Notice("No suggestions to clear.", 3000); return; }
+	const marks = cm.state.field(suggestionStateField, false);
+	if (!marks || marks.length === 0) { new Notice("No suggestions to clear.", 3000); return; }
 
-    const changesArray: { from: number; to: number; insert: string }[] = [];
-    const sortedMarks = [...marks].sort((a,b) => b.from - a.from);
+	const changesArray: { from: number; to: number; insert: string }[] = [];
+	const sortedMarks = [...marks].sort((a,b) => b.from - a.from); // Sort descending for safe deletions
 
-    for (const mark of sortedMarks) {
-        if (mark.type === 'added') {
-            changesArray.push({ from: mark.from, to: mark.to, insert: "" });
-        }
-    }
+	for (const mark of sortedMarks) {
+		if (mark.type === 'added') { // Clearing suggestions means rejecting additions
+			changesArray.push({ from: mark.from, to: mark.to, insert: "" });
+		}
+	}
 
-    const transactionSpec: TransactionSpec = {
-        effects: clearAllSuggestionsEffect.of(null)
-    };
-    if (changesArray.length > 0) {
-        transactionSpec.changes = changesArray;
-    }
-    cm.dispatch(cm.state.update(transactionSpec));
-    new Notice("All active suggestions cleared (changes rejected).", 3000);
+	const transactionSpec: TransactionSpec = {
+		effects: clearAllSuggestionsEffect.of(null) // This will remove all marks from state
+	};
+	if (changesArray.length > 0) {
+		const firstChangeFrom = Math.min(...changesArray.map(c => c.from));
+		transactionSpec.selection = EditorSelection.cursor(firstChangeFrom);
+		transactionSpec.changes = changesArray;
+	} else {
+		// If no text changes (e.g., all suggestions were 'removed' type), preserve selection
+		transactionSpec.selection = cm.state.selection;
+	}
+	cm.dispatch(cm.state.update(transactionSpec));
+	new Notice("All active suggestions cleared (changes rejected).", 3000);
 }
