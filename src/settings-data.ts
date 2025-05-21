@@ -74,14 +74,31 @@ export interface TextTransformerPrompt {
 	enabled: boolean; // if this prompt is active
 }
 
+export interface TextTransformerSettings {
+	openAiApiKey: string;
+	geminiApiKey: string;
+	model: SupportedModels;
+	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
+	defaultPromptId: string | null; // ID of the default prompt for full document
+	alwaysShowPromptSelection: boolean; // Always show prompt selection modal even if only one enabled
+	preserveTextInsideQuotes: boolean;
+	preserveBlockquotes: boolean;
+	dynamicContextLineCount: number;
+	translationLanguage: string;
+	longInputThreshold: number;
+	veryLongInputThreshold: number;
+}
+
 export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	openAiApiKey: "",
 	geminiApiKey: "",
 	model: "gpt-4.1-nano",
 	prompts: [], // Will be populated after its own definition
+	defaultPromptId: "improve", // Default to the "Improve" prompt
+	alwaysShowPromptSelection: false,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
-	dynamicContextLineCount: 3,
+	dynamicContextLineCount: 3, // Default was 1, but settings UI shows 3 and this is often better
 	translationLanguage: "English",
 	longInputThreshold: 1500,
 	veryLongInputThreshold: 15000,
@@ -148,17 +165,3 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 
 // Assign DEFAULT_TEXT_TRANSFORMER_PROMPTS to DEFAULT_SETTINGS.prompts after definition
 DEFAULT_SETTINGS.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map(p => ({...p}));
-
-
-export interface TextTransformerSettings {
-	openAiApiKey: string;
-	geminiApiKey: string;
-	model: SupportedModels;
-	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
-	preserveTextInsideQuotes: boolean;
-	preserveBlockquotes: boolean;
-	dynamicContextLineCount: number; 
-	translationLanguage: string; 
-	longInputThreshold: number;
-	veryLongInputThreshold: number;
-}

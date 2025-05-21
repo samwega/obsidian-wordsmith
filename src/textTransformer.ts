@@ -12,8 +12,17 @@ import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-contro
 
 import { setSuggestionsEffect, SuggestionMark, generateSuggestionId, suggestionStateField, clearAllSuggestionsEffect } from "./suggestion-state";
 
+// Constants for newline visual markers
+export const NEWLINE_ADD_SYMBOL = "↵";
+export const NEWLINE_REMOVE_SYMBOL = "¶";
+
+
 function getCmEditorView(editor: Editor): EditorView | null {
-	// ts-expect-error: editor.cm is not part of the public API, but widely used.
+	// The @ts-expect-error was here, removing it.
+	// Accessing editor.cm is a common practice in Obsidian plugin development,
+	// though it's not officially part of the stable API.
+	// If TypeScript now allows this without error (e.g., due to 'any' or updated internal types),
+	// the suppression is not needed.
 	const cmInstance = editor.cm;
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }
@@ -47,7 +56,6 @@ async function validateAndApplyAIDrivenChanges(
 
 	const { app, settings } = plugin;
 	const fileBefore = app.workspace.getActiveFile()?.path;
-	// Consider making thresholds configurable in settings
 	const longInput = originalText.length > (settings.longInputThreshold || 1500);
 	const veryLongInput = originalText.length > (settings.veryLongInputThreshold || 15000);
 	const notifDuration = longInput ? 0 : 4_000;
@@ -156,8 +164,10 @@ async function validateAndApplyAIDrivenChanges(
 		new Notice("⚠️ The active file changed during AI processing. Aborting.", notifDuration);
 		return false;
 	}
+    const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
+    const normalizedNewTextFromAI = newTextFromAI.replace(/\r\n|\r/g, "\n");
 
-	const diffResult = diffWords(originalText, newTextFromAI);
+	const diffResult = diffWords(normalizedOriginalText, normalizedNewTextFromAI, { ignoreCase: false });
 	if (!diffResult.some(part => part.added || part.removed)) {
 		new Notice("✅ Text is good, AI suggested no changes.", notifDuration);
 		return false;
@@ -165,23 +175,63 @@ async function validateAndApplyAIDrivenChanges(
 
 	let textToInsertInEditor = "";
 	const suggestionMarks: SuggestionMark[] = [];
-	let currentInsertOffset = 0;
+	let currentOffsetInEditorText = 0;
 
 	for (const part of diffResult) {
-		const partStartInDoc = scopeRangeCm.from + currentInsertOffset;
-		const partEndInDoc = partStartInDoc + part.value.length;
+        const normalizedPartValue = part.value.replace(/\r\n|\r/g, "\n");
+        const segments = normalizedPartValue.split(/(\n)/g).filter(s => s.length > 0);
 
-		if (part.added || part.removed) {
-			suggestionMarks.push({
-				id: generateSuggestionId(),
-										from: partStartInDoc,
-										to: partEndInDoc,
-										type: part.added ? 'added' : 'removed',
-			});
-		}
-		textToInsertInEditor += part.value;
-		currentInsertOffset += part.value.length;
-	}
+        for (const segment of segments) {
+            const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
+
+            if (segment === "\n") {
+                if (part.added) {
+                    textToInsertInEditor += NEWLINE_ADD_SYMBOL;
+                    suggestionMarks.push({
+                        id: generateSuggestionId(),
+                        from: markStartPosInDoc,
+                        to: markStartPosInDoc + NEWLINE_ADD_SYMBOL.length,
+                        type: 'added',
+                        isNewlineChange: true,
+                        newlineChar: '\n'
+                    });
+                    currentOffsetInEditorText += NEWLINE_ADD_SYMBOL.length;
+                } else if (part.removed) {
+                    textToInsertInEditor += NEWLINE_REMOVE_SYMBOL;
+                    suggestionMarks.push({
+                        id: generateSuggestionId(),
+                        from: markStartPosInDoc,
+                        to: markStartPosInDoc + NEWLINE_REMOVE_SYMBOL.length,
+                        type: 'removed',
+                        isNewlineChange: true,
+                        newlineChar: '\n'
+                    });
+                    currentOffsetInEditorText += NEWLINE_REMOVE_SYMBOL.length;
+                } else { 
+                    textToInsertInEditor += "\n";
+                    currentOffsetInEditorText += 1;
+                }
+            } else { 
+                textToInsertInEditor += segment;
+                if (part.added) {
+                    suggestionMarks.push({
+                        id: generateSuggestionId(),
+                        from: markStartPosInDoc,
+                        to: markStartPosInDoc + segment.length,
+                        type: 'added'
+                    });
+                } else if (part.removed) {
+                     suggestionMarks.push({
+                        id: generateSuggestionId(),
+                        from: markStartPosInDoc,
+                        to: markStartPosInDoc + segment.length,
+                        type: 'removed'
+                    });
+                }
+                currentOffsetInEditorText += segment.length;
+            }
+        }
+    }
 
 	cm.dispatch(cm.state.update({
 		changes: {
@@ -191,10 +241,10 @@ async function validateAndApplyAIDrivenChanges(
 		},
 		effects: [
 			clearAllSuggestionsEffect.of(null),
-										 setSuggestionsEffect.of(suggestionMarks)
+			setSuggestionsEffect.of(suggestionMarks)
 		],
 		selection: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
-										 scrollIntoView: true,
+		scrollIntoView: true,
 	}));
 
 	if (isOverlength) {
@@ -221,7 +271,7 @@ export async function textTransformerDocumentCM6(
 	const bodyText = fullDocText.substring(bodyTextOffsetStart);
 	const bodyEndOffset = bodyTextOffsetStart + bodyText.length;
 
-	const usePrompt = prompt || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
+	const usePrompt = prompt || plugin.settings.prompts.find((p) => p.id === plugin.settings.defaultPromptId) || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
 	if (!usePrompt) { new Notice("No prompt configured for document transformation."); return; }
 
 	await validateAndApplyAIDrivenChanges(
@@ -252,11 +302,25 @@ export async function textTransformerTextCM6(
 		textScope = "Selection";
 		rangeCm = { from: currentCmSelection.from, to: currentCmSelection.to };
 	} else {
-		const cursorLineNum = editor.getCursor("from").line;
-		const line = cm.state.doc.line(cursorLineNum + 1); // CM lines are 1-based
-		originalText = line.text;
+        const doc = cm.state.doc;
+        const cursorLine = doc.lineAt(currentCmSelection.head);
+        let paraStartLine = cursorLine;
+        let paraEndLine = cursorLine;
+
+        while (paraStartLine.number > 1) {
+            const prevLine = doc.line(paraStartLine.number - 1);
+            if (prevLine.text.trim() === "") break;
+            paraStartLine = prevLine;
+        }
+        while (paraEndLine.number < doc.lines) {
+            const nextLine = doc.line(paraEndLine.number + 1);
+            if (nextLine.text.trim() === "") break;
+            paraEndLine = nextLine;
+        }
+        
+        rangeCm = { from: paraStartLine.from, to: paraEndLine.to };
+        originalText = cm.state.sliceDoc(rangeCm.from, rangeCm.to);
 		textScope = "Paragraph";
-		rangeCm = { from: line.from, to: line.to };
 	}
 
 	if (!prompt) { new Notice("No prompt provided for text transformation."); return; }

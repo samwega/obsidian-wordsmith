@@ -18,18 +18,18 @@ import {
 	DEFAULT_SETTINGS,
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
+	TextTransformerPrompt, // Keep if used by PromptPaletteModal signature directly, or if other commands use it.
 } from "./settings";
 import {
 	MODEL_SPECS,
-	TextTransformerPrompt,
+	// TextTransformerPrompt, // This was the duplicate causing the unused warning, settings.ts re-exports it.
 	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	SupportedModels,
 } from "./settings-data";
 
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	settings: TextTransformerSettings;
+	settings!: TextTransformerSettings; // Definite assignment assertion
 
 	override async onload(): Promise<void> {
 		console.log("TextTransformer Plugin: Loading...");
@@ -39,7 +39,6 @@ export default class TextTransformer extends Plugin {
 
 		try {
 			this.registerEditorExtension(textTransformerSuggestionExtensions());
-			// console.log("TextTransformer Plugin: Successfully registered editor extensions for suggestions.");
 		} catch (e) {
 			console.error("TextTransformer Plugin: FAILED to register editor extensions!", e);
 			new Notice("TextTransformer Error: Could not register editor extensions. Highlighting will not work.", 0);
@@ -70,10 +69,17 @@ export default class TextTransformer extends Plugin {
 					return;
 				}
 				return new Promise<void>((resolve) => {
-					const modal = new PromptPaletteModal(this.app, enabledPrompts, async (prompt) => {
-						await textTransformerTextCM6(this, editor, prompt);
-						resolve();
-					}, () => resolve());
+					const modal = new PromptPaletteModal(
+						this.app,
+						enabledPrompts,
+						async (prompt: TextTransformerPrompt) => { // Explicitly type prompt here
+							await textTransformerTextCM6(this, editor, prompt);
+							resolve();
+						},
+						() => { // onCancel
+							resolve();
+						}
+					);
 					modal.open();
 				});
 			},
@@ -98,32 +104,32 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "accept-suggestions-in-text",
 			name: "Accept suggestions in selection/paragraph",
-			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(editor, "accept"),
+			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(this, editor, "accept"),
 							 icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-suggestions-in-text",
 			name: "Reject suggestions in selection/paragraph",
-			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(editor, "reject"),
+			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(this, editor, "reject"),
 							 icon: "x",
 		});
 		this.addCommand({
 			id: "accept-next-suggestion",
 			name: "Accept next suggestion",
-			editorCallback: (editor): void => resolveNextSuggestionCM6(editor, "accept"),
+			editorCallback: (editor): void => resolveNextSuggestionCM6(this, editor, "accept"),
 							 icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-next-suggestion",
 			name: "Reject next suggestion",
-			editorCallback: (editor): void => resolveNextSuggestionCM6(editor, "reject"),
+			editorCallback: (editor): void => resolveNextSuggestionCM6(this, editor, "reject"),
 							 icon: "x",
 		});
 		this.addCommand({
 			id: "clear-all-suggestions",
 			name: "Clear all active suggestions (reject all)",
-							 editorCallback: (editor): void => clearAllActiveSuggestionsCM6(editor),
-							 icon: "trash-2",
+			editorCallback: (editor): void => clearAllActiveSuggestionsCM6(this, editor),
+			icon: "trash-2",
 		});
 
 		console.info(this.manifest.name + " Plugin loaded successfully.");
@@ -147,7 +153,6 @@ export default class TextTransformer extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
-		// Update any open ContextControlPanel views
 		this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE).forEach((leaf: WorkspaceLeaf) => {
 			if (leaf.view instanceof ContextControlPanel) {
 				leaf.view.updateModelSelector();
@@ -156,37 +161,42 @@ export default class TextTransformer extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
+        this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 		const loaded = await this.loadData() as Partial<TextTransformerSettings> | null;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded); // Ensure all defaults are present
+		
+        if (loaded) {
+            const loadedPrompts = loaded.prompts;
+            delete loaded.prompts; 
+            Object.assign(this.settings, loaded);
 
-		// Migrate/ensure prompts array
-		if (!loaded || !Array.isArray(loaded.prompts) || loaded.prompts.length === 0) {
-			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map(p => ({...p}));
-		} else {
-			const loadedPrompts = loaded.prompts as TextTransformerPrompt[];
-			const existingIds = new Set(loadedPrompts.map(p => p.id));
-			const newPromptsToAdd = DEFAULT_TEXT_TRANSFORMER_PROMPTS.filter(defP => !existingIds.has(defP.id));
+            if (!Array.isArray(loadedPrompts) || loadedPrompts.length === 0) {
+                this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map(p => ({...p}));
+            } else {
+                const existingIds = new Set(loadedPrompts.map(p => p.id));
+                const newPromptsToAdd = DEFAULT_TEXT_TRANSFORMER_PROMPTS.filter(defP => !existingIds.has(defP.id));
 
-			this.settings.prompts = [
-				...loadedPrompts.map(p => ({ // Ensure defaults for existing loaded prompts
-					...DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(dp => dp.id === p.id) || {},
-													...p
-				})),
-				...newPromptsToAdd.map(p => ({...p}))
-			];
-		}
-		// Ensure 'enabled' exists on all prompts
+                this.settings.prompts = [
+                    ...loadedPrompts.map(p => ({ 
+                        ...DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(dp => dp.id === p.id) || {},
+                        ...p
+                    })),
+                    ...newPromptsToAdd.map(p => ({...p}))
+                ];
+            }
+        } else {
+             this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map(p => ({...p}));
+        }
+		
 		this.settings.prompts.forEach(p => {
 			if (typeof p.enabled === 'undefined') {
-				p.enabled = true; // Default to true if undefined
+				p.enabled = true; 
 			}
 		});
-
 
 		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {
 			this.settings.model = DEFAULT_SETTINGS.model;
 		}
-		// Ensure other boolean/numeric settings have defaults if not loaded
+
 		for (const key of Object.keys(DEFAULT_SETTINGS) as Array<keyof TextTransformerSettings>) {
 			if (typeof this.settings[key] === 'undefined') {
 				(this.settings as any)[key] = DEFAULT_SETTINGS[key];
