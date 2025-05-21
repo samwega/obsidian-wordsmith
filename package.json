@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-text-transformer",
 	"type": "module",
-	"description": "Obsidian plugin: AI-based text transformation assistant with command palette and custom prompts. (Forked from obsidian-proofreader by Christopher Grieser)",
+	"description": "AI-based text transforming to revolutionize your writing. Changes are highlighted as suggestions directly in the editor, allowing you to accept/reject them individually or all at once.",
 	"author": "Alexander Glavan",
 	"version": "1.3.0",
 	"keywords": [],
