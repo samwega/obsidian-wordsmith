@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** 1.3.1
+**Current Version:** v1.3.1
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -13,7 +13,7 @@ Text Transformer has evolved into a feature-complete AI writing assistant.
 If you're looking for a more focused proofreading tool, please check out the
 original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader).
 
-<img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
+<img alt="Showcase" width=70% src="https://i.imgur.com/TPtENT3.png">
 <img alt="Showcase" width=70% src="https://i.imgur.com/3raRn13.png">
 
 ## ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
@@ -166,7 +166,7 @@ a suite of powerful AI capabilities:
 *   **Process Entire Documents or Paragraphs:** Apply transformations to
     selected text, the current paragraph, or the entire document.
 
-<img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/WhRKgB1.png">
+<img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/q8vaqr8.png">
 
 ## How It Works: Inline Suggestions
 
@@ -189,7 +189,7 @@ system:
 This seamless process allows for rapid iteration and refinement of your writing
 without ever leaving your Obsidian workspace.
 
-<img alt="Showcase of model settings" width=90% src="https://i.imgur.com/sfBHIIx.png">
+<img alt="Showcase of model settings" width=90% src="https://i.imgur.com/DbuXLxx.png">
 
 ## AI Providers & Models
 
