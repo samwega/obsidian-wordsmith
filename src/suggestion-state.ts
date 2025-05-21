@@ -53,7 +53,8 @@ class SuggestionViewPluginClass {
 	constructor(view: EditorView) {
 		this.decorations = Decoration.none;
 		try {
-			this.decorations = this.computeDecorations(view, "constructor");
+			// Initial computation of decorations
+			this.decorations = this.computeDecorations(view); 
 		} catch (e) {
 			console.error("TextTransformer ViewPlugin: Error in constructor computeDecorations:", e);
 			this.decorations = Decoration.none;
@@ -73,7 +74,7 @@ class SuggestionViewPluginClass {
 		if (update.docChanged) needsRecompute = true;
 		if (update.viewportChanged) needsRecompute = true;
 
-		// @ts-expect-error prevState is not officially on ViewUpdate but is present
+		// @ts-expect-error prevState is not officially on ViewUpdate but is present in practice
 		const currentPrevState = update.prevState;
 		if (currentPrevState) {
 			const prevMarks = currentPrevState.field(suggestionStateField, false);
@@ -82,16 +83,22 @@ class SuggestionViewPluginClass {
 				needsRecompute = true;
 			}
 		} else {
-            needsRecompute = true;
+            // If no prevState, assume recompute is needed or it's the initial update
+            needsRecompute = true; 
 		}
 
-		if (update.transactions.some(tr => tr.effects.some(e => e.is(setSuggestionsEffect) || e.is(resolveSuggestionEffect) || e.is(clearAllSuggestionsEffect)))) {
+		// Check if any of our specific effects were dispatched
+		if (update.transactions.some(tr => tr.effects.some(e => 
+            e.is(setSuggestionsEffect) || 
+            e.is(resolveSuggestionEffect) || 
+            e.is(clearAllSuggestionsEffect)
+        ))) {
 			needsRecompute = true;
 		}
 
 		if (needsRecompute) {
 			try {
-				this.decorations = this.computeDecorations(update.view, "update");
+				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("TextTransformer ViewPlugin: Error in update computeDecorations:", e);
 				this.decorations = Decoration.none;
@@ -99,7 +106,8 @@ class SuggestionViewPluginClass {
 		}
 	}
 
-	computeDecorations(view: EditorView, _callContext: string): DecorationSet { // _callContext marked as unused
+    // Removed _callContext as it was unused
+	computeDecorations(view: EditorView): DecorationSet { 
 		if (!view || !view.state) {
 			return Decoration.none;
 		}
@@ -112,29 +120,41 @@ class SuggestionViewPluginClass {
 
 		const activeDecorations: Range<Decoration>[] = [];
 		for (const mark of marks) {
-			let className = "";
+			let className = ""; // Will hold the CSS class
+			
 			if (mark.type === 'added') {
-				className = "tt-added";
+				className = "text-transformer-added";
 			} else if (mark.type === 'removed') {
-				className = "tt-removed";
+				className = "text-transformer-removed";
 			}
 
+            // If no class name is determined (e.g., unexpected mark.type), skip this mark
+			if (!className) {
+                console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
+                continue;
+            }
+
+			// Validate mark range
 			if (mark.from >= mark.to) {
+                console.warn("TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:", mark);
 				continue;
 			}
 			if (mark.from < 0 || mark.to > view.state.doc.length) {
+                console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
 				continue;
 			}
 
 			try {
 				const decorationInstance = Decoration.mark({
-					class: className
+					attributes: { class: className } // <<< KEY CHANGE: USING CSS CLASS
 				}).range(mark.from, mark.to);
 				activeDecorations.push(decorationInstance);
 			} catch (e) {
-				// console.error error
+				console.error(`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`, e);
 			}
 		}
+		
+		// Create a DecorationSet from the collected decorations
 		const decoSet = Decoration.set(activeDecorations, true);
 		return decoSet;
 	}
@@ -142,14 +162,16 @@ class SuggestionViewPluginClass {
 
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	decorations: (pluginInstance: SuggestionViewPluginClass) => {
+		// This accessor function simply returns the decorations computed by the plugin instance
 		if (pluginInstance && pluginInstance.decorations) {
 			return pluginInstance.decorations;
 		}
-		return Decoration.none;
+		return Decoration.none; // Fallback to no decorations
 	}
 });
 
 export const textTransformerSuggestionExtensions = () => {
+	// This function bundles the state field and the view plugin for registration
 	return [
 		suggestionStateField,
 		suggestionViewPlugin
