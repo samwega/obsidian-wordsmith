@@ -1,5 +1,5 @@
 // src/textTransformer.ts
-import { diffWords } from "diff";
+import * as Diff from "diff"; // Changed import
 import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 import { EditorView } from "@codemirror/view";
 import { EditorSelection } from "@codemirror/state";
@@ -18,11 +18,6 @@ export const NEWLINE_REMOVE_SYMBOL = "¶";
 
 
 function getCmEditorView(editor: Editor): EditorView | null {
-	// The @ts-expect-error was here, removing it.
-	// Accessing editor.cm is a common practice in Obsidian plugin development,
-	// though it's not officially part of the stable API.
-	// If TypeScript now allows this without error (e.g., due to 'any' or updated internal types),
-	// the suppression is not needed.
 	const cmInstance = editor.cm;
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }
@@ -167,8 +162,10 @@ async function validateAndApplyAIDrivenChanges(
     const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
     const normalizedNewTextFromAI = newTextFromAI.replace(/\r\n|\r/g, "\n");
 
-	const diffResult = diffWords(normalizedOriginalText, normalizedNewTextFromAI, { ignoreCase: false });
-	if (!diffResult.some(part => part.added || part.removed)) {
+    // Use diffWordsWithSpace for more granular whitespace diffing
+	const diffResult = Diff.diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI); 
+	
+    if (!diffResult.some(part => part.added || part.removed)) {
 		new Notice("✅ Text is good, AI suggested no changes.", notifDuration);
 		return false;
 	}
@@ -178,59 +175,49 @@ async function validateAndApplyAIDrivenChanges(
 	let currentOffsetInEditorText = 0;
 
 	for (const part of diffResult) {
-        const normalizedPartValue = part.value.replace(/\r\n|\r/g, "\n");
-        const segments = normalizedPartValue.split(/(\n)/g).filter(s => s.length > 0);
+		const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
+        // Normalize part.value for safety, though diffWordsWithSpace should mostly give \n
+        const value = part.value.replace(/\r\n|\r/g, "\n"); 
 
-        for (const segment of segments) {
-            const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
-
-            if (segment === "\n") {
-                if (part.added) {
-                    textToInsertInEditor += NEWLINE_ADD_SYMBOL;
-                    suggestionMarks.push({
-                        id: generateSuggestionId(),
-                        from: markStartPosInDoc,
-                        to: markStartPosInDoc + NEWLINE_ADD_SYMBOL.length,
-                        type: 'added',
-                        isNewlineChange: true,
-                        newlineChar: '\n'
-                    });
-                    currentOffsetInEditorText += NEWLINE_ADD_SYMBOL.length;
-                } else if (part.removed) {
-                    textToInsertInEditor += NEWLINE_REMOVE_SYMBOL;
-                    suggestionMarks.push({
-                        id: generateSuggestionId(),
-                        from: markStartPosInDoc,
-                        to: markStartPosInDoc + NEWLINE_REMOVE_SYMBOL.length,
-                        type: 'removed',
-                        isNewlineChange: true,
-                        newlineChar: '\n'
-                    });
-                    currentOffsetInEditorText += NEWLINE_REMOVE_SYMBOL.length;
-                } else { 
-                    textToInsertInEditor += "\n";
-                    currentOffsetInEditorText += 1;
-                }
-            } else { 
-                textToInsertInEditor += segment;
-                if (part.added) {
-                    suggestionMarks.push({
-                        id: generateSuggestionId(),
-                        from: markStartPosInDoc,
-                        to: markStartPosInDoc + segment.length,
-                        type: 'added'
-                    });
-                } else if (part.removed) {
-                     suggestionMarks.push({
-                        id: generateSuggestionId(),
-                        from: markStartPosInDoc,
-                        to: markStartPosInDoc + segment.length,
-                        type: 'removed'
-                    });
-                }
-                currentOffsetInEditorText += segment.length;
-            }
-        }
+		if (value === "\n") {
+			if (part.added) {
+				textToInsertInEditor += NEWLINE_ADD_SYMBOL;
+				suggestionMarks.push({
+					id: generateSuggestionId(),
+					from: markStartPosInDoc,
+					to: markStartPosInDoc + NEWLINE_ADD_SYMBOL.length,
+					type: 'added',
+					isNewlineChange: true,
+					newlineChar: '\n'
+				});
+				currentOffsetInEditorText += NEWLINE_ADD_SYMBOL.length;
+			} else if (part.removed) {
+				textToInsertInEditor += NEWLINE_REMOVE_SYMBOL;
+				suggestionMarks.push({
+					id: generateSuggestionId(),
+					from: markStartPosInDoc,
+					to: markStartPosInDoc + NEWLINE_REMOVE_SYMBOL.length,
+					type: 'removed',
+					isNewlineChange: true,
+					newlineChar: '\n'
+				});
+				currentOffsetInEditorText += NEWLINE_REMOVE_SYMBOL.length;
+			} else { // Unchanged newline
+				textToInsertInEditor += "\n";
+				currentOffsetInEditorText += 1;
+			}
+		} else { // Actual text segment (word or other whitespace like " ")
+			textToInsertInEditor += value;
+			if (part.added || part.removed) {
+				suggestionMarks.push({
+					id: generateSuggestionId(),
+					from: markStartPosInDoc,
+					to: markStartPosInDoc + value.length,
+					type: part.added ? 'added' : 'removed'
+				});
+			}
+			currentOffsetInEditorText += value.length;
+		}
     }
 
 	cm.dispatch(cm.state.update({
