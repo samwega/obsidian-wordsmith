@@ -1,29 +1,26 @@
-/* styles.css */
+/* styles.css - Option 3: Modern & Minimal (High Contrast for Removed Text) */
+
 .text-transformer-added {
-	background-color: var(--color-green-translucent, rgba(144, 238, 144, 0.4));
-	/* border-bottom: 1px solid var(--color-green, green); */ /* Optional */
+	background-color: rgba(144, 238, 144, 0.3); /* Very light green background */
+	border-bottom: 2px solid var(--color-green, #1E8449); /* Darker, more saturated green for underline */
+	padding: 0 1px;
+	/* Consider adding a slight text color change if needed for very dark themes: */
+	/* color: var(--text-normal); */ /* Or a slightly brighter green: color: #2ECC71; */
 }
 
 .text-transformer-removed {
-	background-color: var(--color-red-translucent, rgba(255, 182, 193, 0.4));
+	/* Option A: More prominent background with distinct text color */
+	/* background-color: rgba(255, 100, 100, 0.25); */ /* A noticeable but not overwhelming light red background */
+	/* color: rgba(150, 40, 40, 0.9); */ /* Darker red text, less transparent */
+
+	/* Option B: Minimal background, focus on text & strikethrough color (closer to original minimal intent but higher contrast) */
+	background-color: rgba(255, 182, 193, 0.15); /* Very faint pink background */
+	color: var(--text-error, #C0392B); /* Use a theme's error text color, or a strong fallback red for the text itself */
+
 	text-decoration: line-through;
-	text-decoration-color: var(--text-faint, #777); /* Or a more prominent color if you prefer */
-	/* color: var(--text-muted); */ /* Optional: if you want the text itself to be more faint */
-}
-
-.tt-added {
-  background-color: lightgreen !important;
-  color: black !important;
-  display: inline !important;
-  padding: 0 1px;
-  border-bottom: 1px solid green;
-}
-
-.tt-removed {
-  background-color: pink !important;
-  text-decoration: line-through !important;
-  text-decoration-color: red !important;
-  color: #555 !important;
-  display: inline !important;
-  padding: 0 1px;
+	text-decoration-thickness: 1px; /* Keep it thin as requested */
+	text-decoration-style: solid;   /* Solid strikethrough is usually clearest */
+	text-decoration-color: var(--text-faint, #999999); /* A clear, solid red for the strikethrough line */
+	padding: 0 1px;
+	/* border-radius: 2px; */ /* Optional, can be removed for sharper edges if no background */
 }
