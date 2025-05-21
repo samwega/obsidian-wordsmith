@@ -382,6 +382,9 @@ Tailor Text Transformer to your exact needs:
 Prior to v1.3.0, Text Transformer used `==highlighted==` additions and `~~struck-through~~` deletions.
 If you are using an older version or wish to customize the appearance for other plugins that might use similar markdown, you could use CSS snippets. **For v1.3.0 and later, the visual appearance is handled by inline styles applied by the plugin itself, and the CSS below is not directly used by Text Transformer for its suggestions.**
 
+> [!NOTE]
+> If you prefer the previous suggestion system that used `==highlight==` and `~~strikethrough~~` markdown, the last version to use this was **v1.2.2**. You can find it on the [releases page](https://github.com/samwega/obsidian-text-transformer/releases/tag/v1.2.2).
+
 ```css
 /* Legacy CSS - Not primarily used by Text Transformer v1.3.0+ for suggestions */
 .cm-strikethrough {
