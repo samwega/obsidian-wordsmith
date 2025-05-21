@@ -13,7 +13,7 @@ import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-contro
 import { setSuggestionsEffect, SuggestionMark, generateSuggestionId, suggestionStateField, clearAllSuggestionsEffect } from "./suggestion-state";
 
 function getCmEditorView(editor: Editor): EditorView | null {
-	// @ts-expect-error: editor.cm is not part of the public API, but widely used.
+	// ts-expect-error: editor.cm is not part of the public API, but widely used.
 	const cmInstance = editor.cm;
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }

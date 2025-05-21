@@ -83,6 +83,8 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	preserveBlockquotes: false,
 	dynamicContextLineCount: 3,
 	translationLanguage: "English",
+	longInputThreshold: 1500,
+	veryLongInputThreshold: 15000,
 };
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
@@ -157,4 +159,6 @@ export interface TextTransformerSettings {
 	preserveBlockquotes: boolean;
 	dynamicContextLineCount: number; 
 	translationLanguage: string; 
+	longInputThreshold: number;
+	veryLongInputThreshold: number;
 }
