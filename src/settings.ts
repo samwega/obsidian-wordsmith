@@ -150,7 +150,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		textInput.placeholder = "Prompt text";
 		textInput.setAttribute(
 			"style",
-			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:29px;max-height:180px;width:100%;resize:vertical;",
+			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:50px;max-height:600px;width:100%;resize:vertical;",
 		);
 		const buttonRow = form.appendChild(document.createElement("div"));
 		buttonRow.setAttribute("style", "display:flex;gap:8px;justify-content:flex-end;");
