@@ -1,7 +1,7 @@
 // src/suggestion-handler.ts
 import { Editor, Notice } from "obsidian";
 import { EditorView } from "@codemirror/view";
-import { EditorSelection, TransactionSpec, StateEffect } from "@codemirror/state";
+import { EditorSelection, TransactionSpec, StateEffect, Text } from "@codemirror/state";
 
 import { suggestionStateField, resolveSuggestionEffect, SuggestionMark, clearAllSuggestionsEffect } from "./suggestion-state";
 
@@ -130,30 +130,70 @@ export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'rej
 	}
 }
 
+function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: number } {
+	let lineFrom = doc.lineAt(pos);
+	let lineTo = doc.lineAt(pos);
+
+	// Find the start of the paragraph
+	while (lineFrom.number > 1) {
+		const prevLine = doc.line(lineFrom.number - 1);
+		if (prevLine.text.trim() === "") {
+			break;
+		}
+		lineFrom = prevLine;
+	}
+
+	// Find the end of the paragraph
+	while (lineTo.number < doc.lines) {
+		const nextLine = doc.line(lineTo.number + 1);
+		if (nextLine.text.trim() === "") {
+			break;
+		}
+		lineTo = nextLine;
+	}
+	return { from: lineFrom.from, to: lineTo.to };
+}
+
 export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept' | 'reject'): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) { new Notice("Modern editor version required."); return; }
 
-	const currentCmSelection = cm.state.selection.main;
-	if (currentCmSelection.empty) {
-		new Notice("No text selected. Use 'Accept/Reject Next' or select text containing suggestions.");
-		return;
+	let currentSelection = cm.state.selection.main;
+	let isParagraphSelection = false;
+
+	if (currentSelection.empty) {
+		const paragraph = getParagraphBoundaries(cm.state.doc, currentSelection.head);
+		currentSelection = EditorSelection.range(paragraph.from, paragraph.to);
+		isParagraphSelection = true;
+		if (currentSelection.empty && (paragraph.from !== paragraph.to)) { // If paragraph is not empty but selection is, it means it's a single line.
+			// This case should ideally be handled by getParagraphBoundaries returning non-empty from/to for a single line.
+			// However, if it still results in an empty selection for a valid line, we might need to adjust.
+			// For now, we assume getParagraphBoundaries correctly identifies single-line paragraphs.
+		} else if (paragraph.from === paragraph.to) { // Truly empty paragraph or at doc start/end
+            new Notice("Cursor is in an empty line or paragraph. Nothing to select.", 3000);
+            return;
+        }
 	}
 
 	const allMarks = cm.state.field(suggestionStateField, false);
 	if (!allMarks || allMarks.length === 0) { new Notice("No suggestions found in the document.", 3000); return; }
 
-	const marksInSelection = allMarks.filter(mark =>
-	mark.from < currentCmSelection.to && mark.to > currentCmSelection.from
+	const marksInScope = allMarks.filter(mark =>
+		mark.from < currentSelection.to && mark.to > currentSelection.from
 	);
 
-	if (marksInSelection.length === 0) { new Notice("No suggestions found in the current selection.", 3000); return; }
+	if (marksInScope.length === 0) {
+		const message = isParagraphSelection ?
+			"No suggestions found in the current paragraph." :
+			"No suggestions found in the current selection.";
+		new Notice(message, 3000); return;
+	}
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
-	const effectsArray: StateEffect<{ id: string; }>[] = marksInSelection.map(mark => resolveSuggestionEffect.of({ id: mark.id }));
-	const sortedMarksInSelection = [...marksInSelection].sort((a, b) => b.from - a.from); // Sort descending for safe deletions
+	const effectsArray: StateEffect<{ id: string; }>[] = marksInScope.map(mark => resolveSuggestionEffect.of({ id: mark.id }));
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); // Sort descending for safe deletions
 
-	for (const mark of sortedMarksInSelection) {
+	for (const mark of sortedMarksInScope) {
 		if (action === 'accept') {
 			if (mark.type === 'removed') {
 				changesArray.push({ from: mark.from, to: mark.to, insert: "" });
@@ -167,16 +207,19 @@ export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(currentCmSelection.from) // Restore selection to start of original selection
+		// Preserve original cursor if it was a paragraph selection, otherwise restore to start of original selection
+		selection: EditorSelection.cursor(isParagraphSelection ? cm.state.selection.main.head : currentSelection.from)
 	};
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
-
-	new Notice(`${marksInSelection.length} suggestion(s) in selection ${action}ed.`, 3000);
+	
+	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isParagraphSelection ? 'paragraph' : 'selection'} ${action}ed.`;
+	new Notice(noticeMessage, 3000);
+	
 	const remainingMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
-	if (remainingMarksAfterOp.length === 0 && marksInSelection.length > 0) {
+	if (remainingMarksAfterOp.length === 0 && marksInScope.length > 0) {
 		new Notice(`All suggestions resolved!`, 2000);
 	}
 }
