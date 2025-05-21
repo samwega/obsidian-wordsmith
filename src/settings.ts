@@ -130,117 +130,157 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				}));
 	}
 
-	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
-		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.setAttribute(
-			"style",
-			"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
-		);
-		const nameInput = form.appendChild(document.createElement("input"));
-		nameInput.type = "text";
-		nameInput.value = prompt.name;
-		nameInput.placeholder = "Prompt name";
-		nameInput.setAttribute(
-			"style",
-			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);width:100%;",
-		);
-		const textInput = form.appendChild(document.createElement("textarea"));
-		textInput.value = prompt.text;
-		textInput.placeholder = "Prompt text";
-		textInput.setAttribute(
-			"style",
-			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:29px;max-height:180px;width:100%;resize:vertical;",
-		);
-		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.setAttribute("style", "display:flex;gap:8px;justify-content:flex-end;");
-		const saveBtn = buttonRow.appendChild(document.createElement("button"));
-		saveBtn.textContent = "Save";
-		saveBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
-		);
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
-		);
-		saveBtn.onclick = async (): Promise<void> => {
-			const newName = (nameInput as HTMLInputElement).value.trim();
-			const newText = (textInput as HTMLTextAreaElement).value.trim();
-			if (!newName || !newText) return;
-			prompt.name = newName;
-			prompt.text = newText;
-			await this.plugin.saveSettings();
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-			this.display();
-		};
-		cancelBtn.onclick = (): void => {
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-		};
-		return form;
-	}
+// In your TextTransformerSettingsMenu class:
 
-	private _createAddPromptForm(): HTMLDivElement {
-		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.setAttribute(
-			"style",
-			"border:1px solid var(--background-modifier-border);background:var(--background-secondary-alt);padding:16px;margin-top:12px;border-radius:8px;display:flex;flex-direction:column;gap:10px;max-width:100%;width:100%;",
-		);
-		const nameInput = form.appendChild(document.createElement("input"));
-		nameInput.type = "text";
-		nameInput.placeholder = "Prompt name";
-		nameInput.setAttribute(
-			"style",
-			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);width:100%;",
-		);
-		const textInput = form.appendChild(document.createElement("textarea"));
-		textInput.placeholder = "Prompt text";
-		textInput.value = 'Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:';
-		textInput.setAttribute(
-			"style",
-			"margin-bottom:8px;padding:6px;font-size:var(--font-ui-medium);border-radius:4px;border:1px solid var(--background-modifier-border);min-height:12px;max-height:80px;width:100%;resize:vertical;",
-		);
-		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.setAttribute("style", "display:flex;gap:8px;justify-content:flex-end;");
-		const saveBtn = buttonRow.appendChild(document.createElement("button"));
-		saveBtn.textContent = "Save";
-		saveBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
-		);
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
-		);
-		saveBtn.onclick = async (): Promise<void> => {
-			const name = (nameInput as HTMLInputElement).value.trim();
-			const text = (textInput as HTMLTextAreaElement).value.trim();
-			if (!name || !text) return;
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-			this.plugin.settings.prompts.push({
-				id: `custom-${Date.now()}`,
-				name,
-				text,
-				isDefault: false,
-				enabled: true,
-			});
-			await this.plugin.saveSettings();
-			this.display();
-		};
-		cancelBtn.onclick = (): void => {
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-		};
-		return form;
-	}
+private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
+    console.log("TextTransformer: _createEditPromptForm EXECUTING - V4 Height Control");
+    const form = document.createElement("div");
+    form.className = "add-prompt-form";
+	form.setAttribute(
+		"style",
+		"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
+		"display:flex; flex-direction:column; gap:10px;" +
+		"width:100%; grid-column: 1 / -1;" // If it's in a grid
+	);
+
+    const nameInput = form.appendChild(document.createElement("input"));
+    nameInput.type = "text";
+    nameInput.value = prompt.name;
+    nameInput.placeholder = "Prompt name";
+    nameInput.setAttribute(
+        "style",
+        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;" // Added flex-shrink
+    );
+
+    const textInput = form.appendChild(document.createElement("textarea"));
+    textInput.value = prompt.text;
+    textInput.placeholder = "Prompt text";
+	textInput.setAttribute(
+		"style",
+		"width: 100%;" +
+		"box-sizing: border-box !important;" +   // Good practice
+		"height: 240px !important;" +          // <<<< YOUR FIXED HEIGHT + !important
+		"resize: none !important;" +           // <<<< Disable resizing explicitly
+		"overflow-y: auto !important;" +       // <<<< Enable scrollbar if content overflows
+		"padding: 6px;" +
+		"border-radius: 4px;" +
+		"border: 1px solid var(--background-modifier-border);" +
+		"background-color: var(--input-background, var(--background-secondary));" +
+		"color: var(--text-normal);"
+	);
+
+    const buttonRow = form.appendChild(document.createElement("div"));
+    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;"); // Added flex-shrink
+
+    // ... (button creation and event handlers remain the same as the V3 Button Fix)
+    const saveBtn = buttonRow.appendChild(document.createElement("button"));
+    saveBtn.textContent = "Save";
+    saveBtn.setAttribute(
+        "style",
+        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);"
+    );
+
+    const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.setAttribute(
+        "style",
+        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);"
+    );
+
+    saveBtn.onclick = async (): Promise<void> => {
+        const newName = (nameInput as HTMLInputElement).value.trim();
+        const newText = (textInput as HTMLTextAreaElement).value.trim();
+        if (!newName || !newText) return;
+        prompt.name = newName;
+        prompt.text = newText;
+        await this.plugin.saveSettings();
+        this.addPromptForm?.remove();
+        this.addPromptForm = null;
+        this.display();
+    };
+    cancelBtn.onclick = (): void => {
+        this.addPromptForm?.remove();
+        this.addPromptForm = null;
+    };
+    return form;
+}
+
+private _createAddPromptForm(): HTMLDivElement {
+    console.log("TextTransformer: _createAddPromptForm EXECUTING - V4 Height Control");
+    const form = document.createElement("div");
+    form.className = "add-prompt-form";
+	form.setAttribute(
+		"style",
+		"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
+		"display:flex; flex-direction:column; gap:10px;" +
+		"width:100%; grid-column: 1 / -1;" // If it's in a grid
+	);
+
+    const nameInput = form.appendChild(document.createElement("input"));
+    nameInput.type = "text";
+    nameInput.placeholder = "Prompt name";
+    nameInput.setAttribute(
+        "style",
+        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;" // Added flex-shrink
+    );
+
+    const textInput = form.appendChild(document.createElement("textarea"));
+    textInput.placeholder = "Prompt text";
+    textInput.value = 'Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:';
+	textInput.setAttribute(
+		"style",
+		"width: 100%;" +
+		"box-sizing: border-box !important;" +   // Good practice
+		"height: 240px !important;" +          // <<<< YOUR FIXED HEIGHT + !important
+		"resize: none !important;" +           // <<<< Disable resizing explicitly
+		"overflow-y: auto !important;" +       // <<<< Enable scrollbar if content overflows
+		"padding: 6px;" +
+		"border-radius: 4px;" +
+		"border: 1px solid var(--background-modifier-border);" +
+		"background-color: var(--input-background, var(--background-secondary));" +
+		"color: var(--text-normal);"
+	);
+
+    const buttonRow = form.appendChild(document.createElement("div"));
+    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;"); // Added flex-shrink
+
+    // ... (button creation and event handlers remain the same as the V3 Button Fix)
+    const saveBtn = buttonRow.appendChild(document.createElement("button"));
+    saveBtn.textContent = "Save";
+    saveBtn.setAttribute(
+        "style",
+        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);"
+    );
+
+    const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.setAttribute(
+        "style",
+        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);"
+    );
+
+    saveBtn.onclick = async (): Promise<void> => {
+        const name = (nameInput as HTMLInputElement).value.trim();
+        const text = (textInput as HTMLTextAreaElement).value.trim();
+        if (!name || !text) return;
+        this.addPromptForm?.remove();
+        this.addPromptForm = null;
+        this.plugin.settings.prompts.push({
+            id: `custom-${Date.now()}`,
+            name,
+            text,
+            isDefault: false,
+            enabled: true,
+        });
+        await this.plugin.saveSettings();
+        this.display();
+    };
+    cancelBtn.onclick = (): void => {
+        this.addPromptForm?.remove();
+        this.addPromptForm = null;
+    };
+    return form;
+}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
 		containerEl.createEl("h3", { text: "Prompt Management" });
