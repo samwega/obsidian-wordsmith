@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.3.1
+**Current Version:** v1.3.2
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -37,6 +37,7 @@ This major update overhauls how AI suggestions are displayed and managed, moving
 
 ### Sub-Versions
 **v1.3.1**—**AI Model Selector in Side Pane:** Quickly switch your preferred AI model directly from the AI Context Control Panel for even faster workflow adjustments.
+**v1.3.2**—Bug fixes.
 
 ## Table of contents
 
@@ -150,14 +151,13 @@ a suite of powerful AI capabilities:
     the AI for more accurate and relevant transformations:
     *   **Dynamic Context:** Automatically include surrounding text from your note.
     *   **Entire Note Context:** Use the full content of your current note.
-    *   **Custom Context:** Paste specific text snippets into the AI Context
+    *   **Custom Context:** Paste any specific text into the provided AI Context
         Control Panel.
     *   Adjust the scope of Dynamic Context with the "Dynamic context lines"
         setting.
-*   **Flexible Prompt Management:** Easily enable/disable default and custom
-    prompts. For advanced customization, default prompts can be modified by
-    editing the `data.json` file in the plugin's directory (reload Obsidian
-    after editing).
+*   **Flexible Prompt Management:** Easily enable/disable any default or custom
+    prompt using the
+    toggles in the settings.
 *   **Multiple AI Provider Support:** Choose between OpenAI (GPT models) and
     Google (Gemini models) to best suit your needs for quality, speed, and
     cost.
@@ -391,17 +391,17 @@ If you are using an older version or wish to customize the appearance for other 
 ```css
 /* Legacy CSS - Not primarily used by Text Transformer v1.3.0+ for suggestions */
 .cm-strikethrough {
-	text-decoration: none !important; /* Removes default strikethrough */
-	background-color: var(--color-red-translucent) !important;
-	border-radius: 3px !important;
-	/* color: white !important; */ /* Optional: contrast text color */
+    text-decoration: none !important; /* Removes default strikethrough */
+    background-color: var(--color-red-translucent) !important;
+    border-radius: 3px !important;
+    /* color: white !important; */ /* Optional: contrast text color */
 }
 
 .cm-s-obsidian span.cm-highlight,
 .markdown-rendered mark {
-	background-color: var(--color-green-translucent) !important;
-	border-radius: 3px !important;
-	/* color: white !important; */ /* Optional: contrast text color */
+    background-color: var(--color-green-translucent) !important;
+    border-radius: 3px !important;
+    /* color: white !important; */ /* Optional: contrast text color */
 }
 ```
 
