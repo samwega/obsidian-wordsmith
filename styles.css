@@ -10,3 +10,20 @@
 	text-decoration-color: var(--text-faint, #777); /* Or a more prominent color if you prefer */
 	/* color: var(--text-muted); */ /* Optional: if you want the text itself to be more faint */
 }
+
+.tt-added {
+  background-color: lightgreen !important;
+  color: black !important;
+  display: inline !important;
+  padding: 0 1px;
+  border-bottom: 1px solid green;
+}
+
+.tt-removed {
+  background-color: pink !important;
+  text-decoration: line-through !important;
+  text-decoration-color: red !important;
+  color: #555 !important;
+  display: inline !important;
+  padding: 0 1px;
+}

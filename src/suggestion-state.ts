@@ -112,11 +112,11 @@ class SuggestionViewPluginClass {
 
 		const activeDecorations: Range<Decoration>[] = [];
 		for (const mark of marks) {
-			let style = "";
+			let className = "";
 			if (mark.type === 'added') {
-				style = "background-color: lightgreen !important; color: black !important; display: inline !important; padding: 0 1px; border-bottom: 1px solid green;";
+				className = "tt-added";
 			} else if (mark.type === 'removed') {
-				style = "background-color: pink !important; text-decoration: line-through !important; text-decoration-color: red !important; color: #555 !important; display: inline !important; padding: 0 1px;";
+				className = "tt-removed";
 			}
 
 			if (mark.from >= mark.to) {
@@ -128,7 +128,7 @@ class SuggestionViewPluginClass {
 
 			try {
 				const decorationInstance = Decoration.mark({
-					attributes: { style: style }
+					class: className
 				}).range(mark.from, mark.to);
 				activeDecorations.push(decorationInstance);
 			} catch (e) {
