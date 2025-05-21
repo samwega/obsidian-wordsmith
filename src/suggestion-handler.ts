@@ -28,7 +28,6 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 function isPositionVisible(cm: EditorView, pos: number): boolean {
 	const coords = cm.coordsAtPos(pos);
 	if (!coords) {
-		// console.warn(`TextTransformer: coordsAtPos(${pos}) returned null.`); // Optional: for debugging visibility issues
 		return false;
 	}
 	const scrollDOM = cm.scrollDOM;
@@ -55,10 +54,6 @@ export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'rej
 		return;
 	}
 
-	// If the cursor is empty and already at the start of the found mark,
-	// we assume we are "on" it, possibly due to a previous scroll action by this command.
-	// In this case, we bypass the visibility check to avoid getting stuck
-	// if isPositionVisible has issues (e.g., coordsAtPos returns null or inaccurate values after scroll).
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
 	if (!effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
@@ -91,14 +86,10 @@ export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'rej
 
 	if (textChangeSpec) {
 		transactionSpec.changes = textChangeSpec;
-		newCursorPosAfterResolve = textChangeSpec.from; // For deletions, cursor goes to start of deleted region
+		newCursorPosAfterResolve = textChangeSpec.from; 
 	}
-	// For accept 'added', cursor stays at targetMark.from (original start of added text)
-	// For reject 'removed', cursor moves to targetMark.to (original end of removed text)
-	// This logic seems fine for advancing.
-
+	
 	transactionSpec.selection = EditorSelection.cursor(newCursorPosAfterResolve);
-
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
@@ -107,14 +98,8 @@ export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'rej
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-
-		// Find the next suggestion using the updated cm.state and cursor position
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
-
 		if (nextSuggestionToFocus) {
-			// Auto-focus or scroll to the next suggestion
-			// The 'effectivelyOnTarget' bypass is not used here as this is proactive focusing,
-			// not a response to "press again".
 			if (!isPositionVisible(cm, nextSuggestionToFocus.from)) {
 				cm.dispatch({
 					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, { y: "center", yMargin: 50 }),
@@ -129,18 +114,10 @@ export function resolveNextSuggestionCM6(editor: Editor, action: 'accept' | 'rej
 	}
 }
 
+// Assuming original getParagraphBoundaries works as intended for defining the "current" paragraph.
 function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: number } {
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
-
-	// Adjust initial line if pos is at the very start of an empty line that follows a non-empty line.
-	if (lineFrom.length === 0 && lineFrom.number > 1) {
-		const prevLine = doc.line(lineFrom.number - 1);
-		if (prevLine.length > 0) {
-			lineFrom = prevLine;
-			lineTo = prevLine; // Reset lineTo to ensure paragraph search starts from this adjusted line
-		}
-	}
 
 	// Find the start of the paragraph
 	while (lineFrom.number > 1) {
@@ -162,51 +139,163 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	return { from: lineFrom.from, to: lineTo.to };
 }
 
+// Helper to iterate through content paragraphs in the document.
+// A "content paragraph" is one or more consecutive non-empty lines.
+// It yields {from, to} for each content paragraph.
+function* iterateParagraphs(doc: Text, startPosition: number = 0): Generator<{ from: number; to: number; }, void, undefined> {
+    let currentPos = startPosition;
+    // Ensure startPosition is not past the document end if doc has content
+    if (currentPos >= doc.length && doc.length > 0) return; 
+
+    while (currentPos < doc.length) {
+        let line = doc.lineAt(currentPos);
+
+        // 1. Advance to find the start of the next actual content paragraph
+        // This loop finds the first non-empty line at or after currentPos.
+        let paragraphBeginLineNum = -1;
+        for (let n = line.number; n <= doc.lines; n++) {
+            const l = doc.line(n);
+            // Check if currentPos is beyond this line's start; if so, this line can't be the start
+            // unless currentPos was *on* this line.
+            if (l.from > currentPos && n > line.number) { // Optimization: if l.from is already past currentPos, use l.from for next iteration.
+                 // This condition is mainly for the first line. If currentPos is in the middle of line `n`,
+                 // then line `n` is still the one we are interested in.
+            } else if (currentPos > l.to) { // currentPos is after line l.
+                 continue;
+            }
+
+
+            if (l.text.trim() !== "") {
+                paragraphBeginLineNum = n;
+                break;
+            }
+        }
+
+        if (paragraphBeginLineNum === -1) return; // No more non-empty lines found
+
+        const paragraphStartLine = doc.line(paragraphBeginLineNum);
+        let paragraphEndLine = paragraphStartLine;
+
+        // 2. Find the end of this content paragraph
+        while (paragraphEndLine.number < doc.lines) {
+            const nextLine = doc.line(paragraphEndLine.number + 1);
+            if (nextLine.text.trim() === "") {
+                break; // Empty line marks the end of the current paragraph
+            }
+            paragraphEndLine = nextLine;
+        }
+
+        yield {
+            from: paragraphStartLine.from,
+            to: paragraphEndLine.to
+        };
+
+        // 3. Prepare for the next iteration: move currentPos to the start of the line AFTER this paragraph
+        currentPos = paragraphEndLine.to + 1; // Position after the paragraph just yielded
+        if (currentPos >= doc.length) return; // Reached end of document
+    }
+}
+
+
 export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept' | 'reject'): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) { new Notice("Modern editor version required."); return; }
 
-	let currentSelectionRange = cm.state.selection.main;
-	const initialCursorPos = cm.state.selection.main.head;
-	let isParagraphSelection = false;
-	let effectivePosForParagraph = initialCursorPos;
+	const allMarks = cm.state.field(suggestionStateField, false);
+	if (!allMarks || allMarks.length === 0) { 
+        new Notice("No suggestions found in the document.", 3000); 
+        return; 
+    }
 
-	if (currentSelectionRange.empty) {
-		const currentLine = cm.state.doc.lineAt(initialCursorPos);
-		// If cursor is on an empty line AND it's not the first line of the doc...
-		if (currentLine.length === 0 && currentLine.number > 1) {
-			const prevLine = cm.state.doc.line(currentLine.number - 1);
-			// ...and the previous line is NOT empty, then target the previous line's end.
-			if (prevLine.length > 0) {
-				effectivePosForParagraph = prevLine.to;
+	const doc = cm.state.doc;
+	let currentSelection = cm.state.selection.main;
+	const cursorOriginalPos = currentSelection.head; 
+
+	let paragraphToOperateOn: { from: number; to: number } | null = null;
+	let finalCursorPos = cursorOriginalPos; 
+	let isOperatingOnIdentifiedParagraph = false; // True if we found a paragraph via cycling logic
+
+	if (!currentSelection.empty) {
+		// User has selected text. Operate strictly on this selection.
+		paragraphToOperateOn = { from: currentSelection.from, to: currentSelection.to };
+		finalCursorPos = currentSelection.from; // Cursor to start of original selection
+	} else {
+		// Cursor is empty: paragraph mode with cycling.
+		isOperatingOnIdentifiedParagraph = true;
+        // Define the paragraph where the cursor currently is. This is our logical "start".
+		const paragraphAtCursor = getParagraphBoundaries(doc, cursorOriginalPos);
+		let pToProcess: { from: number, to: number } | null = null;
+
+		// Pass 1: Search from the current paragraph (or where it starts) to the end of the document.
+		let iterator = iterateParagraphs(doc, paragraphAtCursor.from);
+		for (const p of iterator) {
+			const marksInP = allMarks.filter(mark => mark.from < p.to && mark.to > p.from);
+			if (marksInP.length > 0) {
+				pToProcess = p;
+				break;
 			}
 		}
 
-		const paragraph = getParagraphBoundaries(cm.state.doc, effectivePosForParagraph);
+		// Pass 2: If not found in Pass 1, search from the document start up to (but not including) the initial paragraph.
+		// This pass is skipped if the initial paragraph was the very first one (paragraphAtCursor.from === 0),
+		// as Pass 1 would have covered the whole document.
+		if (!pToProcess && paragraphAtCursor.from > 0) {
+			iterator = iterateParagraphs(doc, 0);
+			for (const p of iterator) {
+				if (p.from >= paragraphAtCursor.from) { // Stop if we reach the paragraph where the cursor initially was
+					break;
+				}
+				const marksInP = allMarks.filter(mark => mark.from < p.to && mark.to > p.from);
+				if (marksInP.length > 0) {
+					pToProcess = p;
+					break;
+				}
+			}
+		}
 		
-		// Check if the determined paragraph is actually just an empty line or lines
-		const paragraphText = cm.state.doc.sliceString(paragraph.from, paragraph.to).trim();
-		if (paragraphText === "") {
-            new Notice("Cursor is in an empty line or paragraph. Nothing to select.", 3000);
-            return;
-        }
+		paragraphToOperateOn = pToProcess;
 
-		currentSelectionRange = EditorSelection.range(paragraph.from, paragraph.to);
-		isParagraphSelection = true;
+		if (paragraphToOperateOn) {
+            // Determine final cursor position
+			if (paragraphToOperateOn.from === paragraphAtCursor.from && paragraphToOperateOn.to === paragraphAtCursor.to) {
+				finalCursorPos = cursorOriginalPos; // Resolved in original paragraph, restore cursor
+			} else {
+				finalCursorPos = paragraphToOperateOn.from; // Resolved in a new paragraph, cursor to its start
+			}
+		} else {
+			// No paragraph with suggestions found after cycling.
+            // Check if the cursor was initially in a visually empty paragraph region.
+            const initialParagraphContent = doc.sliceString(paragraphAtCursor.from, paragraphAtCursor.to).trim();
+            if (initialParagraphContent === "") {
+                 new Notice("Cursor is in an empty paragraph. No suggestions found elsewhere in the document.", 4000);
+            } else {
+                 new Notice("No suggestions found in the current paragraph or elsewhere in the document.", 4000);
+            }
+			return;
+		}
 	}
 
-	const allMarks = cm.state.field(suggestionStateField, false);
-	if (!allMarks || allMarks.length === 0) { new Notice("No suggestions found in the document.", 3000); return; }
+	if (!paragraphToOperateOn) {
+        // This should ideally be caught by the logic above.
+        // If explicit selection, it means the selection itself was empty or invalid.
+        // If paragraph mode, means something went wrong with cycling or paragraph identification.
+        new Notice("Could not determine a paragraph or selection to process.", 3000);
+		return;
+	}
 
 	const marksInScope = allMarks.filter(mark =>
-		mark.from < currentSelectionRange.to && mark.to > currentSelectionRange.from
+		mark.from < paragraphToOperateOn!.to && mark.to > paragraphToOperateOn!.from
 	);
 
 	if (marksInScope.length === 0) {
-		const message = isParagraphSelection ?
-			"No suggestions found in the current paragraph." :
+        // This should not happen if paragraphToOperateOn was found by the cycling logic,
+        // as that logic already filters for paragraphs with marks.
+        // If it was an explicit selection, this is the original "no suggestions in selection".
+		const message = isOperatingOnIdentifiedParagraph ?
+			"Error: Target paragraph has no suggestions after selection." : // Should not be reached
 			"No suggestions found in the current selection.";
-		new Notice(message, 3000); return;
+		new Notice(message, 3000); 
+        return;
 	}
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
@@ -227,14 +316,14 @@ export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(isParagraphSelection ? initialCursorPos : currentSelectionRange.from)
+		selection: EditorSelection.cursor(finalCursorPos)
 	};
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
 	
-	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isParagraphSelection ? 'paragraph' : 'selection'} ${action}ed.`;
+	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? 'paragraph' : 'selection'} ${action}ed.`;
 	new Notice(noticeMessage, 3000);
 	
 	const remainingMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
@@ -251,23 +340,22 @@ export function clearAllActiveSuggestionsCM6(editor: Editor): void {
 	if (!marks || marks.length === 0) { new Notice("No suggestions to clear.", 3000); return; }
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
-	const sortedMarks = [...marks].sort((a,b) => b.from - a.from); // Sort descending for safe deletions
+	const sortedMarks = [...marks].sort((a,b) => b.from - a.from); 
 
 	for (const mark of sortedMarks) {
-		if (mark.type === 'added') { // Clearing suggestions means rejecting additions
+		if (mark.type === 'added') { 
 			changesArray.push({ from: mark.from, to: mark.to, insert: "" });
 		}
 	}
 
 	const transactionSpec: TransactionSpec = {
-		effects: clearAllSuggestionsEffect.of(null) // This will remove all marks from state
+		effects: clearAllSuggestionsEffect.of(null) 
 	};
 	if (changesArray.length > 0) {
 		const firstChangeFrom = Math.min(...changesArray.map(c => c.from));
 		transactionSpec.selection = EditorSelection.cursor(firstChangeFrom);
 		transactionSpec.changes = changesArray;
 	} else {
-		// If no text changes (e.g., all suggestions were 'removed' type), preserve selection
 		transactionSpec.selection = cm.state.selection;
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
