@@ -1,6 +1,20 @@
+// src/main.ts
 import { Plugin } from "obsidian";
-import { acceptOrRejectInText, acceptOrRejectNextSuggestion } from "./accept-reject-suggestions";
-import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-control-panel"; // Added import
+
+// Imports based on the deduced file content mapping
+import { textTransformerSuggestionExtensions } from './suggestion-state';
+import {
+    textTransformerDocumentCM6,
+    textTransformerTextCM6
+} from "./textTransformer"; // <= Core AI logic now expected here
+import {
+    resolveSuggestionsInSelectionCM6,
+    resolveNextSuggestionCM6,
+    clearAllActiveSuggestionsCM6
+} from "./suggestion-handler"; // <= Resolver logic now expected here
+
+// Existing imports
+import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-control-panel";
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
@@ -12,19 +26,22 @@ import {
     TextTransformerPrompt,
     DEFAULT_TEXT_TRANSFORMER_PROMPTS
 } from "./settings-data";
-import { textTransformerDocument, textTransformerText } from "./textTransformer";
+
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
 	settings: TextTransformerSettings = DEFAULT_SETTINGS;
 
 	override async onload(): Promise<void> {
-		// settings
+		// Settings
 		await this.loadSettings();
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
 
+        // Register CodeMirror 6 extensions for suggestions
+        this.registerEditorExtension(textTransformerSuggestionExtensions());
+
 		// Register the context control panel view
-		this.registerView(CONTEXT_CONTROL_VIEW_TYPE, (leaf) => new ContextControlPanel(leaf));
+		this.registerView(CONTEXT_CONTROL_VIEW_TYPE, (leaf) => new ContextControlPanel(leaf)); // Corrected: Removed 'this'
 
 		// Add a command to open the context control panel
 		this.addCommand({
@@ -33,22 +50,23 @@ export default class TextTransformer extends Plugin {
 			callback: () => {
 				this.activateView();
 			},
-			icon: "settings-2", // You might want to choose a more appropriate icon
+			icon: "settings-2",
 		});
 
-		// commands
+		// Commands
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",
-			name: "Transform selection/paragraph",
-			editorCallback: (editor): Promise<void> => {
+			name: "Transform selection/paragraph (CM6)",
+			editorCallback: async (editor) => {
 				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 1) {
-					return textTransformerText(this, editor, enabledPrompts[0]);
+					await textTransformerTextCM6(this, editor, enabledPrompts[0]);
+					return;
 				}
-				// Show prompt selection modal
-				return new Promise((resolve) => {
-					const modal = new PromptPaletteModal(this.app, enabledPrompts, (prompt) => {
-						textTransformerText(this, editor, prompt).then(resolve);
+                return new Promise<void>((resolve) => {
+					const modal = new PromptPaletteModal(this.app, enabledPrompts, async (prompt) => {
+						await textTransformerTextCM6(this, editor, prompt);
+						resolve();
 					});
 					modal.open();
 				});
@@ -57,34 +75,41 @@ export default class TextTransformer extends Plugin {
 		});
 		this.addCommand({
 			id: "textTransformer-full-document",
-			name: "Text Transformer full document",
-			editorCallback: (editor): Promise<void> => textTransformerDocument(this, editor),
+			name: "Text Transformer full document (CM6)",
+			editorCallback: (editor) => textTransformerDocumentCM6(this, editor),
 			icon: "bot-message-square",
 		});
 		this.addCommand({
 			id: "accept-suggestions-in-text",
-			name: "Accept suggestions in selection/paragraph",
-			editorCallback: (editor): void => acceptOrRejectInText(editor, "accept"),
+			name: "Accept suggestions in selection/paragraph (CM6)",
+			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(editor, "accept"),
 			icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-suggestions-in-text",
-			name: "Reject suggestions in selection/paragraph",
-			editorCallback: (editor): void => acceptOrRejectInText(editor, "reject"),
+			name: "Reject suggestions in selection/paragraph (CM6)",
+			editorCallback: (editor): void => resolveSuggestionsInSelectionCM6(editor, "reject"),
 			icon: "x",
 		});
 		this.addCommand({
 			id: "accept-next-suggestion",
-			name: "Accept next suggestion (or go to suggestion if outside viewport)",
-			editorCallback: (editor): void => acceptOrRejectNextSuggestion(editor, "accept"),
+			name: "Accept next suggestion (CM6)",
+			editorCallback: (editor): void => resolveNextSuggestionCM6(editor, "accept"),
 			icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-next-suggestion",
-			name: "Reject next suggestion (or go to suggestion if outside viewport)",
-			editorCallback: (editor): void => acceptOrRejectNextSuggestion(editor, "reject"),
+			name: "Reject next suggestion (CM6)",
+			editorCallback: (editor): void => resolveNextSuggestionCM6(editor, "reject"),
 			icon: "x",
 		});
+        this.addCommand({
+            id: "clear-all-suggestions",
+            name: "Clear all active suggestions (reject all) (CM6)",
+            editorCallback: (editor): void => clearAllActiveSuggestionsCM6(editor),
+            icon: "trash-2",
+        });
+
 
 		console.info(this.manifest.name + " Plugin loaded.");
 	}
@@ -103,6 +128,7 @@ export default class TextTransformer extends Plugin {
 	}
 
 	override onunload(): void {
+        this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
 
@@ -114,23 +140,22 @@ export default class TextTransformer extends Plugin {
 		const loaded = await this.loadData();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
 
-		// Merge in any new default prompts that do not already exist
 		if (!Array.isArray(this.settings.prompts)) {
 			this.settings.prompts = [];
 		}
 		const existingIds = new Set(this.settings.prompts.map((p: TextTransformerPrompt) => p.id));
 		for (const defPrompt of DEFAULT_TEXT_TRANSFORMER_PROMPTS) {
 			if (!existingIds.has(defPrompt.id)) {
-				this.settings.prompts.push({ ...defPrompt });
+                const newPrompt = { ...defPrompt };
+                if (typeof newPrompt.enabled === 'undefined') {
+                    newPrompt.enabled = true;
+                }
+				this.settings.prompts.push(newPrompt);
 			}
 		}
-
-		// In case the plugin updates to newer models, ensure the user will not be
-		// left with an outdated model from the settings.
 		const outdatedModel = !Object.keys(MODEL_SPECS).includes(this.settings.model);
 		if (outdatedModel) {
 			this.settings.model = DEFAULT_SETTINGS.model;
-			await this.saveSettings();
 		}
 	}
 }
