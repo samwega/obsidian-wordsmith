@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** 1.2.2
+**Current Version:** 1.3.0
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -16,9 +16,59 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 <img alt="Showcase" width=70% src="https://github.com/user-attachments/assets/fa77eb97-61b9-4102-b8b2-e7c385868363">
 <img alt="Showcase" width=70% src="https://i.imgur.com/3raRn13.png">
 
-## ✨ What's New in v1.2.1 & v1.2.2 ✨
+## ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
 
-These updates bring significant UI enhancements, a new dynamic translator feature, and a powerful new default prompt:
+This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
+
+*   **New Suggestion Engine:**
+    *   **No More Markdown Markers:** Text Transformer **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
+    *   **Direct CodeMirror Decorations:** Suggestions are now rendered using **inline-styled CodeMirror 6 decorations**. This means:
+        *   Added text is typically shown with a light green background.
+        *   Removed text is shown with a light pink background and a line-through effect.
+        *   These styles are applied *visually* without altering the underlying text with special characters, providing a cleaner experience and better theme compatibility.
+*   **Robust Internal Logic:**
+    *   The internal state management for suggestions has been rewritten using a CodeMirror `ViewPlugin` for more direct and efficient handling of decorations.
+    *   Improved error handling and extensive logging have been added for easier debugging and more stable performance.
+*   **Settings Enhancements:**
+    *   Settings loading is now more robust, with better migration logic for prompts and ensures default values are correctly applied.
+*   **Refined User Experience:**
+    *   Command names have been simplified (e.g., "(CM6)" suffix removed).
+    *   Notices and messages have been clarified.
+
+## Table of contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Release History](#release-history)
+  - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
+  - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
+  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
+  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+- [Features](#features)
+- [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
+- [AI Providers & Models](#ai-providers--models)
+- [Installation & Setup](#installation--setup)
+  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+  - [Manual Installation](#manual-installation)
+  - [API Key Setup](#api-key-setup)
+- [Usage](#usage)
+  - [Core Commands](#core-commands)
+  - [Managing Suggestions](#managing-suggestions)
+  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+- [Customizing Prompts](#customizing-prompts)
+- [Visual Appearance of Changes (Legacy)](#visual-appearance-of-changes-legacy)
+- [Plugin Development](#plugin-development)
+- [About the Developer](#about-the-developer)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Release History
+
+### ✨ What's New in v1.2.1 & v1.2.2 ✨
+
+These updates brought significant UI enhancements, a new dynamic translator feature, and a powerful new default prompt:
 
 *   **Revamped Settings UI:**
     *   Implemented a **two-column layout** for Prompt Settings and Prompt Management for a more organized view.
@@ -28,10 +78,10 @@ These updates bring significant UI enhancements, a new dynamic translator featur
 *   **New Default Prompt - "Mind the Context!":** This prompt instructs the model to do what the context says, and revises the text strictly based on the directives provided in the context. For instance, you can add any rule on the fly in the Custom Context box.
 *   **Bug Fixes:** Addressed issues related to the translator input box display.
 
-## ✨ What's New in v1.2.0 ✨
+### ✨ What's New in v1.2.0 ✨
 
-This version significantly enhances your control over the AI's context and
-streamlines prompt management:
+This version significantly enhanced your control over the AI's context and
+streamlined prompt management:
 
 *   **Take control of your AI's context with the new Context Control Panel:**
     *   **Dynamic Context:** Automatically include surrounding paragraphs for
@@ -47,35 +97,6 @@ streamlines prompt management:
 *   **Prompt Management Update:** Added a helpful note in the settings page
     explaining how to manually edit default prompts by modifying the
     `data.json` file (requires an Obsidian reload after changes).
-
-## Table of contents
-
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Release History](#release-history)
-  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
-  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
-- [Features](#features)
-- [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
-- [AI Providers & Models](#ai-providers--models)
-- [Installation & Setup](#installation--setup)
-  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
-  - [Manual Installation](#manual-installation)
-  - [API Key Setup](#api-key-setup)
-- [Usage](#usage)
-  - [Core Commands](#core-commands)
-  - [Managing Suggestions](#managing-suggestions)
-  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
-- [Customizing Prompts](#customizing-prompts)
-- [Visual Appearance of Changes](#visual-appearance-of-changes)
-- [Plugin Development](#plugin-development)
-- [About the Developer](#about-the-developer)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-## Release History
 
 ### ✨ What's New in v1.1.0 ✨
 
@@ -117,8 +138,9 @@ a suite of powerful AI capabilities:
     from a range of built-in prompts or your own creations through an
     intuitive palette.
 *   **Inline Suggestion Review:** AI-generated changes are displayed directly in
-    your editor as `==highlights==` (additions) and `~~strikethroughs~~`
-    (removals). Accept or reject each change individually or in batches.
+    your editor. Added text appears with a background highlight (e.g., light green),
+    and removed text is shown with a different background and strikethrough (e.g., light pink).
+    Accept or reject each change individually or in batches.
 *   **Custom Prompts:** Go beyond the defaults! Create and save your own prompts
     tailored to your specific writing needs and workflows.
 *   **Advanced AI Context Control:** Precisely control the information sent to
@@ -153,8 +175,10 @@ system:
 2.  **Choose Your Prompt:** Select from default or your custom-created prompts
     using the Prompt Palette.
 3.  **See Instant Changes:** The AI processes your text, and suggestions appear
-    directly in your editor – additions are highlighted (`==like this==`) and
-    deletions are struck through (`~~like this~~`).
+    directly in your editor – additions are typically highlighted with a light green
+    background, and deletions are shown with a light pink background and
+    struck through. These are visual cues powered by CodeMirror decorations and do not insert
+    special characters like `==` or `~~` into your text.
 4.  **You're in Control:** Use dedicated commands (and hotkeys) to accept or
     reject each individual suggestion, or accept/reject all suggestions
     within the current selection/paragraph at once.
@@ -299,6 +323,8 @@ Once suggestions are inserted:
 *   **`Text Transformer: Reject suggestions in selection/paragraph`**: Rejects
     all AI suggestions within the current text selection (or current
     paragraph).
+*   **`Text Transformer: Clear all active suggestions (reject all)`**: Rejects
+    all active suggestions in the current document and clears their visual markings.
 
 ### Using the AI Context Control Panel
 
@@ -351,14 +377,13 @@ Tailor Text Transformer to your exact needs:
     directly (be cautious!) and reload Obsidian for changes to take effect.
     It's often safer to create a new custom prompt based on a default one.
 
-## Visual Appearance of Changes
+## Visual Appearance of Changes (Legacy)
 
-To make the `==highlighted==` additions and `~~struck-through~~` deletions more
-visually distinct (like traditional track changes), you can add the following
-CSS snippet to your Obsidian vault. (Learn
-[How to add CSS snippets](https://help.obsidian.md/How+to/Add+custom+styles#CSS+snippets)).
+Prior to v1.3.0, Text Transformer used `==highlighted==` additions and `~~struck-through~~` deletions.
+If you are using an older version or wish to customize the appearance for other plugins that might use similar markdown, you could use CSS snippets. **For v1.3.0 and later, the visual appearance is handled by inline styles applied by the plugin itself, and the CSS below is not directly used by Text Transformer for its suggestions.**
 
 ```css
+/* Legacy CSS - Not primarily used by Text Transformer v1.3.0+ for suggestions */
 .cm-strikethrough {
 	text-decoration: none !important; /* Removes default strikethrough */
 	background-color: var(--color-red-translucent) !important;
@@ -373,9 +398,6 @@ CSS snippet to your Obsidian vault. (Learn
 	/* color: white !important; */ /* Optional: contrast text color */
 }
 ```
-*(Note: I've updated the CSS to use translucent theme colors which often look
-better, and added `.markdown-rendered mark` for consistency in reading view,
-but users can customize colors as they like).*
 
 ## Plugin Development
 
