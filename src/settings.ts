@@ -5,7 +5,7 @@ import {
     SupportedModels,
     TextTransformerPrompt,
     TextTransformerSettings,
-    DEFAULT_SETTINGS,
+    DEFAULT_SETTINGS, // Import DEFAULT_SETTINGS
 } from "./settings-data";
 
 //──────────────────────────────────────────────────────────────────────────────
@@ -130,10 +130,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				}));
 	}
 
-// In your TextTransformerSettingsMenu class:
-
 private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
-    console.log("TextTransformer: _createEditPromptForm EXECUTING - V4 Height Control");
     const form = document.createElement("div");
     form.className = "add-prompt-form";
 	form.setAttribute(
@@ -172,7 +169,6 @@ private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
     const buttonRow = form.appendChild(document.createElement("div"));
     buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;"); // Added flex-shrink
 
-    // ... (button creation and event handlers remain the same as the V3 Button Fix)
     const saveBtn = buttonRow.appendChild(document.createElement("button"));
     saveBtn.textContent = "Save";
     saveBtn.setAttribute(
@@ -196,7 +192,7 @@ private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
         await this.plugin.saveSettings();
         this.addPromptForm?.remove();
         this.addPromptForm = null;
-        this.display();
+        this.display(); // Refresh display to show updated prompt
     };
     cancelBtn.onclick = (): void => {
         this.addPromptForm?.remove();
@@ -206,7 +202,6 @@ private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
 }
 
 private _createAddPromptForm(): HTMLDivElement {
-    console.log("TextTransformer: _createAddPromptForm EXECUTING - V4 Height Control");
     const form = document.createElement("div");
     form.className = "add-prompt-form";
 	form.setAttribute(
@@ -221,7 +216,7 @@ private _createAddPromptForm(): HTMLDivElement {
     nameInput.placeholder = "Prompt name";
     nameInput.setAttribute(
         "style",
-        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;" // Added flex-shrink
+        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;"
     );
 
     const textInput = form.appendChild(document.createElement("textarea"));
@@ -230,10 +225,10 @@ private _createAddPromptForm(): HTMLDivElement {
 	textInput.setAttribute(
 		"style",
 		"width: 100%;" +
-		"box-sizing: border-box !important;" +   // Good practice
-		"height: 240px !important;" +          // <<<< YOUR FIXED HEIGHT + !important
-		"resize: none !important;" +           // <<<< Disable resizing explicitly
-		"overflow-y: auto !important;" +       // <<<< Enable scrollbar if content overflows
+		"box-sizing: border-box !important;" +
+		"height: 240px !important;" +
+		"resize: none !important;" +
+		"overflow-y: auto !important;" +
 		"padding: 6px;" +
 		"border-radius: 4px;" +
 		"border: 1px solid var(--background-modifier-border);" +
@@ -242,9 +237,8 @@ private _createAddPromptForm(): HTMLDivElement {
 	);
 
     const buttonRow = form.appendChild(document.createElement("div"));
-    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;"); // Added flex-shrink
+    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;");
 
-    // ... (button creation and event handlers remain the same as the V3 Button Fix)
     const saveBtn = buttonRow.appendChild(document.createElement("button"));
     saveBtn.textContent = "Save";
     saveBtn.setAttribute(
@@ -273,7 +267,7 @@ private _createAddPromptForm(): HTMLDivElement {
             enabled: true,
         });
         await this.plugin.saveSettings();
-        this.display();
+        this.display(); // Refresh display to show new prompt
     };
     cancelBtn.onclick = (): void => {
         this.addPromptForm?.remove();
@@ -309,29 +303,26 @@ private _createAddPromptForm(): HTMLDivElement {
 			const setting = new Setting(settingContainer);
 
 			if (prompt.id === "translate") {
-				// Keep the setting name static in the UI
 				setting.setName("Translate to:"); 
 
 				setting.addText(text => text
 					.setPlaceholder("E.g., Spanish")
-					.setValue(this.plugin.settings.translationLanguage || prompt.defaultLanguage || "English")
+					.setValue(this.plugin.settings.translationLanguage) // Simplified: No fallbacks needed
 					.onChange(async (value) => {
 						const newLang = value.trim();
-						this.plugin.settings.translationLanguage = newLang;
+						this.plugin.settings.translationLanguage = newLang || DEFAULT_SETTINGS.translationLanguage; // Revert to default if empty
 
-						// Update the name of the prompt object in settings for the command palette
 						const translatePromptObj = this.plugin.settings.prompts.find(p => p.id === "translate");
 						if (translatePromptObj) {
 							if (newLang) {
 								translatePromptObj.name = `Translate to ${newLang}—autodetects source language`;
 							} else {
-								// Revert to original name structure with default language if input is empty
-								const defaultLang = prompt.defaultLanguage || "English";
-								translatePromptObj.name = `Translate to ${defaultLang}—autodetects source language`;
+                                // Revert to name based on default settings language if input is empty
+								translatePromptObj.name = `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`;
 							}
 						}
 						await this.plugin.saveSettings();
-						// DO NOT call this.display() here to avoid focus loss
+                        // No this.display() here to avoid focus loss on the text input
 					}));
 				
 				setting.addToggle((tg) => {
@@ -399,7 +390,7 @@ private _createAddPromptForm(): HTMLDivElement {
 							if (realIdx > -1) {
 								this.plugin.settings.prompts.splice(realIdx, 1);
 								await this.plugin.saveSettings();
-								this.display();
+								this.display(); // Refresh display to remove deleted prompt
 							}
 						});
 				});
@@ -470,5 +461,5 @@ private _createAddPromptForm(): HTMLDivElement {
 	}
 }
 
-export { DEFAULT_SETTINGS };
-export type { TextTransformerSettings, TextTransformerPrompt };
+export { DEFAULT_SETTINGS }; // Keep this export if other files might use it directly
+export type { TextTransformerSettings, TextTransformerPrompt }; // Keep type exports

@@ -1,5 +1,5 @@
 // src/main.ts
-import { Notice, Plugin } from "obsidian";
+import { Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import { textTransformerSuggestionExtensions } from './suggestion-state';
 import {
@@ -22,7 +22,8 @@ import {
 import {
 	MODEL_SPECS,
 	TextTransformerPrompt,
-	DEFAULT_TEXT_TRANSFORMER_PROMPTS
+	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
+	SupportedModels,
 } from "./settings-data";
 
 
@@ -146,6 +147,12 @@ export default class TextTransformer extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
+		// Update any open ContextControlPanel views
+		this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE).forEach((leaf: WorkspaceLeaf) => {
+			if (leaf.view instanceof ContextControlPanel) {
+				leaf.view.updateModelSelector();
+			}
+		});
 	}
 
 	async loadSettings(): Promise<void> {

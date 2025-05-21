@@ -72,8 +72,18 @@ export interface TextTransformerPrompt {
 	text: string; // the prompt text
 	isDefault: boolean; // true for default prompts
 	enabled: boolean; // if this prompt is active
-	defaultLanguage?: string; // New field
 }
+
+export const DEFAULT_SETTINGS: TextTransformerSettings = {
+	openAiApiKey: "",
+	geminiApiKey: "",
+	model: "gpt-4.1-nano",
+	prompts: [], // Will be populated after its own definition
+	preserveTextInsideQuotes: false,
+	preserveBlockquotes: false,
+	dynamicContextLineCount: 3,
+	translationLanguage: "English",
+};
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
@@ -127,13 +137,16 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "translate",
-		name: "Translate to {language} (autodetects source language)",
+		name: `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`,
 		text: "Act as a professional translator. Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-		defaultLanguage: "English",
 	},
 ];
+
+// Assign DEFAULT_TEXT_TRANSFORMER_PROMPTS to DEFAULT_SETTINGS.prompts after definition
+DEFAULT_SETTINGS.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map(p => ({...p}));
+
 
 export interface TextTransformerSettings {
 	openAiApiKey: string;
@@ -142,17 +155,6 @@ export interface TextTransformerSettings {
 	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
 	preserveTextInsideQuotes: boolean;
 	preserveBlockquotes: boolean;
-	dynamicContextLineCount: number; // New setting
-	translationLanguage: string; // New setting for target language
+	dynamicContextLineCount: number; 
+	translationLanguage: string; 
 }
-
-export const DEFAULT_SETTINGS: TextTransformerSettings = {
-	openAiApiKey: "",
-	geminiApiKey: "",
-	model: "gpt-4.1-nano",
-	prompts: DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	preserveTextInsideQuotes: false,
-	preserveBlockquotes: false,
-	dynamicContextLineCount: 3, // New setting default
-	translationLanguage: "English", // Default target language
-};
