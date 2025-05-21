@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.3.2
+**Current Version:** v1.4.0
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -15,6 +15,23 @@ original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofre
 
 <img alt="Showcase" width=70% src="https://i.imgur.com/TPtENT3.png">
 <img alt="Showcase" width=70% src="https://i.imgur.com/3raRn13.png">
+
+## ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
+
+This update brings a crucial enhancement to how Text Transformer handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
+
+*   **Enhanced Newline Diffing:**
+    *   **Reliable Newline Markers:** Added newlines are now consistently represented by a green "↵" (Enter Key Symbol) and removed newlines by a pink "¶" (Pilcrow Symbol).
+    *   **Improved Accuracy for Structural Changes:** The underlying diffing mechanism (`jsdiff`) has been switched to `diffWordsWithSpace` and combined with more granular internal processing. This significantly improves the plugin's ability to detect and represent newline additions and removals, even when they are part of larger text blocks or when AI rephrases sentences across line breaks.
+    *   **Clearer Visuals for Reformatting:** Whether the AI is breaking a long sentence into multiple lines, or merging multiple lines into one, these structural changes involving newlines are now clearly and correctly marked for your review.
+*   **More Robust Suggestion Handling:**
+    *   The logic for applying and resolving suggestions involving these new newline markers has been updated for consistency. Accepting an added "↵" correctly inserts a newline, and rejecting a removed "¶" correctly re-inserts the newline.
+*   **Under-the-Hood Tweaks:**
+    *   Refinements to TypeScript typings and removal of unused code/directives for a cleaner codebase.
+
+**Why this matters:** Previously, accurately tracking all AI-suggested newline additions could be inconsistent. This update ensures that whether the AI adds a line break for clarity, removes one for conciseness, or completely restructures a paragraph, you'll see exactly what's proposed for every line change, giving you finer control over the final output.
+
+---
 
 ## ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
 
