@@ -6,7 +6,6 @@ import { EditorSelection, TransactionSpec, StateEffect, Text } from "@codemirror
 import { suggestionStateField, resolveSuggestionEffect, SuggestionMark, clearAllSuggestionsEffect } from "./suggestion-state";
 
 function getCmEditorView(editor: Editor): EditorView | null {
-	// @ts-expect-error: editor.cm
 	const cmInstance = editor.cm;
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }
@@ -134,6 +133,15 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
 
+	// Adjust initial line if pos is at the very start of an empty line that follows a non-empty line.
+	if (lineFrom.length === 0 && lineFrom.number > 1) {
+		const prevLine = doc.line(lineFrom.number - 1);
+		if (prevLine.length > 0) {
+			lineFrom = prevLine;
+			lineTo = prevLine; // Reset lineTo to ensure paragraph search starts from this adjusted line
+		}
+	}
+
 	// Find the start of the paragraph
 	while (lineFrom.number > 1) {
 		const prevLine = doc.line(lineFrom.number - 1);
@@ -158,28 +166,40 @@ export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept
 	const cm = getCmEditorView(editor);
 	if (!cm) { new Notice("Modern editor version required."); return; }
 
-	let currentSelection = cm.state.selection.main;
+	let currentSelectionRange = cm.state.selection.main;
+	const initialCursorPos = cm.state.selection.main.head;
 	let isParagraphSelection = false;
+	let effectivePosForParagraph = initialCursorPos;
 
-	if (currentSelection.empty) {
-		const paragraph = getParagraphBoundaries(cm.state.doc, currentSelection.head);
-		currentSelection = EditorSelection.range(paragraph.from, paragraph.to);
-		isParagraphSelection = true;
-		if (currentSelection.empty && (paragraph.from !== paragraph.to)) { // If paragraph is not empty but selection is, it means it's a single line.
-			// This case should ideally be handled by getParagraphBoundaries returning non-empty from/to for a single line.
-			// However, if it still results in an empty selection for a valid line, we might need to adjust.
-			// For now, we assume getParagraphBoundaries correctly identifies single-line paragraphs.
-		} else if (paragraph.from === paragraph.to) { // Truly empty paragraph or at doc start/end
+	if (currentSelectionRange.empty) {
+		const currentLine = cm.state.doc.lineAt(initialCursorPos);
+		// If cursor is on an empty line AND it's not the first line of the doc...
+		if (currentLine.length === 0 && currentLine.number > 1) {
+			const prevLine = cm.state.doc.line(currentLine.number - 1);
+			// ...and the previous line is NOT empty, then target the previous line's end.
+			if (prevLine.length > 0) {
+				effectivePosForParagraph = prevLine.to;
+			}
+		}
+
+		const paragraph = getParagraphBoundaries(cm.state.doc, effectivePosForParagraph);
+		
+		// Check if the determined paragraph is actually just an empty line or lines
+		const paragraphText = cm.state.doc.sliceString(paragraph.from, paragraph.to).trim();
+		if (paragraphText === "") {
             new Notice("Cursor is in an empty line or paragraph. Nothing to select.", 3000);
             return;
         }
+
+		currentSelectionRange = EditorSelection.range(paragraph.from, paragraph.to);
+		isParagraphSelection = true;
 	}
 
 	const allMarks = cm.state.field(suggestionStateField, false);
 	if (!allMarks || allMarks.length === 0) { new Notice("No suggestions found in the document.", 3000); return; }
 
 	const marksInScope = allMarks.filter(mark =>
-		mark.from < currentSelection.to && mark.to > currentSelection.from
+		mark.from < currentSelectionRange.to && mark.to > currentSelectionRange.from
 	);
 
 	if (marksInScope.length === 0) {
@@ -207,8 +227,7 @@ export function resolveSuggestionsInSelectionCM6(editor: Editor, action: 'accept
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		// Preserve original cursor if it was a paragraph selection, otherwise restore to start of original selection
-		selection: EditorSelection.cursor(isParagraphSelection ? cm.state.selection.main.head : currentSelection.from)
+		selection: EditorSelection.cursor(isParagraphSelection ? initialCursorPos : currentSelectionRange.from)
 	};
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
