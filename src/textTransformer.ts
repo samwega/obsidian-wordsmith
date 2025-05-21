@@ -1,5 +1,5 @@
 // src/textTransformer.ts
-import * as Diff from "diff"; // Changed import
+import * as Diff from "diff"; // Keep this import
 import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 import { EditorView } from "@codemirror/view";
 import { EditorSelection } from "@codemirror/state";
@@ -12,10 +12,8 @@ import { ContextControlPanel, CONTEXT_CONTROL_VIEW_TYPE } from "./context-contro
 
 import { setSuggestionsEffect, SuggestionMark, generateSuggestionId, suggestionStateField, clearAllSuggestionsEffect } from "./suggestion-state";
 
-// Constants for newline visual markers
 export const NEWLINE_ADD_SYMBOL = "↵";
 export const NEWLINE_REMOVE_SYMBOL = "¶";
-
 
 function getCmEditorView(editor: Editor): EditorView | null {
 	const cmInstance = editor.cm;
@@ -33,7 +31,6 @@ async function validateAndApplyAIDrivenChanges(
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		new Notice("Text Transformer requires a modern editor version. Cannot apply suggestions.");
-		console.error("TextTransformer: CodeMirror 6 EditorView not found.");
 		return false;
 	}
 
@@ -44,8 +41,7 @@ async function validateAndApplyAIDrivenChanges(
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
 	if (existingSuggestions && existingSuggestions.length > 0) {
-		const warnMsg = `${scope} already has active suggestions. Please accept or reject them first.`;
-		new Notice(warnMsg, 6000);
+		new Notice(`${scope} already has active suggestions. Please accept or reject them first.`, 6000);
 		return false;
 	}
 
@@ -54,8 +50,8 @@ async function validateAndApplyAIDrivenChanges(
 	const longInput = originalText.length > (settings.longInputThreshold || 1500);
 	const veryLongInput = originalText.length > (settings.veryLongInputThreshold || 15000);
 	const notifDuration = longInput ? 0 : 4_000;
-
 	let additionalContextForAI = "";
+
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 	if (contextPanelLeaves.length > 0) {
 		const view = contextPanelLeaves[0].view;
@@ -68,14 +64,10 @@ async function validateAndApplyAIDrivenChanges(
 			const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
 			const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
 
-			if (customText) {
-				contextParts.push(`--- Custom User-Provided Context Start ---\n${customText}\n--- Custom User-Provided Context End ---`);
-			}
-
+			if (customText) contextParts.push(`--- Custom User-Provided Context Start ---\n${customText}\n--- Custom User-Provided Context End ---`);
 			if (useDynamic) {
 				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
 				let selectionStartLine: number, selectionEndLine: number;
-
 				if (scope === "Selection" && editor.somethingSelected()) {
 					const sel = editor.listSelections()[0];
 					selectionStartLine = Math.min(sel.anchor.line, sel.head.line);
@@ -84,32 +76,20 @@ async function validateAndApplyAIDrivenChanges(
 					selectionStartLine = editor.getCursor("from").line;
 					selectionEndLine = selectionStartLine;
 				}
-
-				const docFirstLine = 0;
-				const docLastLine = editor.lastLine();
-				const contextStartLine = Math.max(docFirstLine, selectionStartLine - linesToIncludeAround);
-				const contextEndLine = Math.min(docLastLine, selectionEndLine + linesToIncludeAround);
-
+				const contextStartLine = Math.max(0, selectionStartLine - linesToIncludeAround);
+				const contextEndLine = Math.min(editor.lastLine(), selectionEndLine + linesToIncludeAround);
 				let dynamicContextLines: string[] = [];
-				for (let i = contextStartLine; i <= contextEndLine; i++) {
-					dynamicContextLines.push(editor.getLine(i));
-				}
+				for (let i = contextStartLine; i <= contextEndLine; i++) dynamicContextLines.push(editor.getLine(i));
 				let dynamicContextText = dynamicContextLines.join('\n');
-
-				if (dynamicContextText.includes(originalText)) {
-					dynamicContextText = dynamicContextText.replace(originalText, `${markerStart}${originalText}${markerEnd}`);
-				}
-				contextParts.push(`--- Dynamic Context Start (Original text to transform is marked if found) ---\n${dynamicContextText}\n--- Dynamic Context End ---`);
-
+				if (dynamicContextText.includes(originalText)) dynamicContextText = dynamicContextText.replace(originalText, `${markerStart}${originalText}${markerEnd}`);
+				contextParts.push(`--- Dynamic Context Start ---\n${dynamicContextText}\n--- Dynamic Context End ---`);
 			} else if (useWholeNote) {
 				const currentFile = app.workspace.getActiveFile();
 				if (currentFile) {
 					const fileContent = await app.vault.cachedRead(currentFile);
 					let wholeNoteContext = fileContent;
-					if (scope !== "Document" && fileContent.includes(originalText)) {
-						wholeNoteContext = fileContent.replace(originalText, `${markerStart}${originalText}${markerEnd}`);
-					}
-					contextParts.push(`--- Whole Note Context Start (Original text to transform is marked if not entire document) ---\n${wholeNoteContext}\n--- Whole Note Context End ---`);
+					if (scope !== "Document" && fileContent.includes(originalText)) wholeNoteContext = fileContent.replace(originalText, `${markerStart}${originalText}${markerEnd}`);
+					contextParts.push(`--- Whole Note Context Start ---\n${wholeNoteContext}\n--- Whole Note Context End ---`);
 				}
 			}
 			if (contextParts.length > 0) additionalContextForAI = contextParts.join('\n\n');
@@ -117,130 +97,119 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	let initialMsg = `🤖 ${scope} is being text transformed…`;
-	if (additionalContextForAI) initialMsg += " (with additional context)";
-	if (longInput) {
-		initialMsg += `\n\nDue to the length of the text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}\n\nDo not go to a different file or change the original text in the meantime.`;
-	}
+	if (additionalContextForAI) initialMsg += " (with context)";
+	if (longInput) initialMsg += `\n\nLarge text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}`;
 	const notice = new Notice(initialMsg, longInput ? 0 : 4000);
 
 	let currentPrompt: TextTransformerPrompt = { ...promptInfo };
 	if (currentPrompt.id === "translate") {
-		const targetLanguageSetting = plugin.settings.translationLanguage?.trim();
-		currentPrompt.text = currentPrompt.text.replace(
-			"{language}",
-			targetLanguageSetting || "any suitable language based on the provided text"
-		);
+		currentPrompt.text = currentPrompt.text.replace("{language}", plugin.settings.translationLanguage?.trim() || "target language");
 	}
 
 	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
 	let response: ResponseType;
 	try {
-		if (settings.model.startsWith("gemini-")) {
-			response = await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI);
-		} else {
-			response = await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
-		}
+		response = settings.model.startsWith("gemini-")
+			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI)
+			: await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
 	} catch (error) {
-		console.error("TextTransformer: AI request failed.", error);
 		new Notice(`AI request failed: ${error instanceof Error ? error.message : String(error)}`, 0);
-		notice.hide();
-		return false;
+		notice.hide(); return false;
 	}
 
-	const { newText: newTextFromAI, isOverlength, cost } = response || {};
 	notice.hide();
+	const { newText: newTextFromAI, isOverlength, cost } = response || {};
+	if (!newTextFromAI) { new Notice("AI did not return new text.", notifDuration); return false; }
+	if (fileBefore !== app.workspace.getActiveFile()?.path) { new Notice("⚠️ Active file changed. Aborting.", notifDuration); return false; }
 
-	if (!newTextFromAI) {
-		new Notice("AI did not return new text.", notifDuration);
-		return false;
-	}
-
-	if (fileBefore !== app.workspace.getActiveFile()?.path) {
-		new Notice("⚠️ The active file changed during AI processing. Aborting.", notifDuration);
-		return false;
-	}
     const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
     const normalizedNewTextFromAI = newTextFromAI.replace(/\r\n|\r/g, "\n");
 
-    // Use diffWordsWithSpace for more granular whitespace diffing
-	const diffResult = Diff.diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI); 
-	
-    if (!diffResult.some(part => part.added || part.removed)) {
-		new Notice("✅ Text is good, AI suggested no changes.", notifDuration);
-		return false;
-	}
+	const diffResult = Diff.diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI);
+	if (!diffResult.some(part => part.added || part.removed)) { new Notice("✅ No changes suggested.", notifDuration); return false; }
 
 	let textToInsertInEditor = "";
 	const suggestionMarks: SuggestionMark[] = [];
-	let currentOffsetInEditorText = 0;
+	let currentOffsetInEditorText = 0; // Tracks position in textToInsertInEditor
 
+	// console.log("--- Diff Result ---");
 	for (const part of diffResult) {
-		const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
-        // Normalize part.value for safety, though diffWordsWithSpace should mostly give \n
-        const value = part.value.replace(/\r\n|\r/g, "\n"); 
+		// console.log("Part:", JSON.stringify(part.value), "Added:", part.added, "Removed:", part.removed);
+		const partValue = part.value; // No initial normalization here, diffWordsWithSpace should give \n
 
-		if (value === "\n") {
-			if (part.added) {
-				textToInsertInEditor += NEWLINE_ADD_SYMBOL;
-				suggestionMarks.push({
-					id: generateSuggestionId(),
-					from: markStartPosInDoc,
-					to: markStartPosInDoc + NEWLINE_ADD_SYMBOL.length,
-					type: 'added',
-					isNewlineChange: true,
-					newlineChar: '\n'
-				});
-				currentOffsetInEditorText += NEWLINE_ADD_SYMBOL.length;
-			} else if (part.removed) {
-				textToInsertInEditor += NEWLINE_REMOVE_SYMBOL;
-				suggestionMarks.push({
-					id: generateSuggestionId(),
-					from: markStartPosInDoc,
-					to: markStartPosInDoc + NEWLINE_REMOVE_SYMBOL.length,
-					type: 'removed',
-					isNewlineChange: true,
-					newlineChar: '\n'
-				});
-				currentOffsetInEditorText += NEWLINE_REMOVE_SYMBOL.length;
-			} else { // Unchanged newline
-				textToInsertInEditor += "\n";
-				currentOffsetInEditorText += 1;
+		if (part.added || part.removed) {
+			let currentPosInPartValue = 0;
+			while (currentPosInPartValue < partValue.length) {
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
+				let segmentLength = 0;
+				let segmentIsNewline = false;
+				
+				// Check for newline characters (LF, CR+LF, CR)
+				if (partValue.startsWith("\n", currentPosInPartValue)) {
+					segmentLength = 1;
+					segmentIsNewline = true;
+				} else if (partValue.startsWith("\r\n", currentPosInPartValue)) {
+					segmentLength = 2;
+					segmentIsNewline = true;
+				} else if (partValue.startsWith("\r", currentPosInPartValue)) {
+					segmentLength = 1;
+					segmentIsNewline = true;
+				}
+
+				if (segmentIsNewline) {
+					const symbolToInsert = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
+					textToInsertInEditor += symbolToInsert;
+					suggestionMarks.push({
+						id: generateSuggestionId(),
+						from: markStartPosInDoc,
+						to: markStartPosInDoc + symbolToInsert.length,
+						type: part.added ? 'added' : 'removed',
+						isNewlineChange: true,
+						newlineChar: '\n' // Standardize to LF for resolution
+					});
+					currentOffsetInEditorText += symbolToInsert.length;
+					currentPosInPartValue += segmentLength;
+				} else {
+					// Find the next newline or end of partValue to define the text segment
+					let nextNewlineIndex = Infinity;
+					["\n", "\r\n", "\r"].forEach(nl => {
+						const idx = partValue.indexOf(nl, currentPosInPartValue);
+						if (idx !== -1) nextNewlineIndex = Math.min(nextNewlineIndex, idx);
+					});
+					
+					const endOfTextSegment = (nextNewlineIndex === Infinity) ? partValue.length : nextNewlineIndex;
+					const textSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+					
+					textToInsertInEditor += textSegment;
+					suggestionMarks.push({
+						id: generateSuggestionId(),
+						from: markStartPosInDoc,
+						to: markStartPosInDoc + textSegment.length,
+						type: part.added ? 'added' : 'removed'
+						// isNewlineChange is false by default
+					});
+					currentOffsetInEditorText += textSegment.length;
+					currentPosInPartValue = endOfTextSegment;
+				}
 			}
-		} else { // Actual text segment (word or other whitespace like " ")
-			textToInsertInEditor += value;
-			if (part.added || part.removed) {
-				suggestionMarks.push({
-					id: generateSuggestionId(),
-					from: markStartPosInDoc,
-					to: markStartPosInDoc + value.length,
-					type: part.added ? 'added' : 'removed'
-				});
-			}
-			currentOffsetInEditorText += value.length;
+		} else { // Unchanged part
+			// Normalize newlines in unchanged parts before adding to textToInsertInEditor
+			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
+			textToInsertInEditor += normalizedUnchangedValue;
+			currentOffsetInEditorText += normalizedUnchangedValue.length;
 		}
-    }
+	}
+	// console.log("--- End Diff Result ---");
 
 	cm.dispatch(cm.state.update({
-		changes: {
-			from: scopeRangeCm.from,
-			to: scopeRangeCm.to,
-			insert: textToInsertInEditor,
-		},
-		effects: [
-			clearAllSuggestionsEffect.of(null),
-			setSuggestionsEffect.of(suggestionMarks)
-		],
+		changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
+		effects: [clearAllSuggestionsEffect.of(null), setSuggestionsEffect.of(suggestionMarks)],
 		selection: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
 		scrollIntoView: true,
 	}));
 
-	if (isOverlength) {
-		new Notice(`Text is longer than the maximum output supported by the AI model. Suggestions may be incomplete.`, 10_000);
-	}
-	const changeCount = suggestionMarks.length;
-	const pluralS = changeCount === 1 ? "" : "s";
-	new Notice(`🤖 ${changeCount} suggestion${pluralS} applied.\nEst. cost: $${cost?.toFixed(4) || "0.0000"}`, notifDuration);
-
+	if (isOverlength) new Notice(`Text > AI model max output. Suggestions may be incomplete.`, 10_000);
+	new Notice(`🤖 ${suggestionMarks.length} suggestion${suggestionMarks.length === 1 ? "" : "s"} applied.\nEst. cost: $${cost?.toFixed(4) || "0.0000"}`, notifDuration);
 	return true;
 }
 
@@ -251,20 +220,13 @@ export async function textTransformerDocumentCM6(
 ): Promise<void> {
 	const cm = getCmEditorView(editor);
 	if (!cm) { new Notice("Modern editor version required."); return; }
-
 	const fullDocText = editor.getValue();
 	const fmInfo = getFrontMatterInfo(fullDocText);
 	const bodyTextOffsetStart = fmInfo.contentStart || 0;
 	const bodyText = fullDocText.substring(bodyTextOffsetStart);
-	const bodyEndOffset = bodyTextOffsetStart + bodyText.length;
-
 	const usePrompt = prompt || plugin.settings.prompts.find((p) => p.id === plugin.settings.defaultPromptId) || plugin.settings.prompts.find((p) => p.enabled) || plugin.settings.prompts[0];
-	if (!usePrompt) { new Notice("No prompt configured for document transformation."); return; }
-
-	await validateAndApplyAIDrivenChanges(
-		plugin, editor, bodyText, "Document", usePrompt,
-		{ from: bodyTextOffsetStart, to: bodyEndOffset }
-	);
+	if (!usePrompt) { new Notice("No prompt for document transformation."); return; }
+	await validateAndApplyAIDrivenChanges(plugin, editor, bodyText, "Document", usePrompt, { from: bodyTextOffsetStart, to: bodyTextOffsetStart + bodyText.length });
 }
 
 export async function textTransformerTextCM6(
@@ -274,16 +236,13 @@ export async function textTransformerTextCM6(
 ): Promise<void> {
 	const cm = getCmEditorView(editor);
 	if (!cm) { new Notice("Modern editor version required."); return; }
-
-	if (editor.listSelections().length > 1) {
-		new Notice("Multiple selections are not yet supported for this operation."); return;
-	}
+	if (editor.listSelections().length > 1) { new Notice("Multiple selections not yet supported."); return; }
 
 	let originalText: string;
 	let textScope: "Selection" | "Paragraph";
 	let rangeCm: { from: number; to: number };
-
 	const currentCmSelection = cm.state.selection.main;
+
 	if (!currentCmSelection.empty) {
 		originalText = cm.state.sliceDoc(currentCmSelection.from, currentCmSelection.to);
 		textScope = "Selection";
@@ -293,26 +252,16 @@ export async function textTransformerTextCM6(
         const cursorLine = doc.lineAt(currentCmSelection.head);
         let paraStartLine = cursorLine;
         let paraEndLine = cursorLine;
-
-        while (paraStartLine.number > 1) {
-            const prevLine = doc.line(paraStartLine.number - 1);
-            if (prevLine.text.trim() === "") break;
-            paraStartLine = prevLine;
+        while (paraStartLine.number > 1 && doc.line(paraStartLine.number - 1).text.trim() !== "") {
+            paraStartLine = doc.line(paraStartLine.number - 1);
         }
-        while (paraEndLine.number < doc.lines) {
-            const nextLine = doc.line(paraEndLine.number + 1);
-            if (nextLine.text.trim() === "") break;
-            paraEndLine = nextLine;
+        while (paraEndLine.number < doc.lines && doc.line(paraEndLine.number + 1).text.trim() !== "") {
+            paraEndLine = doc.line(paraEndLine.number + 1);
         }
-        
         rangeCm = { from: paraStartLine.from, to: paraEndLine.to };
         originalText = cm.state.sliceDoc(rangeCm.from, rangeCm.to);
 		textScope = "Paragraph";
 	}
-
-	if (!prompt) { new Notice("No prompt provided for text transformation."); return; }
-
-	await validateAndApplyAIDrivenChanges(
-		plugin, editor, originalText, textScope, prompt, rangeCm
-	);
+	if (!prompt) { new Notice("No prompt for text transformation."); return; }
+	await validateAndApplyAIDrivenChanges(plugin, editor, originalText, textScope, prompt, rangeCm);
 }
