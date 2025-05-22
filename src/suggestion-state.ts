@@ -1,5 +1,5 @@
 // src/suggestion-state.ts
-import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state"; // Added Extension
+import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state"; // Removed Text
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 
 export interface SuggestionMark {
@@ -11,16 +11,25 @@ export interface SuggestionMark {
 	newlineChar?: "\n";
 }
 
-export const setSuggestionsEffect = StateEffect.define<SuggestionMark[]>();
+interface SuggestionState {
+	marks: SuggestionMark[];
+	activeScope: { from: number; to: number } | null;
+}
+
+export const setSuggestionsEffect = StateEffect.define<{
+	marksToSet: SuggestionMark[];
+	scope: { from: number; to: number };
+}>();
 export const resolveSuggestionEffect = StateEffect.define<{ id: string }>();
 export const clearAllSuggestionsEffect = StateEffect.define<null>();
 
-export const suggestionStateField = StateField.define<SuggestionMark[]>({
-	create(): SuggestionMark[] {
-		return [];
+export const suggestionStateField = StateField.define<SuggestionState>({
+	create(): SuggestionState {
+		return { marks: [], activeScope: null };
 	},
-	update(marks, tr): SuggestionMark[] {
-		let newMarks = [...marks];
+	update(value, tr): SuggestionState {
+		let newMarks = [...value.marks];
+		let newActiveScope = value.activeScope ? { ...value.activeScope } : null;
 
 		if (tr.changes.length > 0) {
 			newMarks = newMarks
@@ -33,19 +42,35 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 					return { ...mark, from, to };
 				})
 				.filter(Boolean) as SuggestionMark[];
+
+			if (newActiveScope) {
+				const mappedFrom = tr.changes.mapPos(newActiveScope.from, -1, MapMode.TrackDel);
+				const mappedTo = tr.changes.mapPos(newActiveScope.to, 1, MapMode.TrackDel);
+				if (mappedFrom === null || mappedTo === null || mappedFrom >= mappedTo) {
+					newActiveScope = null;
+				} else {
+					newActiveScope.from = mappedFrom;
+					newActiveScope.to = mappedTo;
+				}
+			}
 		}
 
 		for (const effect of tr.effects) {
 			if (effect.is(setSuggestionsEffect)) {
-				newMarks = effect.value;
+				newMarks = effect.value.marksToSet;
+				newActiveScope = effect.value.scope;
 			} else if (effect.is(resolveSuggestionEffect)) {
 				const idToResolve = effect.value.id;
 				newMarks = newMarks.filter((m) => m.id !== idToResolve);
+				if (newMarks.length === 0) {
+					newActiveScope = null; // Clear scope if all marks resolved
+				}
 			} else if (effect.is(clearAllSuggestionsEffect)) {
 				newMarks = [];
+				newActiveScope = null;
 			}
 		}
-		return newMarks;
+		return { marks: newMarks, activeScope: newActiveScope };
 	},
 });
 
@@ -55,7 +80,6 @@ class SuggestionViewPluginClass {
 	constructor(view: EditorView) {
 		this.decorations = Decoration.none;
 		try {
-			// Initial computation of decorations
 			this.decorations = this.computeDecorations(view);
 		} catch (e) {
 			console.error("TextTransformer ViewPlugin: Error in constructor computeDecorations:", e);
@@ -76,20 +100,14 @@ class SuggestionViewPluginClass {
 		if (update.docChanged) needsRecompute = true;
 		if (update.viewportChanged) needsRecompute = true;
 
-		// @ts-expect-error prevState is not officially on ViewUpdate but is present in practice
-		const currentPrevState = update.prevState;
-		if (currentPrevState) {
-			const prevMarks = currentPrevState.field(suggestionStateField, false);
-			const currentMarks = update.state.field(suggestionStateField, false);
-			if (prevMarks !== currentMarks) {
-				needsRecompute = true;
-			}
-		} else {
-			// If no prevState, assume recompute is needed or it's the initial update
+		// Compare relevant parts of the state field from startState and state
+		const prevFullState = update.startState.field(suggestionStateField, false);
+		const currentFullState = update.state.field(suggestionStateField, false);
+		if (prevFullState !== currentFullState) { // This checks if the object reference changed or marks/scope changed
 			needsRecompute = true;
 		}
 
-		// Check if any of our specific effects were dispatched
+
 		if (
 			update.transactions.some((tr) =>
 				tr.effects.some(
@@ -108,83 +126,106 @@ class SuggestionViewPluginClass {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("TextTransformer ViewPlugin: Error in update computeDecorations:", e);
-				this.decorations = Decoration.none;
+				this.decorations = Decoration.none; // Fallback on error
 			}
 		}
 	}
 
-	// Removed _callContext as it was unused
 	computeDecorations(view: EditorView): DecorationSet {
 		if (!view || !view.state) {
 			return Decoration.none;
 		}
 
-		const marks = view.state.field(suggestionStateField, false);
+		const suggestionFullState = view.state.field(suggestionStateField, false);
+		if (!suggestionFullState) return Decoration.none;
 
-		if (!marks || marks.length === 0) {
-			return Decoration.none;
-		}
-
+		const { marks, activeScope } = suggestionFullState;
 		const activeDecorations: Range<Decoration>[] = [];
-		for (const mark of marks) {
-			let className = ""; // Will hold the CSS class
+		const doc = view.state.doc;
 
-			if (mark.type === "added") {
-				className = "text-transformer-added";
-			} else if (mark.type === "removed") {
-				className = "text-transformer-removed";
-			}
-
-			// If no class name is determined (e.g., unexpected mark.type), skip this mark
-			if (!className) {
-				console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
-				continue;
-			}
-
-			// Validate mark range
-			if (mark.from >= mark.to) {
-				console.warn(
-					"TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:",
-					mark,
-				);
-				continue;
-			}
-			if (mark.from < 0 || mark.to > view.state.doc.length) {
-				console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
-				continue;
-			}
-
+		// Apply spellcheck="false" to lines within the activeScope
+		if (activeScope && activeScope.from < activeScope.to) {
 			try {
-				const decorationInstance = Decoration.mark({
-					attributes: { class: className }, // <<< KEY CHANGE: USING CSS CLASS
-				}).range(mark.from, mark.to);
-				activeDecorations.push(decorationInstance);
+				// Ensure from/to are within document bounds before getting lines
+				const safeFrom = Math.max(0, Math.min(activeScope.from, doc.length));
+				const safeTo = Math.max(0, Math.min(activeScope.to, doc.length));
+
+                if (safeFrom < safeTo) { // Only proceed if there's a valid range
+				    const fromLine = doc.lineAt(safeFrom).number;
+				    const toLine = doc.lineAt(safeTo).number;
+
+				    for (let i = fromLine; i <= toLine; i++) {
+					    const line = doc.line(i);
+					    if (line && line.from <= doc.length) { // Check if line.from is valid
+						    activeDecorations.push(
+							    Decoration.line({
+								    attributes: { spellcheck: "false" },
+							    }).range(line.from),
+						    );
+					    }
+				    }
+                }
 			} catch (e) {
-				console.error(
-					`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
-					e,
-				);
+				console.error("TextTransformer ViewPlugin: Error processing activeScope for line decorations:", e, activeScope, doc.length);
 			}
 		}
 
-		// Create a DecorationSet from the collected decorations
-		const decoSet = Decoration.set(activeDecorations, true);
-		return decoSet;
+		// Apply visual styling for individual suggestion marks
+		if (marks && marks.length > 0) {
+			for (const mark of marks) {
+				let className = "";
+				if (mark.type === "added") {
+					className = "text-transformer-added";
+				} else if (mark.type === "removed") {
+					className = "text-transformer-removed";
+				}
+
+				if (!className) {
+					console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
+					continue;
+				}
+				if (mark.from >= mark.to) {
+					console.warn(
+						"TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:",
+						mark,
+					);
+					continue;
+				}
+				if (mark.from < 0 || mark.to > doc.length) {
+					console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
+					continue;
+				}
+
+				try {
+					activeDecorations.push(
+						Decoration.mark({
+							attributes: { class: className },
+						}).range(mark.from, mark.to),
+					);
+				} catch (e) {
+					console.error(
+						`TextTransformer ViewPlugin: ERROR creating mark decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
+						e,
+					);
+				}
+			}
+		}
+
+		if (activeDecorations.length === 0) return Decoration.none;
+		return Decoration.set(activeDecorations, true);
 	}
 }
 
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	decorations: (pluginInstance: SuggestionViewPluginClass): DecorationSet => {
-		// This accessor function simply returns the decorations computed by the plugin instance
 		if (pluginInstance?.decorations) {
 			return pluginInstance.decorations;
 		}
-		return Decoration.none; // Fallback to no decorations
+		return Decoration.none;
 	},
 });
 
 export const textTransformerSuggestionExtensions = (): Extension[] => {
-	// This function bundles the state field and the view plugin for registration
 	return [suggestionStateField, suggestionViewPlugin];
 };
 

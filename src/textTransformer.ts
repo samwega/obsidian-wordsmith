@@ -45,8 +45,8 @@ async function validateAndApplyAIDrivenChanges(
 		return false;
 	}
 
-	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) {
+	const existingSuggestionState = cm.state.field(suggestionStateField, false);
+	if (existingSuggestionState && existingSuggestionState.marks.length > 0) {
 		new Notice(
 			`${scope} already has active suggestions. Please accept or reject them first.`,
 			6000,
@@ -180,13 +180,11 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	}
 
 	let textToInsertInEditor = "";
-	const suggestionMarks: SuggestionMark[] = [];
+	const suggestionMarksToSet: SuggestionMark[] = [];
 	let currentOffsetInEditorText = 0; // Tracks position in textToInsertInEditor
 
-	// console.log("--- Diff Result ---");
 	for (const part of diffResult) {
-		// console.log("Part:", JSON.stringify(part.value), "Added:", part.added, "Removed:", part.removed);
-		const partValue = part.value; // No initial normalization here, diffWordsWithSpace should give
+		const partValue = part.value;
 
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;
@@ -195,7 +193,6 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 				let segmentLength = 0;
 				let segmentIsNewline = false;
 
-				// Check for newline characters (LF, CR+LF, CR)
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
 					segmentLength = 1;
 					segmentIsNewline = true;
@@ -210,18 +207,17 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 				if (segmentIsNewline) {
 					const symbolToInsert = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 					textToInsertInEditor += symbolToInsert;
-					suggestionMarks.push({
+					suggestionMarksToSet.push({
 						id: generateSuggestionId(),
 						from: markStartPosInDoc,
 						to: markStartPosInDoc + symbolToInsert.length,
 						type: part.added ? "added" : "removed",
 						isNewlineChange: true,
-						newlineChar: "\n", // Standardize to LF for resolution
+						newlineChar: "\n",
 					});
 					currentOffsetInEditorText += symbolToInsert.length;
 					currentPosInPartValue += segmentLength;
 				} else {
-					// Find the next newline or end of partValue to define the text segment
 					let nextNewlineIndex = Number.POSITIVE_INFINITY;
 					["\n", "\r\n", "\r"].forEach((nl) => {
 						const idx = partValue.indexOf(nl, currentPosInPartValue);
@@ -235,31 +231,33 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 					const textSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
 
 					textToInsertInEditor += textSegment;
-					suggestionMarks.push({
+					suggestionMarksToSet.push({
 						id: generateSuggestionId(),
 						from: markStartPosInDoc,
 						to: markStartPosInDoc + textSegment.length,
 						type: part.added ? "added" : "removed",
-						// isNewlineChange is false by default
 					});
 					currentOffsetInEditorText += textSegment.length;
 					currentPosInPartValue = endOfTextSegment;
 				}
 			}
 		} else {
-			// Unchanged part
-			// Normalize newlines in unchanged parts before adding to textToInsertInEditor
 			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
 			textToInsertInEditor += normalizedUnchangedValue;
 			currentOffsetInEditorText += normalizedUnchangedValue.length;
 		}
 	}
-	// console.log("--- End Diff Result ---");
 
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
-			effects: [clearAllSuggestionsEffect.of(null), setSuggestionsEffect.of(suggestionMarks)],
+			effects: [
+				clearAllSuggestionsEffect.of(null), // Clear any old state first
+				setSuggestionsEffect.of({
+					marksToSet: suggestionMarksToSet,
+					scope: { from: scopeRangeCm.from, to: scopeRangeCm.from + textToInsertInEditor.length }, // Scope is the new range of transformed text
+				}),
+			],
 			selection: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
 			scrollIntoView: true,
 		}),
@@ -268,7 +266,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	if (isOverlength)
 		new Notice("Text > AI model max output. Suggestions may be incomplete.", 10_000);
 	new Notice(
-		`🤖 ${suggestionMarks.length} suggestion${suggestionMarks.length === 1 ? "" : "s"} applied.\nEst. cost: $${cost?.toFixed(4) || "0.0000"}`,
+		`🤖 ${suggestionMarksToSet.length} suggestion${suggestionMarksToSet.length === 1 ? "" : "s"} applied.\nEst. cost: $${cost?.toFixed(4) || "0.0000"}`,
 		notifDuration,
 	);
 	return true;
