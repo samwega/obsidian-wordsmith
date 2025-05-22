@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.4.2
+**Current Version:** v1.4.3
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -35,6 +35,7 @@ This update brings a crucial enhancement to how Text Transformer handles changes
 * **v1.4.2**
   * **Adaptive Styling for dark/light themes.**
   * **Developer Experience & Code Health:** Enhanced code stability with TypeScript fixes and stricter type checking. Refined linting with adjusted Biome rules and automated pre-commit checks (via Justfile & Git hooks) for ongoing code consistency. Improved code readability through various style and naming convention updates.
+* * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
 
 ---
 
@@ -66,28 +67,28 @@ This major update overhauls how AI suggestions are displayed and managed, moving
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**Table of Contents**
 
-* [Release History](#release-history)
-  * [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
-  * [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
-  * [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
-  * [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
-* [Features](#features)
-* [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
-* [AI Providers & Models](#ai-providers--models)
-* [Installation & Setup](#installation--setup)
-  * [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
-  * [Manual Installation](#manual-installation)
-  * [API Key Setup](#api-key-setup)
-* [Usage](#usage)
-  * [Core Commands](#core-commands)
-  * [Managing Suggestions](#managing-suggestions)
-  * [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
-* [Customizing Prompts](#customizing-prompts)
-* [Visual Appearance of Changes (Legacy)](#visual-appearance-of-changes-legacy)
-* [Plugin Development](#plugin-development)
-* [About the Developer](#about-the-developer)
+- [Release History](#release-history)
+  - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
+  - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
+  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
+  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+- [Features](#features)
+- [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
+- [AI Providers & Models](#ai-providers--models)
+- [Installation & Setup](#installation--setup)
+  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+  - [Manual Installation](#manual-installation)
+  - [API Key Setup](#api-key-setup)
+- [Usage](#usage)
+  - [Core Commands](#core-commands)
+  - [Managing Suggestions](#managing-suggestions)
+  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+- [Customizing Prompts](#customizing-prompts)
+- [Visual Appearance of Changes (Legacy)](#visual-appearance-of-changes-legacy)
+- [Plugin Development](#plugin-development)
+- [About the Developer](#about-the-developer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
