@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.4.0
+**Current Version:** v1.4.1
 
 Transform your writing in Obsidian with Text Transformer, an AI-powered
 assistant. **Review and accept/reject AI suggestions inline**, similar to track
@@ -30,6 +30,8 @@ This update brings a crucial enhancement to how Text Transformer handles changes
     *   Refinements to TypeScript typings and removal of unused code/directives for a cleaner codebase.
 
 **Why this matters:** Previously, accurately tracking all AI-suggested newline additions could be inconsistent. This update ensures that whether the AI adds a line break for clarity, removes one for conciseness, or completely restructures a paragraph, you'll see exactly what's proposed for every line change, giving you finer control over the final output.
+### Sub-Versions
+**v1.4.1**—**CSS no longer hard coded**—you can edit the CSS now and it will be used by the plugin.
 
 ---
 

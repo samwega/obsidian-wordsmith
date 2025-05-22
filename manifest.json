@@ -2,7 +2,7 @@
   "id": "text-transformer",
   "name": "Text Transformer",
   "description": "AI-based text transforming to revolutionize your writing. Changes are highlighted as suggestions directly in the editor, allowing you to accept/reject them individually or all at once.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "minAppVersion": "1.5.8",
   "isDesktopOnly": false,
   "author": "Alexander Glavan",

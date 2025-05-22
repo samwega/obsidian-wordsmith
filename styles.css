@@ -2,7 +2,7 @@
 
 .text-transformer-added {
 	background-color: rgba(144, 238, 144, 0.3); /* Very light green background */
-	border-bottom: 2px solid var(--color-green, #1E8449); /* Darker, more saturated green for underline */
+	border-bottom: 2px solid var(--color-green, #55b67e); /* Darker, more saturated green for underline */
 	padding: 0 1px;
 	/* Consider adding a slight text color change if needed for very dark themes: */
 	/* color: var(--text-normal); */ /* Or a slightly brighter green: color: #2ECC71; */
@@ -20,7 +20,7 @@
 	text-decoration: line-through;
 	text-decoration-thickness: 1px; /* Keep it thin as requested */
 	text-decoration-style: solid;   /* Solid strikethrough is usually clearest */
-	text-decoration-color: var(--text-faint, #999999); /* A clear, solid red for the strikethrough line */
+	text-decoration-color: var(--text-faint, #9e8277); /* A clear, solid red for the strikethrough line */
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional, can be removed for sharper edges if no background */
 }
