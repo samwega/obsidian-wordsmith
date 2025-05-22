@@ -156,7 +156,10 @@ class SuggestionViewPluginClass {
 
 			try {
 				const decorationInstance = Decoration.mark({
-					attributes: { class: className }, // <<< KEY CHANGE: USING CSS CLASS
+					attributes: {
+						class: className,
+						spellcheck: "false",
+					},
 				}).range(mark.from, mark.to);
 				activeDecorations.push(decorationInstance);
 			} catch (e) {
