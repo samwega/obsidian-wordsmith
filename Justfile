@@ -22,6 +22,7 @@
 #    C. UPDATE `README.md` MANUALLY after running the release script and verifying file versions:
 #       - Update the "Current Version:" line near the top of the README.
 #       - Add a new sub-entry under the relevant "Minor Versions of vX.Y.x" section detailing the changes for the new version.
+#       - The toc may need to be updated with npx markdown-toc -i README.md
 #
 #    D. GIT TAGS:
 #       - If `just release` creates a Git tag, ensure it's pushed to the remote repository using `git push origin --tags` (the script should handle this).
