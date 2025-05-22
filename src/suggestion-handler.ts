@@ -98,7 +98,7 @@ export function resolveNextSuggestionCM6(
 		} else if (targetMark.type === "removed") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
 		}
-	} else {
+	} else if (action === "reject") {
 		// action === 'reject'
 		if (targetMark.type === "added") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
@@ -324,7 +324,7 @@ export function resolveSuggestionsInSelectionCM6(
 			} else if (mark.type === "removed") {
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
-		} else {
+		} else if (action === "reject") {
 			// action === 'reject'
 			if (mark.type === "added") {
 				textChange = { from: mark.from, to: mark.to, insert: "" };

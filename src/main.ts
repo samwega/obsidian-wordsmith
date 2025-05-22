@@ -1,5 +1,5 @@
 // src/main.ts
-import { Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import { Notice, Plugin, WorkspaceLeaf, Editor } from "obsidian"; // Added Editor
 
 import {
 	clearAllActiveSuggestionsCM6,
@@ -46,7 +46,7 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "open-context-control-panel",
 			name: "Open AI Context Control Panel",
-			callback: () => {
+			callback: (): void => {
 				this.activateView();
 			},
 			icon: "settings-2",
@@ -55,7 +55,7 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
-			editorCallback: async (editor) => {
+			editorCallback: async (editor: Editor): Promise<void> => {
 				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 0) {
 					new Notice(
@@ -89,7 +89,7 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "textTransformer-full-document",
 			name: "Transform full document",
-			editorCallback: (editor) => {
+			editorCallback: (editor: Editor): void => {
 				const defaultPrompt =
 					this.settings.prompts.find((p) => p.id === this.settings.defaultPromptId) ||
 					this.settings.prompts.find((p) => p.enabled) ||
@@ -137,7 +137,7 @@ export default class TextTransformer extends Plugin {
 		console.info(this.manifest.name + " Plugin loaded successfully.");
 	}
 
-	async activateView() {
+	async activateView(): Promise<void> {
 		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		await this.app.workspace.getRightLeaf(false)?.setViewState({
 			type: CONTEXT_CONTROL_VIEW_TYPE,

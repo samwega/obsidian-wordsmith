@@ -134,9 +134,11 @@ export class ContextControlPanel extends ItemView {
 		// 4. Custom Context Input Area (Text Area)
 		const textAreaContainer = container.createDiv("tt-custom-context-container");
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
-			.setPlaceholder(`Paste your custom context here...
-You can also add rules in here, try "Spell everything backwards."
-Coming soon: [[wikilinks]] support.`)
+			.setPlaceholder(
+				`Paste your custom context here...
+You can also add rules in here, try "Spell everything backwards.".
+Coming soon: [[wikilinks]] support.`,
+			)
 			.setValue(this.customContextText)
 			.onChange((value) => {
 				this.customContextText = value;
@@ -148,11 +150,12 @@ Coming soon: [[wikilinks]] support.`)
 		textAreaContainer.style.marginTop = "5px";
 	}
 
-	override onClose(): void {
+	override onClose(): Promise<void> {
 		// Perform any cleanup needed when the view is closed
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null; // Clear reference to dropdown
+		return Promise.resolve(); // Explicitly return a resolved promise
 	}
 
 	getWholeNoteContextState(): boolean {

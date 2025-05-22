@@ -18,7 +18,13 @@ build-and-reload:
     open "obsidian://reload-plugin?id=$plugin_id&vault=$vault_name"
 
 check-all:
-    git hook run pre-commit -- "check-all"
+    @echo "Running Biome check..."
+    npx @biomejs/biome check --write --unsafe .
+    @echo "Running TypeScript check..."
+    npx tsc --noEmit --skipLibCheck --strict
+    @echo "Running Markdownlint check..."
+    npx markdownlint-cli -c .markdownlint.json "**/*.md"
+    @echo "All checks passed!"
 
 check-tsc-qf:
     npx tsc --noEmit --skipLibCheck --strict && echo "Typescript OK"

@@ -28,9 +28,13 @@ export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
 
 	renderSuggestion(_prompt: TextTransformerPrompt, el: HTMLElement): void {
 		el.createEl("div", { text: _prompt.name });
-		el.createEl("small", {
-			text: _prompt.isDefault ? "Default" : _prompt.id.startsWith("custom-") ? "Custom" : "",
-		});
+		let smallText = "";
+		if (_prompt.isDefault) {
+			smallText = "Default";
+		} else if (_prompt.id.startsWith("custom-")) {
+			smallText = "Custom";
+		}
+		el.createEl("small", { text: smallText });
 	}
 
 	onChooseSuggestion(prompt: TextTransformerPrompt, _evt: MouseEvent | KeyboardEvent): void {
@@ -39,7 +43,7 @@ export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
 		this.onChoose(prompt);
 	}
 
-	override onClose() {
+	override onClose(): void {
 		// Added override
 		super.onClose();
 		if (!this.chosen && this.onCancel) {

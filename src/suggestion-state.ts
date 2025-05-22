@@ -1,5 +1,5 @@
 // src/suggestion-state.ts
-import { MapMode, Range, StateEffect, StateField } from "@codemirror/state";
+import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state"; // Added Extension
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 
 export interface SuggestionMark {
@@ -16,10 +16,10 @@ export const resolveSuggestionEffect = StateEffect.define<{ id: string }>();
 export const clearAllSuggestionsEffect = StateEffect.define<null>();
 
 export const suggestionStateField = StateField.define<SuggestionMark[]>({
-	create() {
+	create(): SuggestionMark[] {
 		return [];
 	},
-	update(marks, tr) {
+	update(marks, tr): SuggestionMark[] {
 		let newMarks = [...marks];
 
 		if (tr.changes.length > 0) {
@@ -63,7 +63,7 @@ class SuggestionViewPluginClass {
 		}
 	}
 
-	update(update: ViewUpdate) {
+	update(update: ViewUpdate): void {
 		let needsRecompute = false;
 
 		if (!update) {
@@ -174,7 +174,7 @@ class SuggestionViewPluginClass {
 }
 
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
-	decorations: (pluginInstance: SuggestionViewPluginClass) => {
+	decorations: (pluginInstance: SuggestionViewPluginClass): DecorationSet => {
 		// This accessor function simply returns the decorations computed by the plugin instance
 		if (pluginInstance?.decorations) {
 			return pluginInstance.decorations;
@@ -183,7 +183,7 @@ const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	},
 });
 
-export const textTransformerSuggestionExtensions = () => {
+export const textTransformerSuggestionExtensions = (): Extension[] => {
 	// This function bundles the state field and the view plugin for registration
 	return [suggestionStateField, suggestionViewPlugin];
 };

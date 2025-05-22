@@ -1,60 +1,9 @@
 #!/bin/sh
-
-# Exit immediately if a command exits with a non-zero status.
-set -e
-
-echo "Running pre-commit checks..."
-echo "---------------------------------"
-
-# 1. Check TypeScript
-echo "INFO: Checking TypeScript types..."
-if npx tsc --noEmit --skipLibCheck --strict; then
-    echo "SUCCESS: TypeScript checks passed."
-else
-    echo "ERROR: TypeScript checks failed. Please fix the type errors."
-    exit 1
+echo "Running pre-commit checks via Justfile..."
+just check-all
+if [ $? -ne 0 ]; then
+  echo "Pre-commit checks failed. Please fix the issues before committing."
+  exit 1
 fi
-echo "---------------------------------"
-
-# 2. Check and format code with Biome
-# Using --apply for linter to auto-fix where possible,
-# and --write for formatter.
-echo "INFO: Checking and formatting code with Biome..."
-if npx biome check --apply . && npx biome format --write .; then
-    echo "SUCCESS: Biome checks and formatting passed."
-else
-    # Biome might exit with non-zero if it applies changes.
-    # Re-running check to ensure everything is now clean.
-    if npx biome check .; then
-        echo "SUCCESS: Biome applied changes and code is now clean."
-    else
-        echo "ERROR: Biome found issues. Please review Biome's output."
-        # Consider exiting 1 if you want to block commits with any Biome errors
-        # exit 1
-        echo "WARNING: Biome found issues, but commit will proceed. Review output."
-    fi
-fi
-echo "---------------------------------"
-
-# 3. Lint Markdown files
-echo "INFO: Linting Markdown files (checking line lengths, etc.)..."
-if npx markdownlint-cli "**/*.md"; then
-    echo "SUCCESS: Markdown linting passed."
-else
-    echo "ERROR: Markdown linting failed. Please check for issues (e.g., line lengths)."
-    exit 1
-fi
-echo "---------------------------------"
-
-# 4. (Optional) Check for unused files/dependencies with Knip
-# echo "INFO: Running Knip to check for unused code/dependencies..."
-# if npx knip; then
-#     echo "SUCCESS: Knip checks passed."
-# else
-#     echo "ERROR: Knip found issues. Please review Knip's output."
-#     exit 1
-# fi
-# echo "---------------------------------"
-
-echo "All pre-commit checks passed successfully!"
+echo "Pre-commit checks passed."
 exit 0

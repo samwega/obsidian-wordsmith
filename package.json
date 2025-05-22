@@ -1,5 +1,5 @@
 {
-	"name": "Text Transformer",
+	"name": "text-transformer",
 	"type": "module",
 	"description": "AI-based text transforming to revolutionize your writing. Changes are highlighted as suggestions directly in the editor, allowing you to accept/reject them individually or all at once.",
 	"author": "Alexander Glavan",

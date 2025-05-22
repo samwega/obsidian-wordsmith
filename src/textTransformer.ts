@@ -1,7 +1,7 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 // src/textTransformer.ts
-import * as Diff from "diff"; // Keep this import
+import { diffWordsWithSpace } from "diff"; // Keep this import
 import { Editor, Notice, getFrontMatterInfo } from "obsidian";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
@@ -75,7 +75,9 @@ async function validateAndApplyAIDrivenChanges(
 
 			if (customText)
 				contextParts.push(
-					`--- Custom User-Provided Context Start ---\n${customText}\n--- Custom User-Provided Context End ---`,
+					`--- Custom User-Provided Context Start ---
+${customText}
+--- Custom User-Provided Context End ---`,
 				);
 			if (useDynamic) {
 				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
@@ -104,7 +106,9 @@ async function validateAndApplyAIDrivenChanges(
 						`${markerStart}${originalText}${markerEnd}`,
 					);
 				contextParts.push(
-					`--- Dynamic Context Start ---\n${dynamicContextText}\n--- Dynamic Context End ---`,
+					`--- Dynamic Context Start ---
+${dynamicContextText}
+--- Dynamic Context End ---`,
 				);
 			} else if (useWholeNote) {
 				const currentFile = app.workspace.getActiveFile();
@@ -117,7 +121,9 @@ async function validateAndApplyAIDrivenChanges(
 							`${markerStart}${originalText}${markerEnd}`,
 						);
 					contextParts.push(
-						`--- Whole Note Context Start ---\n${wholeNoteContext}\n--- Whole Note Context End ---`,
+						`--- Whole Note Context Start ---
+${wholeNoteContext}
+--- Whole Note Context End ---`,
 					);
 				}
 			}
@@ -128,7 +134,9 @@ async function validateAndApplyAIDrivenChanges(
 	let initialMsg = `🤖 ${scope} is being text transformed…`;
 	if (additionalContextForAI) initialMsg += " (with context)";
 	if (longInput)
-		initialMsg += `\n\nLarge text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}`;
+		initialMsg += `
+
+Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}`;
 	const notice = new Notice(initialMsg, longInput ? 0 : 4000);
 
 	const currentPrompt: TextTransformerPrompt = { ...promptInfo };
@@ -165,7 +173,7 @@ async function validateAndApplyAIDrivenChanges(
 	const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
 	const normalizedNewTextFromAI = newTextFromAI.replace(/\r\n|\r/g, "\n");
 
-	const diffResult = Diff.diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI);
+	const diffResult = diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI);
 	if (!diffResult.some((part) => part.added || part.removed)) {
 		new Notice("✅ No changes suggested.", notifDuration);
 		return false;
@@ -178,7 +186,7 @@ async function validateAndApplyAIDrivenChanges(
 	// console.log("--- Diff Result ---");
 	for (const part of diffResult) {
 		// console.log("Part:", JSON.stringify(part.value), "Added:", part.added, "Removed:", part.removed);
-		const partValue = part.value; // No initial normalization here, diffWordsWithSpace should give \n
+		const partValue = part.value; // No initial normalization here, diffWordsWithSpace should give
 
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;

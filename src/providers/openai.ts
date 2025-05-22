@@ -44,7 +44,7 @@ Apply this instruction ONLY to the user-provided text that follows.`;
 			url: "https://api.openai.com/v1/chat/completions",
 			method: "POST",
 			contentType: "application/json",
-			headers: { Authorization: "Bearer " + settings.openAiApiKey },
+			headers: { authorization: "Bearer " + settings.openAiApiKey },
 			body: JSON.stringify({
 				model: settings.model,
 				messages: messages,
