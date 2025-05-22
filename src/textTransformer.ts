@@ -255,7 +255,10 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 				clearAllSuggestionsEffect.of(null), // Clear any old state first
 				setSuggestionsEffect.of({
 					marksToSet: suggestionMarksToSet,
-					scope: { from: scopeRangeCm.from, to: scopeRangeCm.from + textToInsertInEditor.length }, // Scope is the new range of transformed text
+					scope: {
+						from: scopeRangeCm.from,
+						to: scopeRangeCm.from + textToInsertInEditor.length,
+					}, // Scope is the new range of transformed text
 				}),
 			],
 			selection: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),

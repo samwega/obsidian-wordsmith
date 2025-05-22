@@ -103,10 +103,10 @@ class SuggestionViewPluginClass {
 		// Compare relevant parts of the state field from startState and state
 		const prevFullState = update.startState.field(suggestionStateField, false);
 		const currentFullState = update.state.field(suggestionStateField, false);
-		if (prevFullState !== currentFullState) { // This checks if the object reference changed or marks/scope changed
+		if (prevFullState !== currentFullState) {
+			// This checks if the object reference changed or marks/scope changed
 			needsRecompute = true;
 		}
-
 
 		if (
 			update.transactions.some((tr) =>
@@ -150,23 +150,30 @@ class SuggestionViewPluginClass {
 				const safeFrom = Math.max(0, Math.min(activeScope.from, doc.length));
 				const safeTo = Math.max(0, Math.min(activeScope.to, doc.length));
 
-                if (safeFrom < safeTo) { // Only proceed if there's a valid range
-				    const fromLine = doc.lineAt(safeFrom).number;
-				    const toLine = doc.lineAt(safeTo).number;
+				if (safeFrom < safeTo) {
+					// Only proceed if there's a valid range
+					const fromLine = doc.lineAt(safeFrom).number;
+					const toLine = doc.lineAt(safeTo).number;
 
-				    for (let i = fromLine; i <= toLine; i++) {
-					    const line = doc.line(i);
-					    if (line && line.from <= doc.length) { // Check if line.from is valid
-						    activeDecorations.push(
-							    Decoration.line({
-								    attributes: { spellcheck: "false" },
-							    }).range(line.from),
-						    );
-					    }
-				    }
-                }
+					for (let i = fromLine; i <= toLine; i++) {
+						const line = doc.line(i);
+						if (line && line.from <= doc.length) {
+							// Check if line.from is valid
+							activeDecorations.push(
+								Decoration.line({
+									attributes: { spellcheck: "false" },
+								}).range(line.from),
+							);
+						}
+					}
+				}
 			} catch (e) {
-				console.error("TextTransformer ViewPlugin: Error processing activeScope for line decorations:", e, activeScope, doc.length);
+				console.error(
+					"TextTransformer ViewPlugin: Error processing activeScope for line decorations:",
+					e,
+					activeScope,
+					doc.length,
+				);
 			}
 		}
 
@@ -192,7 +199,10 @@ class SuggestionViewPluginClass {
 					continue;
 				}
 				if (mark.from < 0 || mark.to > doc.length) {
-					console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
+					console.warn(
+						"TextTransformer ViewPlugin: Mark range out of bounds, skipping:",
+						mark,
+					);
 					continue;
 				}
 
