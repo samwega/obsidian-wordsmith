@@ -1,26 +1,41 @@
-/* styles.css - Option 3: Modern & Minimal (High Contrast for Removed Text) */
+/* styles.css - Text Transformer (Adaptive Dark/Light Theme) */
 
+/* --- Base Styles (Primarily for Dark Theme, but with some adaptability) --- */
 .text-transformer-added {
-	background-color: rgba(144, 238, 144, 0.3); /* Very light green background */
-	border-bottom: 2px solid var(--color-green, #55b67e); /* Darker, more saturated green for underline */
+	/* Light green background (good for dark themes) */
+	background-color: #6cdf6c5e; /* Your chosen green with alpha */
+	color: azure; /* Font color (good for dark themes) */
+
+	/* Theme aware green underline */
+	border-bottom: 1px solid var(--color-green, #42ecb6f6); /* Your chosen underline color */
+
 	padding: 0 1px;
-	/* Consider adding a slight text color change if needed for very dark themes: */
-	/* color: var(--text-normal); */ /* Or a slightly brighter green: color: #2ECC71; */
+	/* border-radius: 2px; */ /* Optional */
 }
 
 .text-transformer-removed {
-	/* Option A: More prominent background with distinct text color */
-	/* background-color: rgba(255, 100, 100, 0.25); */ /* A noticeable but not overwhelming light red background */
-	/* color: rgba(150, 40, 40, 0.9); */ /* Darker red text, less transparent */
-
-	/* Option B: Minimal background, focus on text & strikethrough color (closer to original minimal intent but higher contrast) */
-	background-color: rgba(255, 182, 193, 0.15); /* Very faint pink background */
-	color: var(--text-error, #C0392B); /* Use a theme's error text color, or a strong fallback red for the text itself */
+	/* Faint red background (good for dark themes) */
+	background-color: rgba(240, 119, 119, 0.4); /* Your chosen red with alpha */
+	color: azure; /* Font color (good for dark themes) */
 
 	text-decoration: line-through;
-	text-decoration-thickness: 1px; /* Keep it thin as requested */
-	text-decoration-style: solid;   /* Solid strikethrough is usually clearest */
-	text-decoration-color: var(--text-faint, #9e8277); /* A clear, solid red for the strikethrough line */
+	text-decoration-thickness: 1px;
+	text-decoration-style: solid;
+	text-decoration-color: var(--text-faint, #b69588); /* Strikethrough line color (might need adjustment for light) */
+
 	padding: 0 1px;
-	/* border-radius: 2px; */ /* Optional, can be removed for sharper edges if no background */
+	/* border-radius: 2px; */ /* Optional */
+}
+
+/* --- Light Theme Overrides --- */
+body.theme-light .text-transformer-added {
+	background-color: rgba(144, 238, 144, 0.45); /* A slightly more opaque, standard light green */
+	color: #185018; /* Dark green text for high contrast on light backgrounds */
+	border-bottom: 1px solid var(--color-green, #28a745); /* A solid, visible green for underline */
+}
+
+body.theme-light .text-transformer-removed {
+	background-color: rgba(255, 182, 193, 0.5); /* A standard light pink, slightly more opaque */
+	color: #781111; /* Dark red text for high contrast on light backgrounds */
+	text-decoration-color: var(--color-red, #dc3545); /* A clear red for the strikethrough line */
 }

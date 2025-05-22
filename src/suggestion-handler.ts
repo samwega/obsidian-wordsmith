@@ -1,10 +1,15 @@
+import { EditorSelection, StateEffect, Text, TransactionSpec } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 // src/suggestion-handler.ts
 import { Editor, Notice } from "obsidian";
-import { EditorView } from "@codemirror/view";
-import { EditorSelection, TransactionSpec, StateEffect, Text } from "@codemirror/state";
 
 import TextTransformer from "./main"; // Import plugin class
-import { suggestionStateField, resolveSuggestionEffect, SuggestionMark, clearAllSuggestionsEffect } from "./suggestion-state";
+import {
+	SuggestionMark,
+	clearAllSuggestionsEffect,
+	resolveSuggestionEffect,
+	suggestionStateField,
+} from "./suggestion-state";
 
 function getCmEditorView(editor: Editor): EditorView | null {
 	// The @ts-expect-error was here, removing it.
@@ -31,14 +36,26 @@ function isPositionVisible(cm: EditorView, pos: number): boolean {
 		return false;
 	}
 	const scrollDOM = cm.scrollDOM;
-	return coords.top >= 0 && coords.bottom <= scrollDOM.clientHeight &&
-	coords.left >= 0 && coords.right <= scrollDOM.clientWidth &&
-	coords.top < scrollDOM.clientHeight && coords.bottom > 0;
+	return (
+		coords.top >= 0 &&
+		coords.bottom <= scrollDOM.clientHeight &&
+		coords.left >= 0 &&
+		coords.right <= scrollDOM.clientWidth &&
+		coords.top < scrollDOM.clientHeight &&
+		coords.bottom > 0
+	);
 }
 
-export function resolveNextSuggestionCM6(_plugin: TextTransformer, editor: Editor, action: 'accept' | 'reject'): void {
+export function resolveNextSuggestionCM6(
+	_plugin: TextTransformer,
+	editor: Editor,
+	action: "accept" | "reject",
+): void {
 	const cm = getCmEditorView(editor);
-	if (!cm) { new Notice("Modern editor version required."); return; }
+	if (!cm) {
+		new Notice("Modern editor version required.");
+		return;
+	}
 
 	const currentMarksInState = cm.state.field(suggestionStateField, false);
 	if (!currentMarksInState || currentMarksInState.length === 0) {
@@ -47,7 +64,7 @@ export function resolveNextSuggestionCM6(_plugin: TextTransformer, editor: Edito
 	}
 
 	const currentSelection = cm.state.selection.main;
-	let targetMark = findNextSuggestionMark(cm, currentSelection.head);
+	const targetMark = findNextSuggestionMark(cm, currentSelection.head);
 
 	if (!targetMark) {
 		new Notice("Could not find a next suggestion.", 3000);
@@ -59,30 +76,39 @@ export function resolveNextSuggestionCM6(_plugin: TextTransformer, editor: Edito
 	if (!effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
 		cm.dispatch({
 			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
-			selection: EditorSelection.cursor(targetMark.from)
+			selection: EditorSelection.cursor(targetMark.from),
 		});
 		new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
 		return;
 	}
 
-	let textChangeSpec: { from: number; to: number; insert: string } | undefined = undefined;
+	let textChangeSpec: { from: number; to: number; insert: string } | undefined;
 	let newCursorPosAfterResolve = targetMark.from;
 
-	if (action === 'accept') {
-		if (targetMark.type === 'added') {
+	if (action === "accept") {
+		if (targetMark.type === "added") {
 			if (targetMark.isNewlineChange && targetMark.newlineChar) {
-				textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: targetMark.newlineChar };
+				textChangeSpec = {
+					from: targetMark.from,
+					to: targetMark.to,
+					insert: targetMark.newlineChar,
+				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
 			}
-		} else if (targetMark.type === 'removed') {
+		} else if (targetMark.type === "removed") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
 		}
-	} else { // action === 'reject'
-		if (targetMark.type === 'added') {
+	} else if (action === "reject") {
+		// action === 'reject'
+		if (targetMark.type === "added") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
-		} else if (targetMark.type === 'removed') {
+		} else if (targetMark.type === "removed") {
 			if (targetMark.isNewlineChange && targetMark.newlineChar) {
-				textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: targetMark.newlineChar };
+				textChangeSpec = {
+					from: targetMark.from,
+					to: targetMark.to,
+					insert: targetMark.newlineChar,
+				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
 			} else {
 				newCursorPosAfterResolve = targetMark.to;
@@ -91,13 +117,13 @@ export function resolveNextSuggestionCM6(_plugin: TextTransformer, editor: Edito
 	}
 
 	const transactionSpec: TransactionSpec = {
-		effects: resolveSuggestionEffect.of({ id: targetMark.id })
+		effects: resolveSuggestionEffect.of({ id: targetMark.id }),
 	};
 
 	if (textChangeSpec) {
 		transactionSpec.changes = textChangeSpec;
 	}
-	
+
 	transactionSpec.selection = EditorSelection.cursor(newCursorPosAfterResolve);
 	cm.dispatch(cm.state.update(transactionSpec));
 
@@ -109,14 +135,17 @@ export function resolveNextSuggestionCM6(_plugin: TextTransformer, editor: Edito
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
 		if (nextSuggestionToFocus) {
-			if (!isPositionVisible(cm, nextSuggestionToFocus.from)) {
+			if (isPositionVisible(cm, nextSuggestionToFocus.from)) {
 				cm.dispatch({
-					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, { y: "center", yMargin: 50 }),
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from)
+					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
 				});
 			} else {
 				cm.dispatch({
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from)
+					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+						y: "center",
+						yMargin: 50,
+					}),
+					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
 				});
 			}
 		}
@@ -141,69 +170,76 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	return { from: lineFrom.from, to: lineTo.to };
 }
 
-function* iterateParagraphs(doc: Text, startPosition: number = 0): Generator<{ from: number; to: number; }, void, undefined> {
-    let currentPos = startPosition;
-    if (currentPos >= doc.length && doc.length > 0) return;
+function* iterateParagraphs(
+	doc: Text,
+	startPosition = 0,
+): Generator<{ from: number; to: number }, void, undefined> {
+	let currentPos = startPosition;
+	if (currentPos >= doc.length && doc.length > 0) return;
 
-    while (currentPos < doc.length) {
-        let line = doc.lineAt(currentPos);
-        let paragraphBeginLineNum = -1;
+	while (currentPos < doc.length) {
+		const line = doc.lineAt(currentPos);
+		let paragraphBeginLineNum = -1;
 
-        for (let n = line.number; n <= doc.lines; n++) {
-            const l = doc.line(n);
-            if (currentPos > l.to && n > line.number) continue; 
-            if (l.text.trim() !== "") {
-                paragraphBeginLineNum = n;
-                break;
-            }
-        }
+		for (let n = line.number; n <= doc.lines; n++) {
+			const l = doc.line(n);
+			if (currentPos > l.to && n > line.number) continue;
+			if (l.text.trim() !== "") {
+				paragraphBeginLineNum = n;
+				break;
+			}
+		}
 
-        if (paragraphBeginLineNum === -1) return;
+		if (paragraphBeginLineNum === -1) return;
 
-        const paragraphStartLine = doc.line(paragraphBeginLineNum);
-        let paragraphEndLine = paragraphStartLine;
+		const paragraphStartLine = doc.line(paragraphBeginLineNum);
+		let paragraphEndLine = paragraphStartLine;
 
-        while (paragraphEndLine.number < doc.lines) {
-            const nextLine = doc.line(paragraphEndLine.number + 1);
-            if (nextLine.text.trim() === "") break;
-            paragraphEndLine = nextLine;
-        }
+		while (paragraphEndLine.number < doc.lines) {
+			const nextLine = doc.line(paragraphEndLine.number + 1);
+			if (nextLine.text.trim() === "") break;
+			paragraphEndLine = nextLine;
+		}
 
-        yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-        currentPos = paragraphEndLine.to + 1;
-        if (currentPos >= doc.length) return;
-    }
+		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
+		currentPos = paragraphEndLine.to + 1;
+		if (currentPos >= doc.length) return;
+	}
 }
 
-export function resolveSuggestionsInSelectionCM6(_plugin: TextTransformer, editor: Editor, action: 'accept' | 'reject'): void {
+export function resolveSuggestionsInSelectionCM6(
+	_plugin: TextTransformer,
+	editor: Editor,
+	action: "accept" | "reject",
+): void {
 	const cm = getCmEditorView(editor);
-	if (!cm) { new Notice("Modern editor version required."); return; }
+	if (!cm) {
+		new Notice("Modern editor version required.");
+		return;
+	}
 
 	const allMarks = cm.state.field(suggestionStateField, false);
-	if (!allMarks || allMarks.length === 0) { 
-        new Notice("No suggestions found in the document.", 3000); 
-        return; 
-    }
+	if (!allMarks || allMarks.length === 0) {
+		new Notice("No suggestions found in the document.", 3000);
+		return;
+	}
 
 	const doc = cm.state.doc;
-	let currentSelection = cm.state.selection.main;
-	const cursorOriginalPos = currentSelection.head; 
+	const currentSelection = cm.state.selection.main;
+	const cursorOriginalPos = currentSelection.head;
 
 	let paragraphToOperateOn: { from: number; to: number } | null = null;
-	let finalCursorPos = cursorOriginalPos; 
+	let finalCursorPos = cursorOriginalPos;
 	let isOperatingOnIdentifiedParagraph = false;
 
-	if (!currentSelection.empty) {
-		paragraphToOperateOn = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from;
-	} else {
+	if (currentSelection.empty) {
 		isOperatingOnIdentifiedParagraph = true;
 		const paragraphAtCursor = getParagraphBoundaries(doc, cursorOriginalPos);
-		let pToProcess: { from: number, to: number } | null = null;
+		let pToProcess: { from: number; to: number } | null = null;
 
 		let iterator = iterateParagraphs(doc, paragraphAtCursor.from);
 		for (const p of iterator) {
-			const marksInP = allMarks.filter(mark => mark.from < p.to && mark.to > p.from);
+			const marksInP = allMarks.filter((mark) => mark.from < p.to && mark.to > p.from);
 			if (marksInP.length > 0) {
 				pToProcess = p;
 				break;
@@ -214,73 +250,86 @@ export function resolveSuggestionsInSelectionCM6(_plugin: TextTransformer, edito
 			iterator = iterateParagraphs(doc, 0);
 			for (const p of iterator) {
 				if (p.from >= paragraphAtCursor.from) break;
-				const marksInP = allMarks.filter(mark => mark.from < p.to && mark.to > p.from);
+				const marksInP = allMarks.filter((mark) => mark.from < p.to && mark.to > p.from);
 				if (marksInP.length > 0) {
 					pToProcess = p;
 					break;
 				}
 			}
 		}
-		
+
 		paragraphToOperateOn = pToProcess;
 
 		if (paragraphToOperateOn) {
-			if (paragraphToOperateOn.from === paragraphAtCursor.from && paragraphToOperateOn.to === paragraphAtCursor.to) {
+			if (
+				paragraphToOperateOn.from === paragraphAtCursor.from &&
+				paragraphToOperateOn.to === paragraphAtCursor.to
+			) {
 				finalCursorPos = cursorOriginalPos;
 			} else {
 				finalCursorPos = paragraphToOperateOn.from;
 			}
 		} else {
-            const initialParagraphContent = doc.sliceString(paragraphAtCursor.from, paragraphAtCursor.to).trim();
-            if (initialParagraphContent === "") {
-                 new Notice("Cursor is in an empty paragraph. No suggestions found elsewhere in the document.", 4000);
-            } else {
-                 new Notice("No suggestions found in the current paragraph or elsewhere in the document.", 4000);
-            }
+			const initialParagraphContent = doc
+				.sliceString(paragraphAtCursor.from, paragraphAtCursor.to)
+				.trim();
+			if (initialParagraphContent === "") {
+				new Notice(
+					"Cursor is in an empty paragraph. No suggestions found elsewhere in the document.",
+					4000,
+				);
+			} else {
+				new Notice(
+					"No suggestions found in the current paragraph or elsewhere in the document.",
+					4000,
+				);
+			}
 			return;
 		}
+	} else {
+		paragraphToOperateOn = { from: currentSelection.from, to: currentSelection.to };
+		finalCursorPos = currentSelection.from;
 	}
 
 	if (!paragraphToOperateOn) {
-        new Notice("Could not determine a paragraph or selection to process.", 3000);
+		new Notice("Could not determine a paragraph or selection to process.", 3000);
 		return;
 	}
 
-	const marksInScope = allMarks.filter(mark =>
-		mark.from < paragraphToOperateOn!.to && mark.to > paragraphToOperateOn!.from
+	const marksInScope = allMarks.filter(
+		(mark) => mark.from < paragraphToOperateOn?.to && mark.to > paragraphToOperateOn?.from,
 	);
 
 	if (marksInScope.length === 0) {
-		const message = isOperatingOnIdentifiedParagraph ?
-			"Error: Target paragraph has no suggestions after selection." :
-			"No suggestions found in the current selection.";
-		new Notice(message, 3000); 
-        return;
+		const message = isOperatingOnIdentifiedParagraph
+			? "Error: Target paragraph has no suggestions after selection."
+			: "No suggestions found in the current selection.";
+		new Notice(message, 3000);
+		return;
 	}
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
-	const effectsArray: StateEffect<{ id: string; }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); 
+	const effectsArray: StateEffect<{ id: string }>[] = [];
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
 		let textChange: { from: number; to: number; insert: string } | undefined;
 
-		if (action === 'accept') {
-			if (mark.type === 'added') {
+		if (action === "accept") {
+			if (mark.type === "added") {
 				if (mark.isNewlineChange && mark.newlineChar) {
 					textChange = { from: mark.from, to: mark.to, insert: mark.newlineChar };
 				}
-			} else if (mark.type === 'removed') {
-				textChange = { from: mark.from, to: mark.to, insert: "" }; 
+			} else if (mark.type === "removed") {
+				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
-		} else { // action === 'reject'
-			if (mark.type === 'added') {
-				textChange = { from: mark.from, to: mark.to, insert: "" }; 
-			} else if (mark.type === 'removed') {
-				if (mark.isNewlineChange && mark.newlineChar) {
-					textChange = { from: mark.from, to: mark.to, insert: mark.newlineChar };
-				}
+		} else if (action === "reject") {
+			// action === 'reject'
+			if (mark.type === "added") {
+				textChange = { from: mark.from, to: mark.to, insert: "" };
+			} else if (mark.type === "removed" && mark.isNewlineChange && mark.newlineChar) {
+				textChange = { from: mark.from, to: mark.to, insert: mark.newlineChar };
 			}
 		}
 		if (textChange) changesArray.push(textChange);
@@ -288,59 +337,63 @@ export function resolveSuggestionsInSelectionCM6(_plugin: TextTransformer, edito
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos) 
+		selection: EditorSelection.cursor(finalCursorPos),
 	};
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
-        let finalEffectiveCursorPos = finalCursorPos;
-        const sortedChangesArrayForCursor = [...changesArray].sort((a,b) => a.from - b.from);
-        for (const change of sortedChangesArrayForCursor) { 
-            if (finalEffectiveCursorPos > change.from) { 
-                if (finalEffectiveCursorPos <= change.to) { 
-                    finalEffectiveCursorPos = change.from + change.insert.length; 
-                } else { 
-                    finalEffectiveCursorPos += (change.insert.length - (change.to - change.from));
-                }
-            }
-        }
-        transactionSpec.selection = EditorSelection.cursor(finalEffectiveCursorPos);
+		let finalEffectiveCursorPos = finalCursorPos;
+		const sortedChangesArrayForCursor = [...changesArray].sort((a, b) => a.from - b.from);
+		for (const change of sortedChangesArrayForCursor) {
+			if (finalEffectiveCursorPos > change.from) {
+				if (finalEffectiveCursorPos <= change.to) {
+					finalEffectiveCursorPos = change.from + change.insert.length;
+				} else {
+					finalEffectiveCursorPos += change.insert.length - (change.to - change.from);
+				}
+			}
+		}
+		transactionSpec.selection = EditorSelection.cursor(finalEffectiveCursorPos);
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
-	
-	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? 'paragraph' : 'selection'} ${action}ed.`;
+
+	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
 	new Notice(noticeMessage, 3000);
-	
+
 	const remainingMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
 	if (remainingMarksAfterOp.length === 0 && marksInScope.length > 0) {
-		new Notice(`All suggestions resolved!`, 2000);
+		new Notice("All suggestions resolved!", 2000);
 	}
 }
 
 export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: Editor): void {
 	const cm = getCmEditorView(editor);
-	if (!cm) { new Notice("Modern editor version required."); return; }
+	if (!cm) {
+		new Notice("Modern editor version required.");
+		return;
+	}
 
 	const marks = cm.state.field(suggestionStateField, false);
-	if (!marks || marks.length === 0) { new Notice("No suggestions to clear.", 3000); return; }
+	if (!marks || marks.length === 0) {
+		new Notice("No suggestions to clear.", 3000);
+		return;
+	}
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
-	const sortedMarks = [...marks].sort((a,b) => b.from - a.from); 
+	const sortedMarks = [...marks].sort((a, b) => b.from - a.from);
 
 	for (const mark of sortedMarks) {
-		if (mark.type === 'added') {
+		if (mark.type === "added") {
 			changesArray.push({ from: mark.from, to: mark.to, insert: "" });
-		} else if (mark.type === 'removed') {
-			if (mark.isNewlineChange && mark.newlineChar) {
-				changesArray.push({ from: mark.from, to: mark.to, insert: mark.newlineChar });
-			}
+		} else if (mark.type === "removed" && mark.isNewlineChange && mark.newlineChar) {
+			changesArray.push({ from: mark.from, to: mark.to, insert: mark.newlineChar });
 		}
 	}
 
 	const transactionSpec: TransactionSpec = {
-		effects: clearAllSuggestionsEffect.of(null) 
+		effects: clearAllSuggestionsEffect.of(null),
 	};
 	if (changesArray.length > 0) {
-		transactionSpec.selection = EditorSelection.cursor(cm.state.selection.main.head); 
+		transactionSpec.selection = EditorSelection.cursor(cm.state.selection.main.head);
 		transactionSpec.changes = changesArray;
 	} else {
 		transactionSpec.selection = cm.state.selection;

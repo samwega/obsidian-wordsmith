@@ -11,7 +11,8 @@
 			},
 			"complexity": {
 				"noExcessiveCognitiveComplexity": "info",
-				"useSimplifiedLogicExpression": "off" // complains about negated and-conditions
+				"useSimplifiedLogicExpression": "off", // complains about negated and-conditions
+				"noForEach": "off" // Disabled due to auto-fix issues with string literals
 			},
 			"performance": {
 				"useTopLevelRegex": "off" // often not needed
