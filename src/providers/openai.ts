@@ -1,5 +1,5 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { TextTransformerSettings, TextTransformerPrompt } from "src/settings";
+import { TextTransformerPrompt, TextTransformerSettings } from "src/settings";
 import { MODEL_SPECS } from "src/settings-data";
 import { logError } from "src/utils";
 
@@ -14,7 +14,7 @@ export async function openAiRequest(
 		return;
 	}
 
-	let systemMessageContent = `You are an AI assistant helping with text transformation.`;
+	let systemMessageContent = "You are an AI assistant helping with text transformation.";
 
 	if (additionalContextForAI) {
 		systemMessageContent += `

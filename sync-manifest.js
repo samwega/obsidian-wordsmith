@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,12 +25,11 @@ try {
 	manifestJson.authorUrl = "https://github.com/samwega";
 	manifestJson.helpUrl = "https://github.com/samwega/obsidian-text-transformer#readme";
 	if (manifestJson.fundingUrl) {
-		delete manifestJson.fundingUrl;
+		manifestJson.fundingUrl = undefined;
 	}
 
 	// Write the updated manifest.json back to the file
 	fs.writeFileSync(manifestJsonPath, JSON.stringify(manifestJson, null, 2), "utf8");
-    console.log("manifest.json updated successfully!");
 } catch (error) {
 	console.error("Error updating manifest.json:", error);
 	process.exit(1);

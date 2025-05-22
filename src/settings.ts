@@ -1,11 +1,11 @@
 import { PluginSettingTab, Setting } from "obsidian";
 import TextTransformer from "./main";
 import {
-    MODEL_SPECS,
-    SupportedModels,
-    TextTransformerPrompt,
-    TextTransformerSettings,
-    DEFAULT_SETTINGS, // Import DEFAULT_SETTINGS
+	DEFAULT_SETTINGS, // Import DEFAULT_SETTINGS
+	MODEL_SPECS,
+	SupportedModels,
+	TextTransformerPrompt,
+	TextTransformerSettings,
 } from "./settings-data";
 
 //──────────────────────────────────────────────────────────────────────────────
@@ -32,28 +32,27 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
-		const apiModelSetting = new Setting(containerEl)
-			.setName("API Keys & Model");
-		
+		const apiModelSetting = new Setting(containerEl).setName("API Keys & Model");
+
 		apiModelSetting.settingEl.style.borderTop = "none";
 		apiModelSetting.settingEl.style.borderBottom = "none";
-		
+
 		const apiModelSectionContents = containerEl.createDiv();
-		apiModelSectionContents.style.display = "none"; 
-		apiModelSectionContents.style.marginTop = "0px"; 
-		apiModelSectionContents.style.paddingLeft = "25px"; 
+		apiModelSectionContents.style.display = "none";
+		apiModelSectionContents.style.marginTop = "0px";
+		apiModelSectionContents.style.paddingLeft = "25px";
 
 		apiModelSetting.addButton((button) => {
-				button.setButtonText("Show").onClick(() => {
-					if (apiModelSectionContents.style.display === "none") {
-						apiModelSectionContents.style.display = "block";
-						button.setButtonText("Hide");
-					} else {
-						apiModelSectionContents.style.display = "none";
-						button.setButtonText("Show");
-					}
-				});
+			button.setButtonText("Show").onClick(() => {
+				if (apiModelSectionContents.style.display === "none") {
+					apiModelSectionContents.style.display = "block";
+					button.setButtonText("Hide");
+				} else {
+					apiModelSectionContents.style.display = "none";
+					button.setButtonText("Show");
+				}
 			});
+		});
 
 		apiModelSetting.addDropdown((dropdown) => {
 			for (const key in MODEL_SPECS) {
@@ -66,10 +65,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			});
 		});
-		
-		apiModelSetting.nameEl.style.flex = "1"; 
+
+		apiModelSetting.nameEl.style.flex = "1";
 		apiModelSetting.controlEl.style.flex = "0 0 auto";
-		apiModelSetting.controlEl.style.marginLeft = "10px"; 
+		apiModelSetting.controlEl.style.marginLeft = "10px";
 		apiModelSetting.settingEl.style.display = "flex";
 		apiModelSetting.settingEl.style.alignItems = "center";
 
@@ -109,7 +108,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 `.trim();
 		const modelDescDiv = apiModelSectionContents.createEl("div");
 		modelDescDiv.innerHTML = modelDesc;
-		modelDescDiv.style.marginTop = "10px"; 
+		modelDescDiv.style.marginTop = "10px";
 		modelDescDiv.style.color = "var(--text-muted)";
 		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
 	}
@@ -117,164 +116,175 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 	private _renderDynamicContextSection(containerEl: HTMLElement): void {
 		new Setting(containerEl)
 			.setName("Dynamic context lines")
-			.setDesc("Number of lines to include before and after the selection/paragraph for dynamic context (between 1 and 21). Keep in mind a whole paragraph is a line in Obsidian, so you may be sending a lot of context. Default is 1.")
-			.addText(text => text
-				.setPlaceholder("1")
-				.setValue(this.plugin.settings.dynamicContextLineCount.toString())
-				.onChange(async (value) => {
-					const numValue = parseInt(value);
-					if (!isNaN(numValue) && numValue >= 1 && numValue <= 21) {
-						this.plugin.settings.dynamicContextLineCount = numValue;
-						await this.plugin.saveSettings();
-					}
-				}));
+			.setDesc(
+				"Number of lines to include before and after the selection/paragraph for dynamic context (between 1 and 21). Keep in mind a whole paragraph is a line in Obsidian, so you may be sending a lot of context. Default is 1.",
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("1")
+					.setValue(this.plugin.settings.dynamicContextLineCount.toString())
+					.onChange(async (value) => {
+						const numValue = Number.parseInt(value);
+						if (!Number.isNaN(numValue) && numValue >= 1 && numValue <= 21) {
+							this.plugin.settings.dynamicContextLineCount = numValue;
+							await this.plugin.saveSettings();
+						}
+					}),
+			);
 	}
 
-private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
-    const form = document.createElement("div");
-    form.className = "add-prompt-form";
-	form.setAttribute(
-		"style",
-		"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
-		"display:flex; flex-direction:column; gap:10px;" +
-		"width:100%; grid-column: 1 / -1;" // If it's in a grid
-	);
+	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
+		const form = document.createElement("div");
+		form.className = "add-prompt-form";
+		form.setAttribute(
+			"style",
+			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
+				"display:flex; flex-direction:column; gap:10px;" +
+				"width:100%; grid-column: 1 / -1;", // If it's in a grid
+		);
 
-    const nameInput = form.appendChild(document.createElement("input"));
-    nameInput.type = "text";
-    nameInput.value = prompt.name;
-    nameInput.placeholder = "Prompt name";
-    nameInput.setAttribute(
-        "style",
-        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;" // Added flex-shrink
-    );
+		const nameInput = form.appendChild(document.createElement("input"));
+		nameInput.type = "text";
+		nameInput.value = prompt.name;
+		nameInput.placeholder = "Prompt name";
+		nameInput.setAttribute(
+			"style",
+			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;", // Added flex-shrink
+		);
 
-    const textInput = form.appendChild(document.createElement("textarea"));
-    textInput.value = prompt.text;
-    textInput.placeholder = "Prompt text";
-	textInput.setAttribute(
-		"style",
-		"width: 100%;" +
-		"box-sizing: border-box !important;" +   // Good practice
-		"height: 240px !important;" +          // <<<< YOUR FIXED HEIGHT + !important
-		"resize: none !important;" +           // <<<< Disable resizing explicitly
-		"overflow-y: auto !important;" +       // <<<< Enable scrollbar if content overflows
-		"padding: 6px;" +
-		"border-radius: 4px;" +
-		"border: 1px solid var(--background-modifier-border);" +
-		"background-color: var(--input-background, var(--background-secondary));" +
-		"color: var(--text-normal);"
-	);
+		const textInput = form.appendChild(document.createElement("textarea"));
+		textInput.value = prompt.text;
+		textInput.placeholder = "Prompt text";
+		textInput.setAttribute(
+			"style",
+			"width: 100%;" +
+				"box-sizing: border-box !important;" + // Good practice
+				"height: 240px !important;" + // <<<< YOUR FIXED HEIGHT + !important
+				"resize: none !important;" + // <<<< Disable resizing explicitly
+				"overflow-y: auto !important;" + // <<<< Enable scrollbar if content overflows
+				"padding: 6px;" +
+				"border-radius: 4px;" +
+				"border: 1px solid var(--background-modifier-border);" +
+				"background-color: var(--input-background, var(--background-secondary));" +
+				"color: var(--text-normal);",
+		);
 
-    const buttonRow = form.appendChild(document.createElement("div"));
-    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;"); // Added flex-shrink
+		const buttonRow = form.appendChild(document.createElement("div"));
+		buttonRow.setAttribute(
+			"style",
+			"display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;",
+		); // Added flex-shrink
 
-    const saveBtn = buttonRow.appendChild(document.createElement("button"));
-    saveBtn.textContent = "Save";
-    saveBtn.setAttribute(
-        "style",
-        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);"
-    );
+		const saveBtn = buttonRow.appendChild(document.createElement("button"));
+		saveBtn.textContent = "Save";
+		saveBtn.setAttribute(
+			"style",
+			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
+		);
 
-    const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.setAttribute(
-        "style",
-        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);"
-    );
+		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+		cancelBtn.textContent = "Cancel";
+		cancelBtn.setAttribute(
+			"style",
+			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
+		);
 
-    saveBtn.onclick = async (): Promise<void> => {
-        const newName = (nameInput as HTMLInputElement).value.trim();
-        const newText = (textInput as HTMLTextAreaElement).value.trim();
-        if (!newName || !newText) return;
-        prompt.name = newName;
-        prompt.text = newText;
-        await this.plugin.saveSettings();
-        this.addPromptForm?.remove();
-        this.addPromptForm = null;
-        this.display(); // Refresh display to show updated prompt
-    };
-    cancelBtn.onclick = (): void => {
-        this.addPromptForm?.remove();
-        this.addPromptForm = null;
-    };
-    return form;
-}
+		saveBtn.onclick = async (): Promise<void> => {
+			const newName = (nameInput as HTMLInputElement).value.trim();
+			const newText = (textInput as HTMLTextAreaElement).value.trim();
+			if (!newName || !newText) return;
+			prompt.name = newName;
+			prompt.text = newText;
+			await this.plugin.saveSettings();
+			this.addPromptForm?.remove();
+			this.addPromptForm = null;
+			this.display(); // Refresh display to show updated prompt
+		};
+		cancelBtn.onclick = (): void => {
+			this.addPromptForm?.remove();
+			this.addPromptForm = null;
+		};
+		return form;
+	}
 
-private _createAddPromptForm(): HTMLDivElement {
-    const form = document.createElement("div");
-    form.className = "add-prompt-form";
-	form.setAttribute(
-		"style",
-		"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
-		"display:flex; flex-direction:column; gap:10px;" +
-		"width:100%; grid-column: 1 / -1;" // If it's in a grid
-	);
+	private _createAddPromptForm(): HTMLDivElement {
+		const form = document.createElement("div");
+		form.className = "add-prompt-form";
+		form.setAttribute(
+			"style",
+			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
+				"display:flex; flex-direction:column; gap:10px;" +
+				"width:100%; grid-column: 1 / -1;", // If it's in a grid
+		);
 
-    const nameInput = form.appendChild(document.createElement("input"));
-    nameInput.type = "text";
-    nameInput.placeholder = "Prompt name";
-    nameInput.setAttribute(
-        "style",
-        "padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;"
-    );
+		const nameInput = form.appendChild(document.createElement("input"));
+		nameInput.type = "text";
+		nameInput.placeholder = "Prompt name";
+		nameInput.setAttribute(
+			"style",
+			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;",
+		);
 
-    const textInput = form.appendChild(document.createElement("textarea"));
-    textInput.placeholder = "Prompt text";
-    textInput.value = 'Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:';
-	textInput.setAttribute(
-		"style",
-		"width: 100%;" +
-		"box-sizing: border-box !important;" +
-		"height: 240px !important;" +
-		"resize: none !important;" +
-		"overflow-y: auto !important;" +
-		"padding: 6px;" +
-		"border-radius: 4px;" +
-		"border: 1px solid var(--background-modifier-border);" +
-		"background-color: var(--input-background, var(--background-secondary));" +
-		"color: var(--text-normal);"
-	);
+		const textInput = form.appendChild(document.createElement("textarea"));
+		textInput.placeholder = "Prompt text";
+		textInput.value =
+			"Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:";
+		textInput.setAttribute(
+			"style",
+			"width: 100%;" +
+				"box-sizing: border-box !important;" +
+				"height: 240px !important;" +
+				"resize: none !important;" +
+				"overflow-y: auto !important;" +
+				"padding: 6px;" +
+				"border-radius: 4px;" +
+				"border: 1px solid var(--background-modifier-border);" +
+				"background-color: var(--input-background, var(--background-secondary));" +
+				"color: var(--text-normal);",
+		);
 
-    const buttonRow = form.appendChild(document.createElement("div"));
-    buttonRow.setAttribute("style", "display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;");
+		const buttonRow = form.appendChild(document.createElement("div"));
+		buttonRow.setAttribute(
+			"style",
+			"display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;",
+		);
 
-    const saveBtn = buttonRow.appendChild(document.createElement("button"));
-    saveBtn.textContent = "Save";
-    saveBtn.setAttribute(
-        "style",
-        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);"
-    );
+		const saveBtn = buttonRow.appendChild(document.createElement("button"));
+		saveBtn.textContent = "Save";
+		saveBtn.setAttribute(
+			"style",
+			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
+		);
 
-    const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.setAttribute(
-        "style",
-        "padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);"
-    );
+		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+		cancelBtn.textContent = "Cancel";
+		cancelBtn.setAttribute(
+			"style",
+			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
+		);
 
-    saveBtn.onclick = async (): Promise<void> => {
-        const name = (nameInput as HTMLInputElement).value.trim();
-        const text = (textInput as HTMLTextAreaElement).value.trim();
-        if (!name || !text) return;
-        this.addPromptForm?.remove();
-        this.addPromptForm = null;
-        this.plugin.settings.prompts.push({
-            id: `custom-${Date.now()}`,
-            name,
-            text,
-            isDefault: false,
-            enabled: true,
-        });
-        await this.plugin.saveSettings();
-        this.display(); // Refresh display to show new prompt
-    };
-    cancelBtn.onclick = (): void => {
-        this.addPromptForm?.remove();
-        this.addPromptForm = null;
-    };
-    return form;
-}
+		saveBtn.onclick = async (): Promise<void> => {
+			const name = (nameInput as HTMLInputElement).value.trim();
+			const text = (textInput as HTMLTextAreaElement).value.trim();
+			if (!name || !text) return;
+			this.addPromptForm?.remove();
+			this.addPromptForm = null;
+			this.plugin.settings.prompts.push({
+				id: `custom-${Date.now()}`,
+				name,
+				text,
+				isDefault: false,
+				enabled: true,
+			});
+			await this.plugin.saveSettings();
+			this.display(); // Refresh display to show new prompt
+		};
+		cancelBtn.onclick = (): void => {
+			this.addPromptForm?.remove();
+			this.addPromptForm = null;
+		};
+		return form;
+	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
 		containerEl.createEl("h3", { text: "Prompt Management" });
@@ -303,41 +313,45 @@ private _createAddPromptForm(): HTMLDivElement {
 			const setting = new Setting(settingContainer);
 
 			if (prompt.id === "translate") {
-				setting.setName("Translate to:"); 
+				setting.setName("Translate to:");
 
-				setting.addText(text => text
-					.setPlaceholder("E.g., Spanish")
-					.setValue(this.plugin.settings.translationLanguage) // Simplified: No fallbacks needed
-					.onChange(async (value) => {
-						const newLang = value.trim();
-						this.plugin.settings.translationLanguage = newLang || DEFAULT_SETTINGS.translationLanguage; // Revert to default if empty
+				setting.addText((text) =>
+					text
+						.setPlaceholder("E.g., Spanish")
+						.setValue(this.plugin.settings.translationLanguage) // Simplified: No fallbacks needed
+						.onChange(async (value) => {
+							const newLang = value.trim();
+							this.plugin.settings.translationLanguage =
+								newLang || DEFAULT_SETTINGS.translationLanguage; // Revert to default if empty
 
-						const translatePromptObj = this.plugin.settings.prompts.find(p => p.id === "translate");
-						if (translatePromptObj) {
-							if (newLang) {
-								translatePromptObj.name = `Translate to ${newLang}—autodetects source language`;
-							} else {
-                                // Revert to name based on default settings language if input is empty
-								translatePromptObj.name = `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`;
+							const translatePromptObj = this.plugin.settings.prompts.find(
+								(p) => p.id === "translate",
+							);
+							if (translatePromptObj) {
+								if (newLang) {
+									translatePromptObj.name = `Translate to ${newLang}—autodetects source language`;
+								} else {
+									// Revert to name based on default settings language if input is empty
+									translatePromptObj.name = `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`;
+								}
 							}
-						}
-						await this.plugin.saveSettings();
-                        // No this.display() here to avoid focus loss on the text input
-					}));
-				
+							await this.plugin.saveSettings();
+							// No this.display() here to avoid focus loss on the text input
+						}),
+				);
+
 				setting.addToggle((tg) => {
 					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						const p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
 						if (p) p.enabled = value;
 						await this.plugin.saveSettings();
 					});
 				});
-
-			} else { 
+			} else {
 				setting.setName(prompt.name);
 				setting.addToggle((tg) => {
 					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						const p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
 						if (p) p.enabled = value;
 						await this.plugin.saveSettings();
 					});
@@ -386,7 +400,9 @@ private _createAddPromptForm(): HTMLDivElement {
 					btn.setIcon("trash")
 						.setTooltip("Delete")
 						.onClick(async (): Promise<void> => {
-							const realIdx = this.plugin.settings.prompts.findIndex(p => p.id === prompt.id);
+							const realIdx = this.plugin.settings.prompts.findIndex(
+								(p) => p.id === prompt.id,
+							);
 							if (realIdx > -1) {
 								this.plugin.settings.prompts.splice(realIdx, 1);
 								await this.plugin.saveSettings();
@@ -396,7 +412,7 @@ private _createAddPromptForm(): HTMLDivElement {
 				});
 				setting.addToggle((tg) => {
 					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(p => p.id === prompt.id);
+						const p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
 						if (p) p.enabled = value;
 						await this.plugin.saveSettings();
 					});
@@ -410,7 +426,9 @@ private _createAddPromptForm(): HTMLDivElement {
 		addPromptFooter.style.justifyContent = "space-between";
 		addPromptFooter.style.marginTop = "10px";
 
-		const customPromptDesc = addPromptFooter.createEl("p", { text: "If you need to modify the default prompts for some reason, you can find them in your-vault/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done." });
+		const customPromptDesc = addPromptFooter.createEl("p", {
+			text: "If you need to modify the default prompts for some reason, you can find them in your-vault/.obsidian/plugins/text-transformer/data.json - reload obsidian when you're done.",
+		});
 		customPromptDesc.style.fontSize = "var(--font-ui-smaller)";
 		customPromptDesc.style.color = "var(--text-muted)";
 		customPromptDesc.style.marginBottom = "0px";
@@ -425,7 +443,7 @@ private _createAddPromptForm(): HTMLDivElement {
 					if (this.addPromptForm) return;
 					this.addPromptForm = containerEl.insertBefore(
 						this._createAddPromptForm(),
-						addPromptFooter
+						addPromptFooter,
 					) as HTMLDivElement;
 				});
 			});
@@ -436,9 +454,7 @@ private _createAddPromptForm(): HTMLDivElement {
 	private _renderCleanupOptionsSection(containerEl: HTMLElement): void {
 		new Setting(containerEl)
 			.setName("Preserve text inside quotes")
-			.setDesc(
-				'Asks AI to ignore text in quotation marks (""). AI may not always comply.',
-			)
+			.setDesc('Asks AI to ignore text in quotation marks (""). AI may not always comply.')
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.preserveTextInsideQuotes)
@@ -449,9 +465,7 @@ private _createAddPromptForm(): HTMLDivElement {
 			);
 		new Setting(containerEl)
 			.setName("Preserve text in blockquotes and callouts")
-			.setDesc(
-				'Asks AI to ignore lines beginning with `>`. AI may not always comply.',
-			)
+			.setDesc("Asks AI to ignore lines beginning with `>`. AI may not always comply.")
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {
 					this.plugin.settings.preserveBlockquotes = value;

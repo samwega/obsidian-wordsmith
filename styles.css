@@ -4,7 +4,7 @@
 .text-transformer-added {
 	/* Light green background (good for dark themes) */
 	background-color: #6cdf6c5e; /* Your chosen green with alpha */
-	color: azure;	/* Font color (good for dark themes) */
+	color: azure; /* Font color (good for dark themes) */
 
 	/* Theme aware green underline */
 	border-bottom: 1px solid var(--color-green, #42ecb6f6); /* Your chosen underline color */
@@ -22,7 +22,7 @@
 	text-decoration-thickness: 1px;
 	text-decoration-style: solid;
 	text-decoration-color: var(--text-faint, #b69588); /* Strikethrough line color (might need adjustment for light) */
-	
+
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
 }

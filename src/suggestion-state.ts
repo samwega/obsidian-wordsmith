@@ -1,14 +1,14 @@
 // src/suggestion-state.ts
-import { StateField, StateEffect, MapMode, Range } from "@codemirror/state";
+import { MapMode, Range, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 
 export interface SuggestionMark {
 	id: string;
 	from: number;
 	to: number;
-	type: 'added' | 'removed';
-    isNewlineChange?: boolean; 
-    newlineChar?: '\n';       
+	type: "added" | "removed";
+	isNewlineChange?: boolean;
+	newlineChar?: "\n";
 }
 
 export const setSuggestionsEffect = StateEffect.define<SuggestionMark[]>();
@@ -23,14 +23,16 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 		let newMarks = [...marks];
 
 		if (tr.changes.length > 0) {
-			newMarks = newMarks.map(mark => {
-				const from = tr.changes.mapPos(mark.from, -1, MapMode.TrackDel);
-				const to = tr.changes.mapPos(mark.to, 1, MapMode.TrackDel);
-				if (from === null || to === null || from >= to) { 
-					return null;
-				}
-				return { ...mark, from, to };
-			}).filter(Boolean) as SuggestionMark[];
+			newMarks = newMarks
+				.map((mark) => {
+					const from = tr.changes.mapPos(mark.from, -1, MapMode.TrackDel);
+					const to = tr.changes.mapPos(mark.to, 1, MapMode.TrackDel);
+					if (from === null || to === null || from >= to) {
+						return null;
+					}
+					return { ...mark, from, to };
+				})
+				.filter(Boolean) as SuggestionMark[];
 		}
 
 		for (const effect of tr.effects) {
@@ -38,7 +40,7 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 				newMarks = effect.value;
 			} else if (effect.is(resolveSuggestionEffect)) {
 				const idToResolve = effect.value.id;
-				newMarks = newMarks.filter(m => m.id !== idToResolve);
+				newMarks = newMarks.filter((m) => m.id !== idToResolve);
 			} else if (effect.is(clearAllSuggestionsEffect)) {
 				newMarks = [];
 			}
@@ -54,7 +56,7 @@ class SuggestionViewPluginClass {
 		this.decorations = Decoration.none;
 		try {
 			// Initial computation of decorations
-			this.decorations = this.computeDecorations(view); 
+			this.decorations = this.computeDecorations(view);
 		} catch (e) {
 			console.error("TextTransformer ViewPlugin: Error in constructor computeDecorations:", e);
 			this.decorations = Decoration.none;
@@ -65,10 +67,10 @@ class SuggestionViewPluginClass {
 		let needsRecompute = false;
 
 		if (!update) {
-			 if (this.decorations.size > 0) {
-                 this.decorations = Decoration.none;
-             }
-             return;
+			if (this.decorations.size > 0) {
+				this.decorations = Decoration.none;
+			}
+			return;
 		}
 
 		if (update.docChanged) needsRecompute = true;
@@ -83,16 +85,21 @@ class SuggestionViewPluginClass {
 				needsRecompute = true;
 			}
 		} else {
-            // If no prevState, assume recompute is needed or it's the initial update
-            needsRecompute = true; 
+			// If no prevState, assume recompute is needed or it's the initial update
+			needsRecompute = true;
 		}
 
 		// Check if any of our specific effects were dispatched
-		if (update.transactions.some(tr => tr.effects.some(e => 
-            e.is(setSuggestionsEffect) || 
-            e.is(resolveSuggestionEffect) || 
-            e.is(clearAllSuggestionsEffect)
-        ))) {
+		if (
+			update.transactions.some((tr) =>
+				tr.effects.some(
+					(e) =>
+						e.is(setSuggestionsEffect) ||
+						e.is(resolveSuggestionEffect) ||
+						e.is(clearAllSuggestionsEffect),
+				),
+			)
+		) {
 			needsRecompute = true;
 		}
 
@@ -106,8 +113,8 @@ class SuggestionViewPluginClass {
 		}
 	}
 
-    // Removed _callContext as it was unused
-	computeDecorations(view: EditorView): DecorationSet { 
+	// Removed _callContext as it was unused
+	computeDecorations(view: EditorView): DecorationSet {
 		if (!view || !view.state) {
 			return Decoration.none;
 		}
@@ -121,39 +128,45 @@ class SuggestionViewPluginClass {
 		const activeDecorations: Range<Decoration>[] = [];
 		for (const mark of marks) {
 			let className = ""; // Will hold the CSS class
-			
-			if (mark.type === 'added') {
+
+			if (mark.type === "added") {
 				className = "text-transformer-added";
-			} else if (mark.type === 'removed') {
+			} else if (mark.type === "removed") {
 				className = "text-transformer-removed";
 			}
 
-            // If no class name is determined (e.g., unexpected mark.type), skip this mark
+			// If no class name is determined (e.g., unexpected mark.type), skip this mark
 			if (!className) {
-                console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
-                continue;
-            }
+				console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
+				continue;
+			}
 
 			// Validate mark range
 			if (mark.from >= mark.to) {
-                console.warn("TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:", mark);
+				console.warn(
+					"TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:",
+					mark,
+				);
 				continue;
 			}
 			if (mark.from < 0 || mark.to > view.state.doc.length) {
-                console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
+				console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
 				continue;
 			}
 
 			try {
 				const decorationInstance = Decoration.mark({
-					attributes: { class: className } // <<< KEY CHANGE: USING CSS CLASS
+					attributes: { class: className }, // <<< KEY CHANGE: USING CSS CLASS
 				}).range(mark.from, mark.to);
 				activeDecorations.push(decorationInstance);
 			} catch (e) {
-				console.error(`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`, e);
+				console.error(
+					`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
+					e,
+				);
 			}
 		}
-		
+
 		// Create a DecorationSet from the collected decorations
 		const decoSet = Decoration.set(activeDecorations, true);
 		return decoSet;
@@ -163,19 +176,16 @@ class SuggestionViewPluginClass {
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	decorations: (pluginInstance: SuggestionViewPluginClass) => {
 		// This accessor function simply returns the decorations computed by the plugin instance
-		if (pluginInstance && pluginInstance.decorations) {
+		if (pluginInstance?.decorations) {
 			return pluginInstance.decorations;
 		}
 		return Decoration.none; // Fallback to no decorations
-	}
+	},
 });
 
 export const textTransformerSuggestionExtensions = () => {
 	// This function bundles the state field and the view plugin for registration
-	return [
-		suggestionStateField,
-		suggestionViewPlugin
-	];
+	return [suggestionStateField, suggestionViewPlugin];
 };
 
 let _suggestionIdCounter = 0;
