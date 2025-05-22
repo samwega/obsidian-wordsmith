@@ -1,5 +1,5 @@
 // src/main.ts
-import { Notice, Plugin, WorkspaceLeaf, Editor } from "obsidian"; // Added Editor
+import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian"; // Added Editor
 
 import {
 	clearAllActiveSuggestionsCM6,

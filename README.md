@@ -31,8 +31,10 @@ This update brings a crucial enhancement to how Text Transformer handles changes
 
 ### Minor Versions of v.1.4.x
 
-**v1.4.1**—**Style no longer hard coded**—you can edit the CSS now.
-**v1.4.2**—**Adaptive Styling for dark/light themes.**
+* **v1.4.1**—**Style no longer hard coded**—you can edit the CSS now.
+* **v1.4.2**
+  * **Adaptive Styling for dark/light themes.**
+  * **Developer Experience & Code Health:** Enhanced code stability with TypeScript fixes and stricter type checking. Refined linting with adjusted Biome rules and automated pre-commit checks (via Justfile & Git hooks) for ongoing code consistency. Improved code readability through various style and naming convention updates.
 
 ---
 
