@@ -76,12 +76,13 @@ This feature transforms Text Transformer from primarily an editing/refinement to
 
 ### Minor Versions of v.1.5.x
 
-![alt text](image-1.png)
-![alt text](image-2.png)
+![image](https://github.com/user-attachments/assets/0c2dd6f5-7529-4d08-8fef-5867de130d3d)
+![image](https://github.com/user-attachments/assets/464f0e0c-d93c-4aa8-bafa-5ab9655358fe)
+
 * **v1.5.1**—**Dynamic Active Suggestion Highlighting:** Implemented strong visual cues – the suggestion targeted by your cursor (when placed at its beginning) now stands out with significantly increased contrast and a glowing outline, making it unmistakably clear which suggestion you're about to accept or reject.
 
-![alt text](image-3.png)
-![alt text](image.png)
+![image](https://github.com/user-attachments/assets/88076b79-a060-402a-a4cd-61f5ef35adcf)
+![image](https://github.com/user-attachments/assets/31800da0-195d-4096-9156-7cdb33cb9213)
 
 ### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
 
