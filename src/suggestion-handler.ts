@@ -29,20 +29,9 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 	return sortedMarks.length > 0 ? sortedMarks[0] : null;
 }
 
+// Updated isPositionVisible to use viewport directly
 function isPositionVisible(cm: EditorView, pos: number): boolean {
-	const coords = cm.coordsAtPos(pos);
-	if (!coords) {
-		return false;
-	}
-	const scrollDOM = cm.scrollDOM;
-	return (
-		coords.top >= 0 &&
-		coords.bottom <= scrollDOM.clientHeight &&
-		coords.left >= 0 &&
-		coords.right <= scrollDOM.clientWidth &&
-		coords.top < scrollDOM.clientHeight &&
-		coords.bottom > 0
-	);
+    return pos >= cm.viewport.from && pos <= cm.viewport.to;
 }
 
 export function resolveNextSuggestionCM6(
@@ -63,11 +52,11 @@ export function resolveNextSuggestionCM6(
 	}
 
 	let targetMark: SuggestionMark | null;
-	let forceResolve = false;
+	let shouldForceResolve = false; // Renamed for clarity
 
 	if (allMarksInState.length === 1) {
 		targetMark = allMarksInState[0];
-		forceResolve = true;
+		shouldForceResolve = true;
 	} else {
 		const currentSelection = cm.state.selection.main;
 		targetMark = findNextSuggestionMark(cm, currentSelection.head);
@@ -79,9 +68,16 @@ export function resolveNextSuggestionCM6(
 	}
 
 	const currentSelection = cm.state.selection.main;
+	// effectivelyOnTarget means cursor is exactly at the start of the suggestion mark.
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
-
-	if (!forceResolve && !effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
+    
+    // Condition for the "scroll and press again" behavior:
+    // 1. Not forcing resolution (i.e., multiple suggestions exist)
+    // 2. AND (EITHER the cursor is not exactly on the target OR the target is not visible)
+    // This was the problematic part: !effectivelyOnTarget && !isPositionVisible was too restrictive.
+    // It should be: if we are NOT on target OR it's not visible, then scroll.
+    // Corrected logic: if it's not a forced resolve, AND (the cursor is not already at the mark OR the mark is not visible), then scroll.
+	if (!shouldForceResolve && (!effectivelyOnTarget || !isPositionVisible(cm, targetMark.from))) {
 		cm.dispatch({
 			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
 			selection: EditorSelection.cursor(targetMark.from),
@@ -90,6 +86,7 @@ export function resolveNextSuggestionCM6(
 		return;
 	}
 
+	// --- Resolution logic (remains the same) ---
 	let textChangeSpec: { from: number; to: number; insert: string } | undefined;
 	let newCursorPosAfterResolve = targetMark.from;
 
@@ -125,10 +122,11 @@ export function resolveNextSuggestionCM6(
 		}
 	}
 
-    // Initialize effects as a mutable array
 	let currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
 
-    if (forceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)){
+    // Scroll into view if it was a forced resolve AND the new cursor position MIGHT be out of view.
+    // For non-forced resolves, the previous block already handled scrolling to targetMark.from.
+    if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)){
         currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, {y: "center"}));
     }
 
@@ -149,22 +147,22 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-		if (!forceResolve && marksAfterResolution.length > 0) {
+        // If it was NOT a forced resolve (meaning multiple suggestions did exist)
+        // and there are still marks remaining, try to focus the next one.
+		if (!shouldForceResolve && marksAfterResolution.length > 0) {
 			const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
 			if (nextSuggestionToFocus) {
-				if (isPositionVisible(cm, nextSuggestionToFocus.from)) {
-					cm.dispatch({
-						selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-					});
-				} else {
-					cm.dispatch({
-						effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-							y: "center",
-							yMargin: 50,
-						}),
-						selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-					});
-				}
+                // Only dispatch a new transaction if the cursor isn't already there or if it's not visible.
+                // This prevents redundant transactions if the cursor is already optimally placed.
+                if (cm.state.selection.main.head !== nextSuggestionToFocus.from || !isPositionVisible(cm, nextSuggestionToFocus.from)) {
+                    cm.dispatch({
+                        effects: isPositionVisible(cm, nextSuggestionToFocus.from) ? [] : EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+                            y: "center",
+                            yMargin: 50,
+                        }),
+                        selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+                    });
+                }
 			}
 		}
 	}
