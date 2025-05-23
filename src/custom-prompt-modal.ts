@@ -1,7 +1,7 @@
-import { App, Modal, TextAreaComponent, ButtonComponent } from 'obsidian';
+import { App, Modal, Notice, TextAreaComponent, ButtonComponent } from 'obsidian';
 
 export class CustomPromptModal extends Modal {
-    private promptText: string = "Type your prompt here...";
+    private promptText: string = ""; 
     private onSubmit: (promptText: string) => void;
 
     constructor(app: App, onSubmit: (promptText: string) => void) {
@@ -13,24 +13,29 @@ export class CustomPromptModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
 
-        contentEl.createEl('h3', { text: 'Enter your Ad-hoc AI Prompt' });
+        const titleEl = contentEl.createEl('h3', { text: 'Context Aware Generator' });
+        titleEl.style.textAlign = 'center';
 
         const textArea = new TextAreaComponent(contentEl)
-            .setValue(this.promptText)
+            .setValue(this.promptText) 
             .onChange((value) => {
                 this.promptText = value;
             })
-            .setPlaceholder('Enter your prompt...');
+            .setPlaceholder(
+                `Enter your prompt...
+
+You may reference your context if you like.
+
+<Enter> submits. <Shift+Enter> for new line.`,
+                ) 
         
         textArea.inputEl.style.width = '100%';
         textArea.inputEl.style.minHeight = '300px';
+        textArea.inputEl.style.minWidth = '100%'; // Prevent shrinking below container width
         
-        // Automatically focus the textarea
-        // Needs to be deferred slightly for focus to work reliably
         setTimeout(() => {
             textArea.inputEl.focus();
         }, 50);
-
 
         textArea.inputEl.addEventListener('keydown', (evt: KeyboardEvent) => {
             if (evt.key === 'Enter' && !evt.shiftKey) {
@@ -40,18 +45,14 @@ export class CustomPromptModal extends Modal {
         });
         
         const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
+        buttonContainer.style.textAlign = 'center'; 
+        buttonContainer.style.marginTop = '1em';
 
         new ButtonComponent(buttonContainer)
-            .setButtonText('Generate')
+            .setButtonText('Generate at Cursor')
             .setCta()
             .onClick(() => {
                 this.submitForm();
-            });
-        
-        new ButtonComponent(buttonContainer)
-            .setButtonText('Cancel')
-            .onClick(() => {
-                this.close();
             });
     }
 
@@ -59,6 +60,8 @@ export class CustomPromptModal extends Modal {
         if (this.promptText.trim()) {
             this.onSubmit(this.promptText);
             this.close();
+        } else {
+            new Notice("Prompt cannot be empty.");
         }
     }
 
