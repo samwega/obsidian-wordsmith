@@ -66,30 +66,34 @@ class SuggestionViewPluginClass {
 	update(update: ViewUpdate): void {
 		let needsRecompute = false;
 
-		if (!update) {
+		if (!update) { // Defensive, might not be hit in typical CM usage
 			if (this.decorations.size > 0) {
 				this.decorations = Decoration.none;
 			}
 			return;
 		}
 
-		if (update.docChanged) needsRecompute = true;
-		if (update.viewportChanged) needsRecompute = true;
+		// Reasons to recompute decorations:
+		if (update.docChanged || update.viewportChanged || update.selectionSet) {
+			needsRecompute = true;
+		}
 
-		// @ts-expect-error prevState is not officially on ViewUpdate but is present in practice
-		const currentPrevState = update.prevState;
-		if (currentPrevState) {
-			const prevMarks = currentPrevState.field(suggestionStateField, false);
+		// Check if the suggestionStateField itself has changed
+		if (update.startState) {
+			const prevMarks = update.startState.field(suggestionStateField, false);
 			const currentMarks = update.state.field(suggestionStateField, false);
 			if (prevMarks !== currentMarks) {
 				needsRecompute = true;
 			}
 		} else {
-			// If no prevState, assume recompute is needed or it's the initial update
-			needsRecompute = true;
+			// No startState, likely initial creation. If there are marks, compute.
+			const currentMarks = update.state.field(suggestionStateField, false);
+			if (currentMarks && currentMarks.length > 0) {
+				needsRecompute = true;
+			}
 		}
 
-		// Check if any of our specific effects were dispatched
+		// Check if any of our specific effects were dispatched (might be redundant if state also changed, but safe)
 		if (
 			update.transactions.some((tr) =>
 				tr.effects.some(
@@ -108,18 +112,19 @@ class SuggestionViewPluginClass {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("TextTransformer ViewPlugin: Error in update computeDecorations:", e);
-				this.decorations = Decoration.none;
+				this.decorations = Decoration.none; // Fallback
 			}
 		}
 	}
 
-	// Removed _callContext as it was unused
 	computeDecorations(view: EditorView): DecorationSet {
 		if (!view || !view.state) {
 			return Decoration.none;
 		}
 
 		const marks = view.state.field(suggestionStateField, false);
+		const cursorPos = view.state.selection.main.head; // Get current cursor position
+		const isSelectionEmpty = view.state.selection.main.empty; // Check if it's a cursor, not a range selection
 
 		if (!marks || marks.length === 0) {
 			return Decoration.none;
@@ -127,7 +132,7 @@ class SuggestionViewPluginClass {
 
 		const activeDecorations: Range<Decoration>[] = [];
 		for (const mark of marks) {
-			let className = ""; // Will hold the CSS class
+			let className = ""; 
 
 			if (mark.type === "added") {
 				className = "text-transformer-added";
@@ -135,10 +140,14 @@ class SuggestionViewPluginClass {
 				className = "text-transformer-removed";
 			}
 
-			// If no class name is determined (e.g., unexpected mark.type), skip this mark
 			if (!className) {
 				console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
 				continue;
+			}
+
+			// Check if this mark is "active" (cursor at the beginning and no range selection)
+			if (isSelectionEmpty && cursorPos === mark.from) {
+				className += ` ${className}-active`; // e.g., "text-transformer-added text-transformer-added-active"
 			}
 
 			// Validate mark range
@@ -170,7 +179,6 @@ class SuggestionViewPluginClass {
 			}
 		}
 
-		// Create a DecorationSet from the collected decorations
 		const decoSet = Decoration.set(activeDecorations, true);
 		return decoSet;
 	}
@@ -178,16 +186,14 @@ class SuggestionViewPluginClass {
 
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	decorations: (pluginInstance: SuggestionViewPluginClass): DecorationSet => {
-		// This accessor function simply returns the decorations computed by the plugin instance
 		if (pluginInstance?.decorations) {
 			return pluginInstance.decorations;
 		}
-		return Decoration.none; // Fallback to no decorations
+		return Decoration.none; 
 	},
 });
 
 export const textTransformerSuggestionExtensions = (): Extension[] => {
-	// This function bundles the state field and the view plugin for registration
 	return [suggestionStateField, suggestionViewPlugin];
 };
 

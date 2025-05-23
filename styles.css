@@ -25,6 +25,8 @@
 
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
+    /* Add a base border to ensure it can be colored when active without layout shift */
+    border-bottom: 1px solid transparent;
 }
 
 /* --- Light Theme Overrides --- */
@@ -38,4 +40,36 @@ body.theme-light .text-transformer-removed {
 	background-color: rgba(255, 182, 193, 0.5); /* A standard light pink, slightly more opaque */
 	color: #781111; /* Dark red text for high contrast on light backgrounds */
 	text-decoration-color: var(--color-red, #dc3545); /* A clear red for the strikethrough line */
+    /* Add a base border to ensure it can be colored when active without layout shift */
+    border-bottom: 1px solid transparent;
+}
+
+
+/* --- Active Suggestion Highlights --- */
+/* These styles will apply when the cursor is at the beginning of a suggestion. */
+
+/* Dark Theme Active Suggestion */
+.text-transformer-added-active {
+	background-color: #5ce05c80; /* More opaque/intense green */
+	border-bottom-color: #70ffc0;  /* Brighter green border */
+    /* You could also add a subtle outline or box-shadow if desired: */
+    /* outline: 1px solid rgba(112, 255, 192, 0.4); */
+}
+
+.text-transformer-removed-active {
+	background-color: rgba(250, 100, 100, 0.55); /* More opaque/intense red */
+    border-bottom-color: #ff9090; /* Brighter red border */
+    /* You could also add a subtle outline or box-shadow if desired: */
+    /* outline: 1px solid rgba(255, 144, 144, 0.4); */
+}
+
+/* Light Theme Active Suggestion Overrides */
+body.theme-light .text-transformer-added-active {
+	background-color: rgba(120, 240, 120, 0.65); /* More opaque/intense light green */
+	border-bottom-color: #1e7e34;  /* Stronger/darker green border for contrast */
+}
+
+body.theme-light .text-transformer-removed-active {
+	background-color: rgba(255, 160, 170, 0.7); /* More opaque/intense light red/pink */
+    border-bottom-color: #b0202c;  /* Stronger/darker red border for contrast */
 }

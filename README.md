@@ -90,9 +90,7 @@ This update brings a crucial enhancement to how Text Transformer handles changes
 #### Minor Versions of v.1.4.x
 
 * **v1.4.1**—**Style no longer hard coded**—you can edit the CSS now.
-* **v1.4.2**
-  * **Adaptive Styling for dark/light themes.**
-  * **Developer Experience & Code Health:** Enhanced code stability with TypeScript fixes and stricter type checking. Refined linting with adjusted Biome rules and automated pre-commit checks (via Justfile & Git hooks) for ongoing code consistency. Improved code readability through various style and naming convention updates.
+* **v1.4.2—Adaptive Styling for dark/light themes.**
 * * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
 
 ---
@@ -432,30 +430,12 @@ Tailor Text Transformer to your exact needs:
     directly (be cautious!) and reload Obsidian for changes to take effect.
     It's often safer to create a new custom prompt based on a default one.
 
-## Visual Appearance of Changes (Legacy)
+## Legacy Text Trasnformer
 
-Prior to v1.3.0, Text Transformer used `==highlighted==` additions and `~~struck-through~~` deletions.
-If you are using an older version or wish to customize the appearance for other plugins that might use similar markdown, you could use CSS snippets. **For v1.3.0 and later, the visual appearance is handled by inline styles applied by the plugin itself, and the CSS below is not directly used by Text Transformer for its suggestions.**
+Prior to v1.3.0, Text Transformer used `==highlighted==` additions and `~~struck-through~~` deletions, using the regex based mechanics of Proofreader.
 
 > [!NOTE]
-> If you prefer the previous suggestion system that used `==highlight==` and `~~strikethrough~~` markdown, the last version to use this was **v1.2.2**. You can find it on the [releases page](https://github.com/samwega/obsidian-text-transformer/releases/tag/v1.2.2).
-
-```css
-/* Legacy CSS - Not primarily used by Text Transformer v1.3.0+ for suggestions */
-.cm-strikethrough {
-    text-decoration: none !important; /* Removes default strikethrough */
-    background-color: var(--color-red-translucent) !important;
-    border-radius: 3px !important;
-    /* color: white !important; */ /* Optional: contrast text color */
-}
-
-.cm-s-obsidian span.cm-highlight,
-.markdown-rendered mark {
-    background-color: var(--color-green-translucent) !important;
-    border-radius: 3px !important;
-    /* color: white !important; */ /* Optional: contrast text color */
-}
-```
+> If you prefer the previous suggestion system, as it allows to use `==highlight==` and `~~strikethrough~~` in other markdown based applications, the last version to use this was **v1.2.2**. You can find it on the [releases page](https://github.com/samwega/obsidian-text-transformer/releases/tag/v1.2.2).
 
 ## Plugin Development
 
