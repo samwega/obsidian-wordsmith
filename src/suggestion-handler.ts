@@ -12,7 +12,6 @@ import {
 } from "./suggestion-state";
 
 function getCmEditorView(editor: Editor): EditorView | null {
-	// The @ts-expect-error was here, removing it.
 	const cmInstance = editor.cm;
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }
@@ -57,23 +56,32 @@ export function resolveNextSuggestionCM6(
 		return;
 	}
 
-	const currentMarksInState = cm.state.field(suggestionStateField, false);
-	if (!currentMarksInState || currentMarksInState.length === 0) {
+	const allMarksInState = cm.state.field(suggestionStateField, false);
+	if (!allMarksInState || allMarksInState.length === 0) {
 		new Notice("No suggestions to resolve.", 3000);
 		return;
 	}
 
-	const currentSelection = cm.state.selection.main;
-	const targetMark = findNextSuggestionMark(cm, currentSelection.head);
+	let targetMark: SuggestionMark | null;
+	let forceResolve = false;
+
+	if (allMarksInState.length === 1) {
+		targetMark = allMarksInState[0];
+		forceResolve = true;
+	} else {
+		const currentSelection = cm.state.selection.main;
+		targetMark = findNextSuggestionMark(cm, currentSelection.head);
+	}
 
 	if (!targetMark) {
-		new Notice("Could not find a next suggestion.", 3000);
+		new Notice("Could not find a suggestion to resolve.", 3000);
 		return;
 	}
 
+	const currentSelection = cm.state.selection.main;
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
-	if (!effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
+	if (!forceResolve && !effectivelyOnTarget && !isPositionVisible(cm, targetMark.from)) {
 		cm.dispatch({
 			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
 			selection: EditorSelection.cursor(targetMark.from),
@@ -94,12 +102,13 @@ export function resolveNextSuggestionCM6(
 					insert: targetMark.newlineChar,
 				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
-			}
+			} else {
+                newCursorPosAfterResolve = targetMark.to;
+            }
 		} else if (targetMark.type === "removed") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
 		}
 	} else if (action === "reject") {
-		// action === 'reject'
 		if (targetMark.type === "added") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
 		} else if (targetMark.type === "removed") {
@@ -107,24 +116,31 @@ export function resolveNextSuggestionCM6(
 				textChangeSpec = {
 					from: targetMark.from,
 					to: targetMark.to,
-					insert: targetMark.newlineChar,
+					insert: targetMark.newlineChar, 
 				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
 			} else {
-				newCursorPosAfterResolve = targetMark.to;
-			}
+                newCursorPosAfterResolve = targetMark.to;
+            }
 		}
 	}
 
+    // Initialize effects as a mutable array
+	let currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
+
+    if (forceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)){
+        currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, {y: "center"}));
+    }
+
 	const transactionSpec: TransactionSpec = {
-		effects: resolveSuggestionEffect.of({ id: targetMark.id }),
+		effects: currentEffects,
+        selection: EditorSelection.cursor(newCursorPosAfterResolve),
 	};
 
 	if (textChangeSpec) {
 		transactionSpec.changes = textChangeSpec;
 	}
 
-	transactionSpec.selection = EditorSelection.cursor(newCursorPosAfterResolve);
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
@@ -133,20 +149,22 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
-		if (nextSuggestionToFocus) {
-			if (isPositionVisible(cm, nextSuggestionToFocus.from)) {
-				cm.dispatch({
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-				});
-			} else {
-				cm.dispatch({
-					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-						y: "center",
-						yMargin: 50,
-					}),
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-				});
+		if (!forceResolve && marksAfterResolution.length > 0) {
+			const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
+			if (nextSuggestionToFocus) {
+				if (isPositionVisible(cm, nextSuggestionToFocus.from)) {
+					cm.dispatch({
+						selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+					});
+				} else {
+					cm.dispatch({
+						effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+							y: "center",
+							yMargin: 50,
+						}),
+						selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+					});
+				}
 			}
 		}
 	}
@@ -325,7 +343,6 @@ export function resolveSuggestionsInSelectionCM6(
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
 		} else if (action === "reject") {
-			// action === 'reject'
 			if (mark.type === "added") {
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			} else if (mark.type === "removed" && mark.isNewlineChange && mark.newlineChar) {
@@ -393,7 +410,18 @@ export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: E
 		effects: clearAllSuggestionsEffect.of(null),
 	};
 	if (changesArray.length > 0) {
-		transactionSpec.selection = EditorSelection.cursor(cm.state.selection.main.head);
+		let finalCursorPos = cm.state.selection.main.head;
+		const sortedChangesForCursor = [...changesArray].sort((a,b) => a.from - b.from);
+		for (const change of sortedChangesForCursor) {
+			if (finalCursorPos > change.from) {
+				if (finalCursorPos <= change.to) {
+					finalCursorPos = change.from + change.insert.length;
+				} else {
+					finalCursorPos += change.insert.length - (change.to - change.from);
+				}
+			}
+		}
+		transactionSpec.selection = EditorSelection.cursor(finalCursorPos);
 		transactionSpec.changes = changesArray;
 	} else {
 		transactionSpec.selection = cm.state.selection;

@@ -22,11 +22,9 @@ export class CustomPromptModal extends Modal {
                 this.promptText = value;
             })
             .setPlaceholder(
-                `Enter your prompt...
+                `Enter your prompt... You may reference your context if you like.
 
-You may reference your context if you like.
-
-<Enter> submits. <Shift+Enter> for new line.`,
+<enter> submits. <shift+enter> for new line.`,
                 ) 
         
         textArea.inputEl.style.width = '100%';
