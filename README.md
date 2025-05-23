@@ -1,10 +1,10 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.5.0
+**Current Version:** v1.5.1
 
-Transform your writing in Obsidian with Text Transformer, an AI-powered assistant. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
+Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create your own custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
 
 Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, Text Transformer has evolved into a feature-complete AI writing assistant.
 
@@ -17,6 +17,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 - [Release History](#release-history)
   - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+  - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
   - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
     - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
   - [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
@@ -37,7 +38,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   - [Managing Suggestions](#managing-suggestions)
   - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
 - [Customizing Prompts](#customizing-prompts)
-- [Visual Appearance of Changes (Legacy)](#visual-appearance-of-changes-legacy)
+- [Legacy Text Trasnformer](#legacy-text-trasnformer)
 - [Plugin Development](#plugin-development)
 - [About the Developer](#about-the-developer)
 
@@ -72,6 +73,15 @@ This major release introduces a powerful new way to interact with AI: **Ad-hoc C
 **Why this is a game-changer:**
 
 This feature transforms Text Transformer from primarily an editing/refinement tool into a versatile writing partner capable of both **transforming existing text and generating new content with contextual understanding, all within the familiar suggestion-based workflow.** Whether you're stuck, need a creative boost, or want to quickly draft a section, the Context Aware Generator is ready to assist.
+
+### Minor Versions of v.1.5.x
+
+![alt text](image-1.png)
+![alt text](image-2.png)
+* **v1.5.1**—**Dynamic Active Suggestion Highlighting:** Implemented strong visual cues – the suggestion targeted by your cursor (when placed at its beginning) now stands out with significantly increased contrast and a glowing outline, making it unmistakably clear which suggestion you're about to accept or reject.
+
+![alt text](image-3.png)
+![alt text](image.png)
 
 ### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
 
@@ -181,39 +191,20 @@ Transformer today:
 
 ## Features
 
-Text Transformer empowers you to refine your text directly within Obsidian using
-a suite of powerful AI capabilities:
+Text Transformer empowers you to refine your text directly within Obsidian using a suite of powerful AI capabilities:
 
-* **Versatile Text Transformations via Prompt Palette:** Improve clarity,
-    shorten or lengthen text, fix grammar, simplify language, enhance
-    readability, translate (with dynamic language input), utilize contextual
-    instructions (e.g., the "Mind the Context!" prompt), and more. Select
-    from a range of built-in prompts or your own creations through an
-    intuitive palette.
-* **Inline Suggestion Review:** AI-generated changes are displayed directly in
-    your editor. Added text appears with a background highlight (e.g., light green),
-    and removed text is shown with a different background and strikethrough (e.g., light pink).
-    Accept or reject each change individually or in batches.
-* **Custom Prompts:** Go beyond the defaults! Create and save your own prompts
-    tailored to your specific writing needs and workflows.
-* **Advanced AI Context Control:** Precisely control the information sent to
-    the AI for more accurate and relevant transformations:
-  * **Dynamic Context:** Automatically include surrounding text from your note.
+* **Versatile Text Transformations via Prompt Palette:** Improve clarity, shorten or lengthen text, fix grammar, simplify language, enhance readability, translate (with dynamic language input), utilize contextual instructions (such as the "Mind the Context!" prompt), and more. Select from a range of built-in prompts or your own creations through an intuitive palette.
+* **Inline Suggestion Review:** AI-generated changes appear directly in your editor. Added text is highlighted (e.g., light green), and removed text is displayed with a different background and strike-through (e.g., light pink). You can accept or reject each change individually or in batches.
+* **Custom Prompts:** Create and save your own prompts tailored to your specific writing needs and workflows.
+  * **Flexible Prompt Management:** Easily enable or disable any default or custom prompt using toggles in the settings.
+* **Advanced AI Context Control:** Precisely manage the information sent to the AI for more accurate and relevant transformations:
+  * **Dynamic Context:** Automatically include surrounding text from your note. Adjust how many lines above and below the line you're currently on are included.
   * **Entire Note Context:** Use the full content of your current note.
-  * **Custom Context:** Paste any specific text into the provided AI Context
-        Control Panel.
-  * Adjust the scope of Dynamic Context with the "Dynamic context lines"
-        setting.
-* **Flexible Prompt Management:** Easily enable/disable any default or custom
-    prompt using the
-    toggles in the settings.
-* **Multiple AI Provider Support:** Choose between OpenAI (GPT models) and
-    Google (Gemini models) to best suit your needs for quality, speed, and
-    cost.
-* **Keyboard-First Workflow:** Designed for efficiency with comprehensive
-    hotkey support for all major actions.
-* **Process Entire Documents or Paragraphs:** Apply transformations to
-    selected text, the current paragraph, or the entire document.
+  * **Custom Context:** Paste any specific text into the provided AI Context Control Panel.
+  * **Multiple AI Provider Support:** Choose between OpenAI (GPT models) and Google (Gemini models) to best suit your needs for quality, speed, and cost.
+* **Ad-hoc Contextual Generation at Cursor:** Instantly generate new text, ideas, or continuations exactly where your cursor is placed, leveraging surrounding context for highly relevant suggestions—all seamlessly inserted as reviewable inline suggestions.
+* **Keyboard-First Workflow:** Designed for efficiency, with comprehensive hotkey support for all major actions.
+* **Dynamic Active Suggestion Highlighting:** Suggestions targeted by your cursor (when placed at their beginning) are now visually emphasized with increased contrast and a glowing outline, making it easy to see which suggestion you are about to accept or reject.
 
 <img alt="Showcase of model settings" width=90% src="https://i.imgur.com/DbuXLxx.png">
 
