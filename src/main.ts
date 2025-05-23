@@ -7,9 +7,10 @@ import {
 	resolveSuggestionsInSelectionCM6,
 } from "./suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer";
+import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer"; // Added generateTextAndApplyAsSuggestionCM6
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
+import { CustomPromptModal } from "./custom-prompt-modal"; // Added CustomPromptModal
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
@@ -51,6 +52,18 @@ export default class TextTransformer extends Plugin {
 			},
 			icon: "settings-2",
 		});
+
+        // New Command for Ad-hoc Prompt
+        this.addCommand({
+            id: "generate-text-with-ad-hoc-prompt-suggestion",
+            name: "Generate text with ad-hoc prompt (as suggestion)",
+            icon: "wand-2",
+            editorCallback: async (editor: Editor) => {
+                new CustomPromptModal(this.app, async (promptText) => {
+                    await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
+                }).open();
+            },
+        });
 
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",

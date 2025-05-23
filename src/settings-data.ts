@@ -72,12 +72,18 @@ export interface TextTransformerPrompt {
 	text: string; // the prompt text
 	isDefault: boolean; // true for default prompts
 	enabled: boolean; // if this prompt is active
+    model?: SupportedModels; // Optional: Specific model for this prompt
+    temperature?: number; // Optional: Specific temperature for this prompt
+    frequency_penalty?: number; // Optional: Specific frequency_penalty for this prompt
+    presence_penalty?: number; // Optional: Specific presence_penalty for this prompt
+    max_tokens?: number; // Optional: Specific max_tokens for this prompt
+    showInPromptPalette?: boolean; // Should this prompt appear in the palette?
 }
 
 export interface TextTransformerSettings {
 	openAiApiKey: string;
 	geminiApiKey: string;
-	model: SupportedModels;
+	model: SupportedModels; // Default model for the plugin
 	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
 	defaultPromptId: string | null; // ID of the default prompt for full document
 	alwaysShowPromptSelection: boolean; // Always show prompt selection modal even if only one enabled
@@ -87,6 +93,10 @@ export interface TextTransformerSettings {
 	translationLanguage: string;
 	longInputThreshold: number;
 	veryLongInputThreshold: number;
+    temperature: number; // Default temperature
+    frequency_penalty: number; // Default frequency_penalty
+    presence_penalty: number; // Default presence_penalty
+    max_tokens: number; // Default max_tokens
 }
 
 export const DEFAULT_SETTINGS: TextTransformerSettings = {
@@ -98,10 +108,14 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	alwaysShowPromptSelection: false,
 	preserveTextInsideQuotes: false,
 	preserveBlockquotes: false,
-	dynamicContextLineCount: 3, // Default was 1, but settings UI shows 3 and this is often better
+	dynamicContextLineCount: 3, 
 	translationLanguage: "English",
 	longInputThreshold: 1500,
 	veryLongInputThreshold: 15000,
+    temperature: 0.7, // Default temperature
+    frequency_penalty: 0, // Default frequency_penalty
+    presence_penalty: 0, // Default presence_penalty
+    max_tokens: 2048, // Default max_tokens
 };
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
@@ -111,6 +125,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Please make suggestions how to improve clarity, readability, grammar, and language of the following text. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "shorten",
@@ -118,6 +133,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Shorten the following text while preserving its meaning and clarity. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "lengthen",
@@ -125,6 +141,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Expand and elaborate the following text for greater detail and depth, but do not add unrelated information. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "fix-grammar",
@@ -132,6 +149,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional proofreader. Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "simplify-language",
@@ -139,6 +157,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "enhance-readability",
@@ -146,6 +165,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Improve the readability and flow of the following text. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "mind-the-context",
@@ -153,6 +173,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. You will receive a text selection, and a context. Do to the text whatever the context says, strictly. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 	{
 		id: "translate",
@@ -160,6 +181,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional translator. Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
+        showInPromptPalette: true,
 	},
 ];
 
