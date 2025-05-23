@@ -25,8 +25,8 @@
 
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
-    /* Add a base border to ensure it can be colored when active without layout shift */
-    border-bottom: 1px solid transparent;
+	/* Add a base border to ensure it can be colored when active without layout shift */
+	border-bottom: 1px solid transparent;
 }
 
 /* --- Light Theme Overrides --- */
@@ -40,36 +40,47 @@ body.theme-light .text-transformer-removed {
 	background-color: rgba(255, 182, 193, 0.5); /* A standard light pink, slightly more opaque */
 	color: #781111; /* Dark red text for high contrast on light backgrounds */
 	text-decoration-color: var(--color-red, #dc3545); /* A clear red for the strikethrough line */
-    /* Add a base border to ensure it can be colored when active without layout shift */
-    border-bottom: 1px solid transparent;
+	/* Add a base border to ensure it can be colored when active without layout shift */
+	border-bottom: 1px solid transparent;
 }
 
 
 /* --- Active Suggestion Highlights --- */
-/* These styles will apply when the cursor is at the beginning of a suggestion. */
 
-/* Dark Theme Active Suggestion */
+/* Dark Theme Active "Added" Suggestion - Enhanced Contrast */
 .text-transformer-added-active {
-	background-color: #5ce05c80; /* More opaque/intense green */
-	border-bottom-color: #70ffc0;  /* Brighter green border */
-    /* You could also add a subtle outline or box-shadow if desired: */
-    /* outline: 1px solid rgba(112, 255, 192, 0.4); */
+	background-color: #60f070A0; /* Brighter and more opaque green */
+	/* The existing 1px border-bottom from .text-transformer-added remains */
+	outline: 1px solid #78ff85;  /* Prominent, luminous green outline */
+	outline-offset: -1px; /* Pulls outline inward to align with content edges better */
+	/* Optional: subtle glow for even more pop if desired, uncomment to try */
+	box-shadow: 0 0 6px rgba(144, 255, 218, 0.6);
 }
 
+/* Dark Theme Active "Removed" Suggestion (As per previous preference) */
 .text-transformer-removed-active {
 	background-color: rgba(250, 100, 100, 0.55); /* More opaque/intense red */
-    border-bottom-color: #ff9090; /* Brighter red border */
-    /* You could also add a subtle outline or box-shadow if desired: */
-    /* outline: 1px solid rgba(255, 144, 144, 0.4); */
+	border-bottom-color: #ff9090; /* Brighter red border, uses existing 1px thickness */
+	outline: 1px solid #fe9191;  /* Prominent, luminous teal/green outline */
+	outline-offset: -1px; /* Pulls outline inward to align with content edges better */
+	box-shadow: 0 0 6px rgba(250, 143, 143, 0.6);
 }
 
-/* Light Theme Active Suggestion Overrides */
+/* Light Theme Active "Added" Suggestion Overrides - Enhanced Contrast */
 body.theme-light .text-transformer-added-active {
-	background-color: rgba(120, 240, 120, 0.65); /* More opaque/intense light green */
-	border-bottom-color: #1e7e34;  /* Stronger/darker green border for contrast */
+	background-color: rgba(100, 240, 100, 0.8); /* More opaque and vibrant light green */
+	/* The existing 1px border-bottom from .text-transformer-added.theme-light remains */
+	outline: 1px solid #107018;  /* Strong, defined darker green outline for contrast */
+	outline-offset: -1px;
+	/* Optional: subtle glow */
+	box-shadow: 0 0 6px rgba(29, 147, 39, 0.75);
 }
 
+/* Light Theme Active "Removed" Suggestion Overrides (As per previous preference) */
 body.theme-light .text-transformer-removed-active {
 	background-color: rgba(255, 160, 170, 0.7); /* More opaque/intense light red/pink */
-    border-bottom-color: #b0202c;  /* Stronger/darker red border for contrast */
+	border-bottom-color: #ff6e6e;  /* Stronger/darker red border for contrast, uses existing 1px thickness */
+	outline: 1px solid #dc3545;  /* Strong, defined darker red outline for contrast */
+	outline-offset: -1px;
+	box-shadow: 0 0 6px rgba(226, 60, 74, 0.75);
 }
