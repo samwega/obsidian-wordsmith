@@ -56,7 +56,7 @@ export default class TextTransformer extends Plugin {
         // New Command for Ad-hoc Prompt
         this.addCommand({
             id: "generate-text-with-ad-hoc-prompt-suggestion",
-            name: "Generate text with ad-hoc prompt (as suggestion)",
+            name: "Prompt Based Context Aware Generation at Cursor",
             icon: "wand-2",
             editorCallback: async (editor: Editor) => {
                 new CustomPromptModal(this.app, async (promptText) => {

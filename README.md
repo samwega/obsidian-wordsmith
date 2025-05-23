@@ -1,75 +1,26 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.4.3
+**Current Version:** v1.5.0
 
-Transform your writing in Obsidian with Text Transformer, an AI-powered
-assistant. **Review and accept/reject AI suggestions inline**, similar to track
-changes, directly in your editor. Supports custom prompts, multiple AI
-providers (OpenAI GPT & Google Gemini), advanced context control, and is fully
-keyboard-driven.
+Transform your writing in Obsidian with Text Transformer, an AI-powered assistant. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-Initially forked from the excellent Obsidian Proofreader by Christopher Grieser,
-Text Transformer has evolved into a feature-complete AI writing assistant.
-If you're looking for a more focused proofreading tool, please check out the
-original [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader).
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create your own custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
 
-<img alt="Showcase" width=70% src="https://i.imgur.com/92rfV9X.png">
+Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, Text Transformer has evolved into a feature-complete AI writing assistant.
 
-## ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
-
-This update brings a crucial enhancement to how Text Transformer handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
-
-* **Enhanced Newline Diffing:**
-  * Newlines are now consistently marked with green "↵" (added) and pink "¶" (removed).
-  * **Improved Accuracy for Structural Changes:** The underlying diffing mechanism (`jsdiff`) has been switched to `diffWordsWithSpace` and combined with more granular internal processing. This significantly improves the plugin's ability to detect and represent newline additions and removals, even when they are part of larger text blocks or when AI rephrases sentences across line breaks.
-  * **Clearer Visuals for Reformatting:** Whether the AI is breaking a long sentence into multiple lines, or merging multiple lines into one, these structural changes involving newlines are now clearly and correctly marked for your review.
-* **More Robust Suggestion Handling:**
-  * The logic for applying and resolving suggestions involving these new newline markers has been updated for consistency. Accepting an added "↵" correctly inserts a newline, and rejecting a removed "¶" correctly re-inserts the newline.
-* **Under-the-Hood Tweaks:** Codebase cleaned with TypeScript typing refinements and removal of unused code.
-
-**Why this matters:** This update solves inconsistent tracking of AI-suggested newlines additions and removals, ensuring you see and control proposed line changes for clarity, conciseness, or restructuring.
-
-### Minor Versions of v.1.4.x
-
-* **v1.4.1**—**Style no longer hard coded**—you can edit the CSS now.
-* **v1.4.2**
-  * **Adaptive Styling for dark/light themes.**
-  * **Developer Experience & Code Health:** Enhanced code stability with TypeScript fixes and stricter type checking. Refined linting with adjusted Biome rules and automated pre-commit checks (via Justfile & Git hooks) for ongoing code consistency. Improved code readability through various style and naming convention updates.
-* * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
-
----
-
-## ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
-
-This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
-
-* **New Suggestion Engine:**
-  * **No More Markdown Markers:** Text Transformer **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
-  * **Direct CodeMirror Decorations:** Suggestions are now rendered using **inline-styled CodeMirror 6 decorations**. This means:
-    * Added text is typically shown with a light green background.
-    * Removed text is shown with a light pink background and a line-through effect.
-    * These styles are applied *visually* without altering the underlying text with special characters, providing a cleaner experience and better theme compatibility.
-* **Robust Internal Logic:**
-  * The internal state management for suggestions has been rewritten using a CodeMirror `ViewPlugin` for more direct and efficient handling of decorations.
-  * Improved error handling and extensive logging have been added for easier debugging and more stable performance.
-* **Settings Enhancements:**
-  * Settings loading is now more robust, with better migration logic for prompts and ensures default values are correctly applied.
-* **Refined User Experience:**
-  * Command names have been simplified (e.g., "(CM6)" suffix removed).
-  * Notices and messages have been clarified.
-
-### Minor Versions of v.1.3.x
-
-**v1.3.1**—**AI Model Selector in Side Pane:** Quickly switch your preferred AI model directly from the AI Context Control Panel for even faster workflow adjustments.
-**v1.3.2**—Bug fixes.
+<img alt="Showcase" width=90% src="https://i.imgur.com/92rfV9X.png">
 
 ## Table of contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
 
 - [Release History](#release-history)
+  - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+  - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
+    - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
+  - [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
+    - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
   - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
   - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
   - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
@@ -93,6 +44,82 @@ This major update overhauls how AI suggestions are displayed and managed, moving
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Release History
+
+### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
+
+This major release introduces a powerful new way to interact with AI: **Ad-hoc Contextual Generation directly at your cursor, presented as a suggestion.** Go beyond transforming existing text – now you can generate new content, ideas, or continuations seamlessly within your writing flow.
+
+**Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor**
+
+*   **New Command: "Generate text with ad-hoc prompt (as suggestion)"**
+    *   Trigger this editor command (via hotkey or command palette) to open the new "Context Aware Generator" modal.
+    *   Type your specific instruction (e.g., "brainstorm ideas for X," "write an intro paragraph about Y," "explain Z simply") into the modal.
+*   **Contextual Awareness for Generation:**
+    *   Leverages the settings in your **AI Context Control Panel** (Custom, Dynamic, or Entire Note).
+    *   When Dynamic or Entire Note context is active, a special marker (`<<<GENERATION_TARGET_CURSOR_POSITION>>>`) is inserted at your precise cursor location within the context sent to the AI. This tells the AI *exactly* where you intend the new text to be generated.
+    *   The AI uses this context and marker to produce more relevant and precisely placed generated content.
+*   **Seamless Suggestion Workflow:**
+    *   The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
+    *   You can then accept or reject this generated block just like any other Text Transformer suggestion.
+    *   The cursor automatically moves to the end of the inserted text.
+*   **Modal Enhancements:**
+    *   The "Context Aware Generator" modal automatically focuses the prompt input area.
+    *   A notice appears if you try to submit an empty prompt.
+*   **Streamlined Suggestion Navigation:**
+    *   When using "Accept/Reject Next Suggestion," if there's only **one** suggestion in the entire document, it's now resolved immediately without requiring a second key press (the "scroll and press again" step is skipped).
+    *   For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
+
+**Why this is a game-changer:**
+
+This feature transforms Text Transformer from primarily an editing/refinement tool into a versatile writing partner capable of both **transforming existing text and generating new content with contextual understanding, all within the familiar suggestion-based workflow.** Whether you're stuck, need a creative boost, or want to quickly draft a section, the Context Aware Generator is ready to assist.
+
+### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
+
+This update brings a crucial enhancement to how Text Transformer handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
+
+* **Enhanced Newline Diffing:**
+  * Newlines are now consistently marked with green "↵" (added) and pink "¶" (removed).
+  * **Improved Accuracy for Structural Changes:** The underlying diffing mechanism (`jsdiff`) has been switched to `diffWordsWithSpace` and combined with more granular internal processing. This significantly improves the plugin's ability to detect and represent newline additions and removals, even when they are part of larger text blocks or when AI rephrases sentences across line breaks.
+  * **Clearer Visuals for Reformatting:** Whether the AI is breaking a long sentence into multiple lines, or merging multiple lines into one, these structural changes involving newlines are now clearly and correctly marked for your review.
+* **More Robust Suggestion Handling:**
+  * The logic for applying and resolving suggestions involving these new newline markers has been updated for consistency. Accepting an added "↵" correctly inserts a newline, and rejecting a removed "¶" correctly re-inserts the newline.
+* **Under-the-Hood Tweaks:** Codebase cleaned with TypeScript typing refinements and removal of unused code.
+
+**Why this matters:** This update solves inconsistent tracking of AI-suggested newlines additions and removals, ensuring you see and control proposed line changes for clarity, conciseness, or restructuring.
+
+#### Minor Versions of v.1.4.x
+
+* **v1.4.1**—**Style no longer hard coded**—you can edit the CSS now.
+* **v1.4.2**
+  * **Adaptive Styling for dark/light themes.**
+  * **Developer Experience & Code Health:** Enhanced code stability with TypeScript fixes and stricter type checking. Refined linting with adjusted Biome rules and automated pre-commit checks (via Justfile & Git hooks) for ongoing code consistency. Improved code readability through various style and naming convention updates.
+* * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
+
+---
+
+### ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
+
+This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
+
+* **New Suggestion Engine:**
+  * **No More Markdown Markers:** Text Transformer **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
+  * **Direct CodeMirror Decorations:** Suggestions are now rendered using **inline-styled CodeMirror 6 decorations**. This means:
+    * Added text is typically shown with a light green background.
+    * Removed text is shown with a light pink background and a line-through effect.
+    * These styles are applied *visually* without altering the underlying text with special characters, providing a cleaner experience and better theme compatibility.
+* **Robust Internal Logic:**
+  * The internal state management for suggestions has been rewritten using a CodeMirror `ViewPlugin` for more direct and efficient handling of decorations.
+  * Improved error handling and extensive logging have been added for easier debugging and more stable performance.
+* **Settings Enhancements:**
+  * Settings loading is now more robust, with better migration logic for prompts and ensures default values are correctly applied.
+* **Refined User Experience:**
+  * Command names have been simplified (e.g., "(CM6)" suffix removed).
+  * Notices and messages have been clarified.
+
+#### Minor Versions of v.1.3.x
+
+**v1.3.1**—**AI Model Selector in Side Pane:** Quickly switch your preferred AI model directly from the AI Context Control Panel for even faster workflow adjustments.
+**v1.3.2**—Bug fixes.
 
 ### ✨ What's New in v1.2.1 & v1.2.2 ✨
 
