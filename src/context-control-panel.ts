@@ -114,7 +114,7 @@ export class ContextControlPanel extends ItemView {
 			});
 
 		this.dynamicContextLinesSetting = new Setting(container)
-			.setName("● N. of context lines")
+			.setName("‣ N. of context lines")
 			.setDesc("to include before/after selection (1-21).")
 			.addText((text) => {
 				text

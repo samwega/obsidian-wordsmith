@@ -75,7 +75,7 @@ Text Transformer now offers one of the fastest and most ergonomic AI suggestion 
 * **v1.6.1**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
 * **v1.6.2**—**UI & Workflow Refinements**:
   * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
-  * **Removed Full Document Transform**: This command was adding unwanted complexity. You may simply Ctrl-A and Transform Selection.
+  * **Removed Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
