@@ -5,28 +5,29 @@ import {
 	clearAllActiveSuggestionsCM6,
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
+    focusNextSuggestionCM6, // Added for Feature 2
+    focusPreviousSuggestionCM6, // Added for Feature 2
 } from "./suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer"; // Added generateTextAndApplyAsSuggestionCM6
+import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer"; 
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import { CustomPromptModal } from "./custom-prompt-modal"; // Added CustomPromptModal
+import { CustomPromptModal } from "./custom-prompt-modal"; 
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
-	TextTransformerPrompt, // Keep if used by PromptPaletteModal signature directly, or if other commands use it.
+	TextTransformerPrompt, 
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
 } from "./settings";
 import {
-	// TextTransformerPrompt, // This was the duplicate causing the unused warning, settings.ts re-exports it.
 	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
 	MODEL_SPECS,
 } from "./settings-data";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	settings!: TextTransformerSettings; // Definite assignment assertion
+	settings!: TextTransformerSettings; 
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
@@ -53,7 +54,6 @@ export default class TextTransformer extends Plugin {
 			icon: "settings-2",
 		});
 
-        // New Command for Ad-hoc Prompt
         this.addCommand({
             id: "generate-text-with-ad-hoc-prompt-suggestion",
             name: "Prompt Based Context Aware Generation at Cursor",
@@ -85,12 +85,10 @@ export default class TextTransformer extends Plugin {
 						this.app,
 						enabledPrompts,
 						async (prompt: TextTransformerPrompt) => {
-							// Explicitly type prompt here
 							await textTransformerTextCM6(this, editor, prompt);
 							resolve();
 						},
 						() => {
-							// onCancel
 							resolve();
 						},
 					);
@@ -146,6 +144,26 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => clearAllActiveSuggestionsCM6(this, editor),
 			icon: "trash-2",
 		});
+
+        // Feature 2: Suggestion Navigation Commands
+        this.addCommand({
+            id: "focus-next-suggestion",
+            name: "Focus next suggestion",
+            editorCallback: (editor: Editor): void => {
+                focusNextSuggestionCM6(this, editor);
+            },
+            icon: "arrow-down-circle", 
+        });
+
+        this.addCommand({
+            id: "focus-previous-suggestion",
+            name: "Focus previous suggestion",
+            editorCallback: (editor: Editor): void => {
+                focusPreviousSuggestionCM6(this, editor);
+            },
+            icon: "arrow-up-circle",
+        });
+
 
 		console.info(this.manifest.name + " Plugin loaded successfully.");
 	}

@@ -39,7 +39,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) { // Corrected: check length of the array
+	if (existingSuggestions && existingSuggestions.length > 0) { 
 		new Notice(
 			"There are already active suggestions. Please accept or reject them first.",
 			6000,
@@ -91,7 +91,7 @@ ${customContext}
 						finalDynamicContext += lineText;
 					}
 					if (i < endLineNum) {
-						finalDynamicContext += "\n"; // Corrected newline
+						finalDynamicContext += "\n"; 
 					}
 				}
 				contextParts.push(
@@ -149,7 +149,7 @@ ${fileContent}
 		return;
 	}
 
-	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); // Corrected regex
+	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); 
 
 	const suggestionMark: SuggestionMark = {
 		id: generateSuggestionId(),
@@ -168,8 +168,8 @@ ${fileContent}
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: insertFrom, to: insertFrom, insert: normalizedGeneratedText },
-			effects: setSuggestionsEffect.of(marksToApply), // Corrected: pass array directly
-			selection: EditorSelection.cursor(insertFrom + normalizedGeneratedText.length),
+			effects: setSuggestionsEffect.of(marksToApply), 
+			selection: EditorSelection.cursor(marksToApply[0].from), // Feature 1: Cursor at start of suggestion
 			scrollIntoView: true,
 		}),
 	);
@@ -206,7 +206,7 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) { // Corrected: check length of the array
+	if (existingSuggestions && existingSuggestions.length > 0) { 
 		new Notice(
 			`${scope} already has active suggestions. Please accept or reject them first.`,
 			6000,
@@ -409,15 +409,18 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 			currentOffsetInEditorText += normalizedUnchangedValue.length;
 		}
 	}
-
+    
+    // suggestionMarksToApply is already sorted by 'from' due to sequential processing of diffResult.
+    // It's also guaranteed to be non-empty if we've reached this point because of the early return 
+    // if diffResult has no added/removed parts.
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
 			effects: [
                 clearAllSuggestionsEffect.of(null), 
-                setSuggestionsEffect.of(suggestionMarksToApply) // Corrected: pass array directly
+                setSuggestionsEffect.of(suggestionMarksToApply) 
             ],
-			selection: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
+			selection: EditorSelection.cursor(suggestionMarksToApply[0].from), // Feature 1: Cursor at start of first suggestion
 			scrollIntoView: true,
 		}),
 	);

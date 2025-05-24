@@ -16,6 +16,86 @@ function getCmEditorView(editor: Editor): EditorView | null {
 	return cmInstance instanceof EditorView ? cmInstance : null;
 }
 
+// Helper for Feature 2: Find next suggestion mark for focusing
+function findNextMarkToFocus(marks: SuggestionMark[], currentPos: number): SuggestionMark | null {
+    if (marks.length === 0) return null;
+    const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
+    
+    // Find first mark strictly AFTER currentPos
+    for (const mark of sortedMarks) {
+        if (mark.from > currentPos) return mark;
+    }
+    // If no mark is after currentPos (i.e., cursor is at or after the last mark), cycle to the first mark.
+    return sortedMarks[0]; 
+}
+
+// Helper for Feature 2: Find previous suggestion mark for focusing
+function findPreviousMarkToFocus(marks: SuggestionMark[], currentPos: number): SuggestionMark | null {
+    if (marks.length === 0) return null;
+    const sortedMarks = [...marks].sort((a, b) => a.from - b.from); // Sort ascending
+
+    // Find the last mark whose 'from' is strictly BEFORE currentPos
+    let foundMark: SuggestionMark | null = null;
+    for (let i = sortedMarks.length - 1; i >= 0; i--) {
+        const mark = sortedMarks[i];
+        if (mark.from < currentPos) {
+            foundMark = mark;
+            break; 
+        }
+    }
+    // If a mark before currentPos was found, return it.
+    // Otherwise (cursor is at or before the first mark), cycle to the last mark.
+    return foundMark || sortedMarks[sortedMarks.length - 1];
+}
+
+
+export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
+    const cm = getCmEditorView(editor);
+    if (!cm) {
+        new Notice("Modern editor version required.");
+        return;
+    }
+    const allMarks = cm.state.field(suggestionStateField, false) || [];
+    if (allMarks.length === 0) {
+        new Notice("No suggestions to navigate.", 2000);
+        return;
+    }
+
+    const currentPos = cm.state.selection.main.head;
+    const targetMark = findNextMarkToFocus(allMarks, currentPos);
+
+    if (targetMark) { // Should always find a mark if allMarks.length > 0 due to cycling
+        cm.dispatch({
+            selection: EditorSelection.cursor(targetMark.from),
+            effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })
+        });
+    }
+}
+
+export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
+    const cm = getCmEditorView(editor);
+    if (!cm) {
+        new Notice("Modern editor version required.");
+        return;
+    }
+    const allMarks = cm.state.field(suggestionStateField, false) || [];
+    if (allMarks.length === 0) {
+        new Notice("No suggestions to navigate.", 2000);
+        return;
+    }
+
+    const currentPos = cm.state.selection.main.head;
+    const targetMark = findPreviousMarkToFocus(allMarks, currentPos); 
+
+    if (targetMark) { // Should always find a mark if allMarks.length > 0 due to cycling
+        cm.dispatch({
+            selection: EditorSelection.cursor(targetMark.from),
+            effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })
+        });
+    }
+}
+
+
 function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMark | null {
 	const marks = cm.state.field(suggestionStateField, false);
 	if (!marks || marks.length === 0) return null;
@@ -29,7 +109,6 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 	return sortedMarks.length > 0 ? sortedMarks[0] : null;
 }
 
-// Updated isPositionVisible to use viewport directly
 function isPositionVisible(cm: EditorView, pos: number): boolean {
     return pos >= cm.viewport.from && pos <= cm.viewport.to;
 }
@@ -52,7 +131,7 @@ export function resolveNextSuggestionCM6(
 	}
 
 	let targetMark: SuggestionMark | null;
-	let shouldForceResolve = false; // Renamed for clarity
+	let shouldForceResolve = false; 
 
 	if (allMarksInState.length === 1) {
 		targetMark = allMarksInState[0];
@@ -68,15 +147,8 @@ export function resolveNextSuggestionCM6(
 	}
 
 	const currentSelection = cm.state.selection.main;
-	// effectivelyOnTarget means cursor is exactly at the start of the suggestion mark.
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
     
-    // Condition for the "scroll and press again" behavior:
-    // 1. Not forcing resolution (i.e., multiple suggestions exist)
-    // 2. AND (EITHER the cursor is not exactly on the target OR the target is not visible)
-    // This was the problematic part: !effectivelyOnTarget && !isPositionVisible was too restrictive.
-    // It should be: if we are NOT on target OR it's not visible, then scroll.
-    // Corrected logic: if it's not a forced resolve, AND (the cursor is not already at the mark OR the mark is not visible), then scroll.
 	if (!shouldForceResolve && (!effectivelyOnTarget || !isPositionVisible(cm, targetMark.from))) {
 		cm.dispatch({
 			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
@@ -86,7 +158,6 @@ export function resolveNextSuggestionCM6(
 		return;
 	}
 
-	// --- Resolution logic (remains the same) ---
 	let textChangeSpec: { from: number; to: number; insert: string } | undefined;
 	let newCursorPosAfterResolve = targetMark.from;
 
@@ -124,8 +195,6 @@ export function resolveNextSuggestionCM6(
 
 	let currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
 
-    // Scroll into view if it was a forced resolve AND the new cursor position MIGHT be out of view.
-    // For non-forced resolves, the previous block already handled scrolling to targetMark.from.
     if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)){
         currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, {y: "center"}));
     }
@@ -147,13 +216,9 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-        // If it was NOT a forced resolve (meaning multiple suggestions did exist)
-        // and there are still marks remaining, try to focus the next one.
 		if (!shouldForceResolve && marksAfterResolution.length > 0) {
 			const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
 			if (nextSuggestionToFocus) {
-                // Only dispatch a new transaction if the cursor isn't already there or if it's not visible.
-                // This prevents redundant transactions if the cursor is already optimally placed.
                 if (cm.state.selection.main.head !== nextSuggestionToFocus.from || !isPositionVisible(cm, nextSuggestionToFocus.from)) {
                     cm.dispatch({
                         effects: isPositionVisible(cm, nextSuggestionToFocus.from) ? [] : EditorView.scrollIntoView(nextSuggestionToFocus.from, {
