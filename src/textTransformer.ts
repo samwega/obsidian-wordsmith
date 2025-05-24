@@ -1,9 +1,8 @@
-// textTransformer.ts
 // src/textTransformer.ts
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { diffWordsWithSpace } from "diff";
-import { Editor, Notice, getFrontMatterInfo } from "obsidian";
+import { Editor, Notice } from "obsidian"; // Removed getFrontMatterInfo
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
 import TextTransformer from "./main";
@@ -40,7 +39,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) {
+	if (existingSuggestions && existingSuggestions.length > 0) { 
 		new Notice(
 			"There are already active suggestions. Please accept or reject them first.",
 			6000,
@@ -52,7 +51,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	let additionalContextForAI = "";
 	const contextParts: string[] = [];
 	const currentFile = app.workspace.getActiveFile();
-	const cursorOffset = cm.state.selection.main.head;
+	const cursorOffset = cm.state.selection.main.head; 
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 	if (contextPanelLeaves.length > 0) {
@@ -92,7 +91,7 @@ ${customContext}
 						finalDynamicContext += lineText;
 					}
 					if (i < endLineNum) {
-						finalDynamicContext += "\n";
+						finalDynamicContext += "\n"; 
 					}
 				}
 				contextParts.push(
@@ -124,15 +123,15 @@ ${fileContent}
 		id: "ad-hoc-generation",
 		name: "Ad-hoc Generation",
 		text: userPromptText,
-        isDefault: false,
+        isDefault: false, 
         enabled: true,
-        showInPromptPalette: false, // Ad-hoc prompts don't go in the palette
+        showInPromptPalette: false,
 	};
 
 	const notice = new Notice("🤖 Generating text via ad-hoc prompt...", 0);
 	let response;
 	try {
-		const oldTextForAI = "";
+		const oldTextForAI = ""; 
 		response = settings.model.startsWith("gemini-")
 			? await geminiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI, true)
 			: await openAiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI);
@@ -146,12 +145,12 @@ ${fileContent}
 
 	const { newText: generatedText, cost, isOverlength } = response || {};
 
-	if (!generatedText) {
+	if (!generatedText) { 
 		new Notice("AI did not return any generated text.", 5000);
 		return;
 	}
 
-	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n");
+	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); 
 
 	const marksToApply: SuggestionMark[] = [];
 	let textToInsertInDocument = "";
@@ -167,8 +166,8 @@ ${fileContent}
 
 		if (normalizedGeneratedText.startsWith("\n", currentParseOffsetInGeneratedText)) {
 			isNewlineSegment = true;
-			textSegmentForDocument = NEWLINE_ADD_SYMBOL;
-			segmentLengthInGeneratedText = 1;
+			textSegmentForDocument = NEWLINE_ADD_SYMBOL; 
+			segmentLengthInGeneratedText = 1; 
 		} else {
 			let nextNewlineIndex = normalizedGeneratedText.indexOf("\n", currentParseOffsetInGeneratedText);
 			if (nextNewlineIndex === -1) {
@@ -178,7 +177,7 @@ ${fileContent}
 			segmentLengthInGeneratedText = textSegmentForDocument.length;
 		}
 		
-		if (textSegmentForDocument.length > 0) {
+		if (textSegmentForDocument.length > 0) { 
 			textToInsertInDocument += textSegmentForDocument;
 			const commonMarkProps = {
 				id: generateSuggestionId(),
@@ -191,9 +190,9 @@ ${fileContent}
 			const mark: SuggestionMark = isNewlineSegment
 				? {
 					  ...commonMarkProps,
-					  newlineChar: "\n" as const,
+					  newlineChar: "\n" as const, 
 				  }
-				: commonMarkProps;
+				: commonMarkProps; 
 		
 			marksToApply.push(mark);
 			currentInsertOffsetInDocument += textSegmentForDocument.length;
@@ -205,7 +204,7 @@ ${fileContent}
 		cm.state.update({
 			changes: { from: cursorOffset, to: cursorOffset, insert: textToInsertInDocument },
 			effects: [
-                clearAllSuggestionsEffect.of(null),
+                clearAllSuggestionsEffect.of(null), 
                 setSuggestionsEffect.of(marksToApply)
             ],
 			selection: marksToApply.length > 0 ? EditorSelection.cursor(marksToApply[0].from) : EditorSelection.cursor(cursorOffset + textToInsertInDocument.length),
@@ -229,8 +228,8 @@ async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
 	editor: Editor,
 	originalText: string,
-	scope: "Document" | "Selection" | "Paragraph",
-	prompt: TextTransformerPrompt, // Changed from promptInfo to prompt
+	scope: "Selection" | "Paragraph", // "Document" scope removed
+	promptInfo: TextTransformerPrompt,
 	scopeRangeCm: { from: number; to: number },
 ): Promise<boolean> {
 	const cm = getCmEditorView(editor);
@@ -245,7 +244,7 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) {
+	if (existingSuggestions && existingSuggestions.length > 0) { 
 		new Notice(
 			`${scope} already has active suggestions. Please accept or reject them first.`,
 			6000,
@@ -282,16 +281,13 @@ ${customText}
 				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
 				let selectionStartLine: number;
 				let selectionEndLine: number;
-				if (scope === "Selection" && editor.somethingSelected()) {
-					const sel = editor.listSelections()[0];
-					selectionStartLine = Math.min(sel.anchor.line, sel.head.line);
-					selectionEndLine = Math.max(sel.anchor.line, sel.head.line);
-				} else {
-                    const fromPos = editor.offsetToPos(scopeRangeCm.from);
-                    const toPos = editor.offsetToPos(scopeRangeCm.to);
-					selectionStartLine = fromPos.line;
-					selectionEndLine = toPos.line;
-				}
+
+				// For dynamic context, scopeRangeCm already defines the selection or paragraph
+                const fromPos = editor.offsetToPos(scopeRangeCm.from);
+                const toPos = editor.offsetToPos(scopeRangeCm.to);
+				selectionStartLine = fromPos.line;
+				selectionEndLine = toPos.line;
+				
 				const contextStartLine = Math.max(0, selectionStartLine - linesToIncludeAround);
 				const contextEndLine = Math.min(
 					editor.lastLine(),
@@ -301,7 +297,8 @@ ${customText}
 				for (let i = contextStartLine; i <= contextEndLine; i++)
 					dynamicContextLines.push(editor.getLine(i));
 				let dynamicContextText = dynamicContextLines.join("\n");
-				if (dynamicContextText.includes(originalText))
+				// Mark the original text within the dynamic context
+				if (dynamicContextText.includes(originalText)) 
 					dynamicContextText = dynamicContextText.replace(
 						originalText,
 						`${markerStart}${originalText}${markerEnd}`,
@@ -316,7 +313,8 @@ ${dynamicContextText}
 				if (currentFile) {
 					const fileContent = await app.vault.cachedRead(currentFile);
 					let wholeNoteContext = fileContent;
-					if (scope !== "Document" && fileContent.includes(originalText))
+					// Mark the original text within the whole note context
+					if (fileContent.includes(originalText))
 						wholeNoteContext = wholeNoteContext.replace(
 							originalText,
 							`${markerStart}${originalText}${markerEnd}`,
@@ -340,7 +338,7 @@ ${wholeNoteContext}
 Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : ""}`;
 	const notice = new Notice(initialMsg, longInput ? 0 : 4000);
 
-	const currentPrompt: TextTransformerPrompt = { ...prompt }; // Use the passed prompt
+	const currentPrompt: TextTransformerPrompt = { ...promptInfo };
 	if (currentPrompt.id === "translate") {
 		currentPrompt.text = currentPrompt.text.replace(
 			"{language}",
@@ -349,9 +347,9 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	}
 
 	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
-	let responseAI: ResponseType; // Renamed to avoid conflict with fetch response
+	let response: ResponseType;
 	try {
-		responseAI = settings.model.startsWith("gemini-")
+		response = settings.model.startsWith("gemini-")
 			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI)
 			: await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
 	} catch (error) {
@@ -361,7 +359,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	}
 
 	notice.hide();
-	const { newText: newTextFromAI, isOverlength, cost } = responseAI || {};
+	const { newText: newTextFromAI, isOverlength, cost } = response || {};
 	if (!newTextFromAI) {
 		new Notice("AI did not return new text.", notifDuration);
 		return false;
@@ -380,25 +378,25 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		return false;
 	}
 
-	let textToInsertInEditor = "";
-	const suggestionMarksToApply: SuggestionMark[] = [];
-	let currentOffsetInEditorText = 0;
+	let textToInsertInEditor = ""; 
+	const suggestionMarksToApply: SuggestionMark[] = []; 
+	let currentOffsetInEditorText = 0; 
 
 	for (const part of diffResult) {
-		const partValue = part.value;
+		const partValue = part.value; 
 
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;
 			while (currentPosInPartValue < partValue.length) {
-				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
-				let segmentLengthFromDiff = 0;
-				let textSegmentForEditor = "";
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText; 
+				let segmentLengthFromDiff = 0; 
+				let textSegmentForEditor = ""; 
 
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
 					segmentLengthFromDiff = 1;
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r\n", currentPosInPartValue)) {
-					segmentLengthFromDiff = 2;
+					segmentLengthFromDiff = 2; 
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r", currentPosInPartValue)) {
 					segmentLengthFromDiff = 1;
@@ -414,11 +412,11 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 						to: markStartPosInDoc + textSegmentForEditor.length,
 						type: part.added ? "added" : "removed",
 						isNewlineChange: true,
-						newlineChar: "\n",
+						newlineChar: "\n", 
 					});
 					currentOffsetInEditorText += textSegmentForEditor.length;
 					currentPosInPartValue += segmentLengthFromDiff;
-				} else {
+				} else { 
 					let nextNewlineIndexInDiffPart = Number.POSITIVE_INFINITY;
 					["\n", "\r\n", "\r"].forEach((nl) => {
 						const idx = partValue.indexOf(nl, currentPosInPartValue);
@@ -443,7 +441,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 					currentPosInPartValue = endOfTextSegmentInDiffPart;
 				}
 			}
-		} else {
+		} else { 
 			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
 			textToInsertInEditor += normalizedUnchangedValue;
 			currentOffsetInEditorText += normalizedUnchangedValue.length;
@@ -454,8 +452,8 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		cm.state.update({
 			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
 			effects: [
-                clearAllSuggestionsEffect.of(null),
-                setSuggestionsEffect.of(suggestionMarksToApply)
+                clearAllSuggestionsEffect.of(null), 
+                setSuggestionsEffect.of(suggestionMarksToApply) 
             ],
 			selection: suggestionMarksToApply.length > 0 ? EditorSelection.cursor(suggestionMarksToApply[0].from) : EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
 			scrollIntoView: true,
@@ -472,32 +470,7 @@ Est. cost: $${cost?.toFixed(4) || "0.0000"}`,
 	return true;
 }
 
-export async function textTransformerDocumentCM6(
-	plugin: TextTransformer,
-	editor: Editor,
-	prompt: TextTransformerPrompt, // Made non-optional
-): Promise<void> {
-	const cm = getCmEditorView(editor);
-	if (!cm) {
-		new Notice("Modern editor version required.");
-		return;
-	}
-	const fullDocText = editor.getValue();
-	const fmInfo = getFrontMatterInfo(fullDocText);
-	const bodyTextOffsetStart = fmInfo.contentStart || 0;
-	const bodyText = fullDocText.substring(bodyTextOffsetStart);
-
-    // The prompt is now guaranteed to be provided by the command
-	if (!prompt) { // Should not happen if called from the command
-		new Notice("Error: Prompt not provided for document transformation.");
-		return;
-	}
-
-	await validateAndApplyAIDrivenChanges(plugin, editor, bodyText, "Document", prompt, {
-		from: bodyTextOffsetStart,
-		to: bodyTextOffsetStart + bodyText.length,
-	});
-}
+// textTransformerDocumentCM6 has been removed
 
 export async function textTransformerTextCM6(
 	plugin: TextTransformer,

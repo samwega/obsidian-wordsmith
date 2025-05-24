@@ -1,3 +1,4 @@
+// src/settings-data.ts
 export const MODEL_SPECS = {
 	"gpt-4.1": {
 		displayText: "GPT 4.1",
@@ -57,7 +58,6 @@ export type GeminiModels = "gemini-2.5-pro-preview-05-06" | "gemini-2.5-flash-pr
 
 export type SupportedModels = OpenAiModels | GeminiModels;
 
-// Maps friendly Gemini model names to API model IDs
 export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
 	"gemini-2.5-pro": "gemini-2.5-pro-preview-05-06",
 	"gemini-2.5-flash": "gemini-2.5-flash-preview-04-17",
@@ -67,52 +67,52 @@ export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
 //──────────────────────────────────────────────────────────────────────────────
 
 export interface TextTransformerPrompt {
-	id: string; // unique identifier
-	name: string; // display name
-	text: string; // the prompt text
-	isDefault: boolean; // true for default prompts
-	enabled: boolean; // if this prompt is active
-    model?: SupportedModels; // Optional: Specific model for this prompt
-    temperature?: number; // Optional: Specific temperature for this prompt
-    frequency_penalty?: number; // Optional: Specific frequency_penalty for this prompt
-    presence_penalty?: number; // Optional: Specific presence_penalty for this prompt
-    max_tokens?: number; // Optional: Specific max_tokens for this prompt
-    showInPromptPalette?: boolean; // Should this prompt appear in the palette?
+	id: string; 
+	name: string; 
+	text: string; 
+	isDefault: boolean; 
+	enabled: boolean; 
+    model?: SupportedModels; 
+    temperature?: number; 
+    frequency_penalty?: number; 
+    presence_penalty?: number; 
+    max_tokens?: number; 
+    showInPromptPalette?: boolean; 
 }
 
 export interface TextTransformerSettings {
 	openAiApiKey: string;
 	geminiApiKey: string;
-	model: SupportedModels; // Default model for the plugin
-	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
-	defaultPromptId: string | null; // ID of the default prompt for full document
-	alwaysShowPromptSelection: boolean; // Always show prompt selection modal even if only one enabled
+	model: SupportedModels; 
+	prompts: TextTransformerPrompt[]; 
+	alwaysShowPromptSelection: boolean; 
 	dynamicContextLineCount: number;
 	translationLanguage: string;
 	longInputThreshold: number;
 	veryLongInputThreshold: number;
-    temperature: number; // Default temperature
-    frequency_penalty: number; // Default frequency_penalty
-    presence_penalty: number; // Default presence_penalty
-    max_tokens: number; // Default max_tokens
+    temperature: number; 
+    frequency_penalty: number; 
+    presence_penalty: number; 
+    max_tokens: number; 
 }
 
-export const DEFAULT_SETTINGS: TextTransformerSettings = {
+export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> & { defaultPromptId?: string | null } = {
 	openAiApiKey: "",
 	geminiApiKey: "",
 	model: "gpt-4.1-nano",
-	prompts: [], // Will be populated after its own definition
-	defaultPromptId: "improve", // Default to the "Improve" prompt
+	prompts: [], 
 	alwaysShowPromptSelection: false,
 	dynamicContextLineCount: 3, 
 	translationLanguage: "English",
 	longInputThreshold: 1500,
 	veryLongInputThreshold: 15000,
-    temperature: 0.7, // Default temperature
-    frequency_penalty: 0, // Default frequency_penalty
-    presence_penalty: 0, // Default presence_penalty
-    max_tokens: 2048, // Default max_tokens
+    temperature: 0.7, 
+    frequency_penalty: 0, 
+    presence_penalty: 0, 
+    max_tokens: 2048, 
 };
+// Note: defaultPromptId was removed from DEFAULT_SETTINGS structure as it's no longer part of TextTransformerSettings
+
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{

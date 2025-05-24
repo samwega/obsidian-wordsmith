@@ -1,8 +1,8 @@
-// settings.ts
+// src/settings.ts
 import { PluginSettingTab, Setting } from "obsidian";
 import TextTransformer from "./main";
 import {
-	DEFAULT_SETTINGS,
+	DEFAULT_SETTINGS, 
 	MODEL_SPECS,
 	SupportedModels,
 	TextTransformerPrompt,
@@ -28,7 +28,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
-		// Dynamic context section is now in the context control panel
+		// _renderDynamicContextSection has been removed
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
@@ -113,6 +113,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
 	}
 
+	// _renderDynamicContextSection has been removed
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
 		const form = document.createElement("div");
@@ -121,7 +122,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			"style",
 			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
 				"display:flex; flex-direction:column; gap:10px;" +
-				"width:100%; grid-column: 1 / -1;",
+				"width:100%; grid-column: 1 / -1;", 
 		);
 
 		const nameInput = form.appendChild(document.createElement("input"));
@@ -130,7 +131,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		nameInput.placeholder = "Prompt name";
 		nameInput.setAttribute(
 			"style",
-			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;",
+			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;", 
 		);
 
 		const textInput = form.appendChild(document.createElement("textarea"));
@@ -139,36 +140,22 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		textInput.setAttribute(
 			"style",
 			"width: 100%;" +
-				"box-sizing: border-box !important;" +
-				"height: 240px !important;" +
-				"resize: none !important;" +
-				"overflow-y: auto !important;" +
+				"box-sizing: border-box !important;" + 
+				"height: 240px !important;" + 
+				"resize: none !important;" + 
+				"overflow-y: auto !important;" + 
 				"padding: 6px;" +
 				"border-radius: 4px;" +
 				"border: 1px solid var(--background-modifier-border);" +
 				"background-color: var(--input-background, var(--background-secondary));" +
 				"color: var(--text-normal);",
 		);
-		
-		const showInPaletteSetting = new Setting(form)
-			.setName("Show in Prompt Palette")
-			.setDesc("If disabled, this prompt won't appear in the prompt selection list (e.g., for prompts used by specific commands).")
-			.addToggle(toggle => {
-				toggle.setValue(prompt.showInPromptPalette === undefined ? true : prompt.showInPromptPalette)
-				.onChange(async (value) => {
-					prompt.showInPromptPalette = value;
-				});
-			});
-		showInPaletteSetting.settingEl.style.borderTop = "none";
-        showInPaletteSetting.settingEl.style.paddingTop = "5px";
-        showInPaletteSetting.settingEl.style.paddingBottom = "5px";
-
 
 		const buttonRow = form.appendChild(document.createElement("div"));
 		buttonRow.setAttribute(
 			"style",
 			"display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;",
-		);
+		); 
 
 		const saveBtn = buttonRow.appendChild(document.createElement("button"));
 		saveBtn.textContent = "Save";
@@ -190,11 +177,10 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			if (!newName || !newText) return;
 			prompt.name = newName;
 			prompt.text = newText;
-			// prompt.showInPromptPalette is updated by its toggle's onChange directly on the prompt object
-			await this.plugin.saveSettings(); // This saves the entire settings object, including the modified prompt
+			await this.plugin.saveSettings();
 			this.addPromptForm?.remove();
 			this.addPromptForm = null;
-			this.display();
+			this.display(); 
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
@@ -210,7 +196,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			"style",
 			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
 				"display:flex; flex-direction:column; gap:10px;" +
-				"width:100%; grid-column: 1 / -1;",
+				"width:100%; grid-column: 1 / -1;", 
 		);
 
 		const nameInput = form.appendChild(document.createElement("input"));
@@ -238,21 +224,6 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				"background-color: var(--input-background, var(--background-secondary));" +
 				"color: var(--text-normal);",
 		);
-
-		let showInPaletteValue = true;
-		const showInPaletteSetting = new Setting(form)
-			.setName("Show in Prompt Palette")
-			.setDesc("If disabled, this prompt won't appear in the prompt selection list.")
-			.addToggle(toggle => {
-				toggle.setValue(showInPaletteValue)
-				.onChange(value => {
-					showInPaletteValue = value;
-				});
-			});
-		showInPaletteSetting.settingEl.style.borderTop = "none";
-        showInPaletteSetting.settingEl.style.paddingTop = "5px";
-        showInPaletteSetting.settingEl.style.paddingBottom = "5px";
-
 
 		const buttonRow = form.appendChild(document.createElement("div"));
 		buttonRow.setAttribute(
@@ -286,10 +257,9 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				text,
 				isDefault: false,
 				enabled: true,
-				showInPromptPalette: showInPaletteValue,
 			});
 			await this.plugin.saveSettings();
-			this.display();
+			this.display(); 
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
@@ -330,11 +300,11 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 				setting.addText((text) =>
 					text
 						.setPlaceholder("E.g., Spanish")
-						.setValue(this.plugin.settings.translationLanguage)
+						.setValue(this.plugin.settings.translationLanguage) 
 						.onChange(async (value) => {
 							const newLang = value.trim();
 							this.plugin.settings.translationLanguage =
-								newLang || DEFAULT_SETTINGS.translationLanguage;
+								newLang || DEFAULT_SETTINGS.translationLanguage; 
 
 							const translatePromptObj = this.plugin.settings.prompts.find(
 								(p) => p.id === "translate",
@@ -367,10 +337,6 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 					});
 				});
 			}
-            // Default prompts generally always show in palette if enabled;
-            // The `showInPromptPalette` for default prompts is primarily controlled by `DEFAULT_TEXT_TRANSFORMER_PROMPTS`.
-            // If a default prompt should NOT be in palette, its `showInPromptPalette` should be `false` there.
-            // We don't add a toggle here to prevent users from accidentally hiding essential default prompts from the palette.
 		});
 
 		if (customPrompts.length > 0) {
@@ -403,9 +369,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 					btn.setIcon("pencil")
 						.setTooltip("Edit")
 						.onClick((): void => {
-							if (this.addPromptForm) {
-                                this.addPromptForm.remove();
-                            }
+							if (this.addPromptForm) return;
 							this.addPromptForm = settingContainer.parentElement?.insertBefore(
 								this._createEditPromptForm(prompt),
 								settingContainer.nextSibling,
@@ -422,7 +386,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 							if (realIdx > -1) {
 								this.plugin.settings.prompts.splice(realIdx, 1);
 								await this.plugin.saveSettings();
-								this.display();
+								this.display(); 
 							}
 						});
 				});
@@ -456,9 +420,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			.addButton((btn) => {
 				btn.setButtonText("Add Custom Prompt").setCta();
 				btn.onClick((): void => {
-					if (this.addPromptForm) {
-                        this.addPromptForm.remove();
-                    }
+					if (this.addPromptForm) return;
 					this.addPromptForm = containerEl.insertBefore(
 						this._createAddPromptForm(),
 						addPromptFooter,
@@ -470,5 +432,5 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 	}
 }
 
-export { DEFAULT_SETTINGS };
-export type { TextTransformerSettings, TextTransformerPrompt };
+export { DEFAULT_SETTINGS }; 
+export type { TextTransformerSettings, TextTransformerPrompt }; 

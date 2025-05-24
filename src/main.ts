@@ -1,23 +1,22 @@
-// main.ts
 // src/main.ts
-import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian"; // Added Editor
 
 import {
 	clearAllActiveSuggestionsCM6,
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
-    focusNextSuggestionCM6,
-    focusPreviousSuggestionCM6,
+    focusNextSuggestionCM6, 
+    focusPreviousSuggestionCM6, 
 } from "./suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer";
+import { generateTextAndApplyAsSuggestionCM6, textTransformerTextCM6 } from "./textTransformer"; 
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import { CustomPromptModal } from "./custom-prompt-modal";
+import { CustomPromptModal } from "./custom-prompt-modal"; 
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
-	TextTransformerPrompt,
+	TextTransformerPrompt, 
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
 } from "./settings";
@@ -28,13 +27,7 @@ import {
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	settings!: TextTransformerSettings;
-
-	private _getPaletteEnabledPrompts(): TextTransformerPrompt[] {
-		return this.settings.prompts.filter(
-			(p) => p.enabled && p.showInPromptPalette !== false
-		);
-	}
+	settings!: TextTransformerSettings; 
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
@@ -76,10 +69,10 @@ export default class TextTransformer extends Plugin {
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
 			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this._getPaletteEnabledPrompts();
+				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 0) {
 					new Notice(
-						"No enabled prompts for palette. Please configure prompts in Text Transformer settings.",
+						"No enabled prompts. Please configure prompts in Text Transformer settings.",
 					);
 					return;
 				}
@@ -93,35 +86,6 @@ export default class TextTransformer extends Plugin {
 						enabledPrompts,
 						async (prompt: TextTransformerPrompt) => {
 							await textTransformerTextCM6(this, editor, prompt);
-							resolve();
-						},
-						() => {
-							resolve();
-						},
-					);
-					modal.open();
-				});
-			},
-			icon: "bot-message-square",
-		});
-
-		this.addCommand({
-			id: "textTransformer-full-document",
-			name: "Transform full document",
-			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this._getPaletteEnabledPrompts();
-				if (enabledPrompts.length === 0) {
-					new Notice(
-						"No enabled prompts for palette. Please configure prompts in Text Transformer settings.",
-					);
-					return;
-				}
-				return new Promise<void>((resolve) => {
-					const modal = new PromptPaletteModal(
-						this.app,
-						enabledPrompts,
-						async (prompt: TextTransformerPrompt) => {
-							await textTransformerDocumentCM6(this, editor, prompt);
 							resolve();
 						},
 						() => {
@@ -171,7 +135,7 @@ export default class TextTransformer extends Plugin {
             editorCallback: (editor: Editor): void => {
                 focusNextSuggestionCM6(this, editor);
             },
-            icon: "arrow-down-circle",
+            icon: "arrow-down-circle", 
         });
 
         this.addCommand({
@@ -219,8 +183,10 @@ export default class TextTransformer extends Plugin {
 		const loaded = (await this.loadData()) as Partial<TextTransformerSettings> | null;
 
 		if (loaded) {
-			const { prompts: loadedPrompts, ...otherLoadedSettings } = loaded;
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			const { prompts: loadedPrompts, defaultPromptId: _removedDefaultPromptId, ...otherLoadedSettings } = loaded as any; // Cast to any to handle potentially removed defaultPromptId
 			Object.assign(this.settings, otherLoadedSettings);
+
 
 			if (!Array.isArray(loadedPrompts) || loadedPrompts.length === 0) {
 				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => ({ ...p }));
@@ -234,9 +200,8 @@ export default class TextTransformer extends Plugin {
 					...loadedPrompts.map((p) => ({
 						...(DEFAULT_TEXT_TRANSFORMER_PROMPTS.find((dp) => dp.id === p.id) || {}),
 						...p,
-						showInPromptPalette: p.showInPromptPalette === undefined ? true : p.showInPromptPalette,
 					})),
-					...newPromptsToAdd.map((p) => ({ ...p, showInPromptPalette: p.showInPromptPalette === undefined ? true : p.showInPromptPalette })),
+					...newPromptsToAdd.map((p) => ({ ...p })),
 				];
 			}
 		} else {
@@ -247,18 +212,19 @@ export default class TextTransformer extends Plugin {
 			if (typeof p.enabled === "undefined") {
 				p.enabled = true;
 			}
-            if (typeof p.showInPromptPalette === "undefined") {
-                p.showInPromptPalette = true;
-            }
 		});
 
 		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {
 			this.settings.model = DEFAULT_SETTINGS.model;
 		}
+        
+		// Ensure all settings have a default value
+        const tempDefaultSettings = {...DEFAULT_SETTINGS};
+        delete tempDefaultSettings.defaultPromptId; 
 
-		for (const key of Object.keys(DEFAULT_SETTINGS) as Array<keyof TextTransformerSettings>) {
+		for (const key of Object.keys(tempDefaultSettings) as Array<keyof Omit<TextTransformerSettings, 'defaultPromptId'>>) {
 			if (typeof this.settings[key] === "undefined") {
-				(this.settings as any)[key] = DEFAULT_SETTINGS[key];
+				(this.settings as any)[key] = DEFAULT_SETTINGS[key as keyof TextTransformerSettings];
 			}
 		}
 	}
