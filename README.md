@@ -57,13 +57,13 @@ This release supercharges your suggestion review workflow, making it faster and 
   * Effortlessly cycle through all active AI suggestions in your document using new commands:
     * **"Text Transformer: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
     * **"Text Transformer: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
-  * Both commands support keyboard repeat, enabling rapid traversal through suggestions with your preferred hotkeys (set them in Obsidian’s hotkey settings).
 * **Improved Cursor Behavior:**
   * Whenever new suggestions are generated—whether from a text transformation or an ad-hoc prompt—the cursor is now automatically positioned at the very first suggestion, immediately highlighting it for action. This streamlines the accept/reject workflow and eliminates manual cursor adjustment.
 * **Refined Keyboard-First Editing:**
   * Combined with dynamic active suggestion highlighting (from v1.5.1), these navigation enhancements make it easier than ever to see, select, and act on the exact change you want—all without leaving the keyboard.
 * **Under-the-Hood Improvements:**
   * Minor performance and stability tweaks for smoother suggestion handling.
+  * Removed the legacy toggles in Settings to ask the AI not to modify text in quotation marks ("") and citations (lines starting with >). They were not working at all and required a much more involved implementation. Will add the feature in a future release if people ask for it.
 
 **Why this matters:**
 

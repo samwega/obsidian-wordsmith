@@ -28,7 +28,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
 		this._renderDynamicContextSection(containerEl);
-		this._renderCleanupOptionsSection(containerEl);
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
@@ -449,29 +448,6 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 			});
 		addPromptSetting.settingEl.style.margin = "0";
 		addPromptSetting.settingEl.style.borderTop = "none";
-	}
-
-	private _renderCleanupOptionsSection(containerEl: HTMLElement): void {
-		new Setting(containerEl)
-			.setName("Preserve text inside quotes")
-			.setDesc('Asks AI to ignore text in quotation marks (""). AI may not always comply.')
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.preserveTextInsideQuotes)
-					.onChange(async (value) => {
-						this.plugin.settings.preserveTextInsideQuotes = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-		new Setting(containerEl)
-			.setName("Preserve text in blockquotes and callouts")
-			.setDesc("Asks AI to ignore lines beginning with `>`. AI may not always comply.")
-			.addToggle((toggle) =>
-				toggle.setValue(this.plugin.settings.preserveBlockquotes).onChange(async (value) => {
-					this.plugin.settings.preserveBlockquotes = value;
-					await this.plugin.saveSettings();
-				}),
-			);
 	}
 }
 

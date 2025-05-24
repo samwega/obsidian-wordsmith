@@ -87,8 +87,6 @@ export interface TextTransformerSettings {
 	prompts: TextTransformerPrompt[]; // All prompts (default + custom)
 	defaultPromptId: string | null; // ID of the default prompt for full document
 	alwaysShowPromptSelection: boolean; // Always show prompt selection modal even if only one enabled
-	preserveTextInsideQuotes: boolean;
-	preserveBlockquotes: boolean;
 	dynamicContextLineCount: number;
 	translationLanguage: string;
 	longInputThreshold: number;
@@ -106,8 +104,6 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	prompts: [], // Will be populated after its own definition
 	defaultPromptId: "improve", // Default to the "Improve" prompt
 	alwaysShowPromptSelection: false,
-	preserveTextInsideQuotes: false,
-	preserveBlockquotes: false,
 	dynamicContextLineCount: 3, 
 	translationLanguage: "English",
 	longInputThreshold: 1500,
