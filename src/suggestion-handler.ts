@@ -17,34 +17,40 @@ function getCmEditorView(editor: Editor): EditorView | null {
 }
 
 // Helper for Feature 2: Find next suggestion mark for focusing
-function findNextMarkToFocus(marks: SuggestionMark[], currentPos: number): SuggestionMark | null {
+// Renamed for clarity to distinguish from findNextSuggestionMark used in resolution.
+function findNextFocusTarget(marks: SuggestionMark[], currentSelectionHead: number): SuggestionMark | null {
     if (marks.length === 0) return null;
+    // Ensure marks are sorted by their 'from' position
     const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
     
-    // Find first mark strictly AFTER currentPos
+    // Find the first mark whose 'from' position is strictly greater than the current selection head
     for (const mark of sortedMarks) {
-        if (mark.from > currentPos) return mark;
+        if (mark.from > currentSelectionHead) return mark;
     }
-    // If no mark is after currentPos (i.e., cursor is at or after the last mark), cycle to the first mark.
+    // If no mark is found after the current selection head (i.e., cursor is at or after the last mark),
+    // cycle to the very first mark in the document.
     return sortedMarks[0]; 
 }
 
 // Helper for Feature 2: Find previous suggestion mark for focusing
-function findPreviousMarkToFocus(marks: SuggestionMark[], currentPos: number): SuggestionMark | null {
+// Renamed for clarity.
+function findPreviousFocusTarget(marks: SuggestionMark[], currentSelectionHead: number): SuggestionMark | null {
     if (marks.length === 0) return null;
-    const sortedMarks = [...marks].sort((a, b) => a.from - b.from); // Sort ascending
+    // Ensure marks are sorted by their 'from' position
+    const sortedMarks = [...marks].sort((a, b) => a.from - b.from); 
 
-    // Find the last mark whose 'from' is strictly BEFORE currentPos
     let foundMark: SuggestionMark | null = null;
+    // Iterate backwards through the sorted marks to find the last mark
+    // whose 'from' position is strictly less than the current selection head.
     for (let i = sortedMarks.length - 1; i >= 0; i--) {
         const mark = sortedMarks[i];
-        if (mark.from < currentPos) {
+        if (mark.from < currentSelectionHead) {
             foundMark = mark;
             break; 
         }
     }
-    // If a mark before currentPos was found, return it.
-    // Otherwise (cursor is at or before the first mark), cycle to the last mark.
+    // If a mark before the current selection head was found, return it.
+    // Otherwise (i.e., cursor is at or before the first mark), cycle to the very last mark in the document.
     return foundMark || sortedMarks[sortedMarks.length - 1];
 }
 
@@ -62,9 +68,9 @@ export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor)
     }
 
     const currentPos = cm.state.selection.main.head;
-    const targetMark = findNextMarkToFocus(allMarks, currentPos);
+    const targetMark = findNextFocusTarget(allMarks, currentPos);
 
-    if (targetMark) { // Should always find a mark if allMarks.length > 0 due to cycling
+    if (targetMark) { 
         cm.dispatch({
             selection: EditorSelection.cursor(targetMark.from),
             effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })
@@ -85,9 +91,9 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
     }
 
     const currentPos = cm.state.selection.main.head;
-    const targetMark = findPreviousMarkToFocus(allMarks, currentPos); 
+    const targetMark = findPreviousFocusTarget(allMarks, currentPos); 
 
-    if (targetMark) { // Should always find a mark if allMarks.length > 0 due to cycling
+    if (targetMark) { 
         cm.dispatch({
             selection: EditorSelection.cursor(targetMark.from),
             effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })

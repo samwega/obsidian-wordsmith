@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.5.1
+**Current Version:** v1.6.0
 
 Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -16,6 +16,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Release History](#release-history)
+  - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
   - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
   - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
   - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
@@ -45,6 +46,28 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Release History
+
+### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
+
+This release supercharges your suggestion review workflow, making it faster and more intuitive to manage AI-generated edits and new content.
+
+**Key Features of v1.6.0:**
+
+* **Suggestion Navigation Hotkeys:**
+  * Effortlessly cycle through all active AI suggestions in your document using new commands:
+    * **"Text Transformer: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
+    * **"Text Transformer: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
+  * Both commands support keyboard repeat, enabling rapid traversal through suggestions with your preferred hotkeys (set them in Obsidian’s hotkey settings).
+* **Improved Cursor Behavior:**
+  * Whenever new suggestions are generated—whether from a text transformation or an ad-hoc prompt—the cursor is now automatically positioned at the very first suggestion, immediately highlighting it for action. This streamlines the accept/reject workflow and eliminates manual cursor adjustment.
+* **Refined Keyboard-First Editing:**
+  * Combined with dynamic active suggestion highlighting (from v1.5.1), these navigation enhancements make it easier than ever to see, select, and act on the exact change you want—all without leaving the keyboard.
+* **Under-the-Hood Improvements:**
+  * Minor performance and stability tweaks for smoother suggestion handling.
+
+**Why this matters:**
+
+Text Transformer now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian. Quickly navigate, focus, and resolve suggested changes—whether editing, rewriting, or generating new content—keeping you firmly in your creative flow.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
