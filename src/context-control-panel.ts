@@ -114,7 +114,7 @@ export class ContextControlPanel extends ItemView {
 			});
 
 		this.dynamicContextLinesSetting = new Setting(container)
-			.setName("N. of context lines")
+			.setName("● N. of context lines")
 			.setDesc("to include before/after selection (1-21).")
 			.addText((text) => {
 				text
@@ -138,6 +138,10 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.style.width = "60px"; // Make the input box smaller
 			});
 		
+			if (this.dynamicContextLinesSetting) { // Check if it was successfully created
+				this.dynamicContextLinesSetting.settingEl.style.borderTop = "none";
+			}
+
 		// Initial visibility based on useDynamicContext state
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "" : "none";
