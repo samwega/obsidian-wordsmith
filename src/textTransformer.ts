@@ -1,3 +1,4 @@
+// src/textTransformer.ts
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 // src/textTransformer.ts
@@ -51,7 +52,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	let additionalContextForAI = "";
 	const contextParts: string[] = [];
 	const currentFile = app.workspace.getActiveFile();
-	const cursorOffset = cm.state.selection.main.head;
+	const cursorOffset = cm.state.selection.main.head; // Capture initial cursor offset
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 	if (contextPanelLeaves.length > 0) {
@@ -102,7 +103,8 @@ ${finalDynamicContext}
 
 			} else if (useWholeNote && currentFile) {
 				let fileContent = await app.vault.cachedRead(currentFile);
-				fileContent = fileContent.substring(0, cursorOffset) + GENERATION_TARGET_CURSOR_MARKER + fileContent.substring(cursorOffset);
+				const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
+				fileContent = fileContent.substring(0, safeCursorOffset) + GENERATION_TARGET_CURSOR_MARKER + fileContent.substring(safeCursorOffset);
 				contextParts.push(
 					`--- Entire Note Context Start ---
 ${fileContent}
@@ -144,32 +146,64 @@ ${fileContent}
 
 	const { newText: generatedText, cost, isOverlength } = response || {};
 
-	if (!generatedText) {
+	if (!generatedText) { // Handles empty string or undefined
 		new Notice("AI did not return any generated text.", 5000);
 		return;
 	}
 
 	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); 
 
-	const suggestionMark: SuggestionMark = {
-		id: generateSuggestionId(),
-		from: cursorOffset, 
-		to: cursorOffset + normalizedGeneratedText.length, 
-		type: "added",
-	};
-	
-	const insertFrom = cm.state.selection.main.head;
-    const marksToApply: SuggestionMark[] = [{
-        ...suggestionMark,
-        from: insertFrom,
-        to: insertFrom + normalizedGeneratedText.length,
-    }];
+	const marksToApply: SuggestionMark[] = [];
+	let currentParseOffsetInGeneratedText = 0; 
 
+	while (currentParseOffsetInGeneratedText < normalizedGeneratedText.length) {
+		const markStartInDoc = cursorOffset + currentParseOffsetInGeneratedText;
+		let segmentLengthInGeneratedText = 0;
+		let isNewlineSegment = false;
+		let actualSegmentText = ""; 
+
+		if (normalizedGeneratedText.startsWith("\n", currentParseOffsetInGeneratedText)) {
+			isNewlineSegment = true;
+			actualSegmentText = "\n";
+			segmentLengthInGeneratedText = 1;
+		} else {
+			let nextNewlineIndex = normalizedGeneratedText.indexOf("\n", currentParseOffsetInGeneratedText);
+			if (nextNewlineIndex === -1) {
+				nextNewlineIndex = normalizedGeneratedText.length;
+			}
+			actualSegmentText = normalizedGeneratedText.substring(currentParseOffsetInGeneratedText, nextNewlineIndex);
+			segmentLengthInGeneratedText = actualSegmentText.length;
+		}
+		
+		if (actualSegmentText.length > 0) {
+			const commonMarkProps = {
+				id: generateSuggestionId(),
+				from: markStartInDoc,
+				to: markStartInDoc + actualSegmentText.length,
+				type: "added" as const, // Use "as const" to ensure 'type' is literal 'added'
+				isNewlineChange: isNewlineSegment,
+			};
+		
+			const mark: SuggestionMark = isNewlineSegment
+				? {
+					  ...commonMarkProps,
+					  newlineChar: "\n" as const, // Property exists with correct type "\n"
+				  }
+				: commonMarkProps; // Property is absent
+		
+			marksToApply.push(mark);
+		}
+		currentParseOffsetInGeneratedText += segmentLengthInGeneratedText;
+	}
+	
 	cm.dispatch(
 		cm.state.update({
-			changes: { from: insertFrom, to: insertFrom, insert: normalizedGeneratedText },
-			effects: setSuggestionsEffect.of(marksToApply), 
-			selection: EditorSelection.cursor(marksToApply[0].from), // Feature 1: Cursor at start of suggestion
+			changes: { from: cursorOffset, to: cursorOffset, insert: normalizedGeneratedText },
+			effects: [
+                clearAllSuggestionsEffect.of(null), // Clear any prior suggestions
+                setSuggestionsEffect.of(marksToApply)
+            ],
+			selection: marksToApply.length > 0 ? EditorSelection.cursor(marksToApply[0].from) : EditorSelection.cursor(cursorOffset + normalizedGeneratedText.length),
 			scrollIntoView: true,
 		}),
 	);
@@ -178,7 +212,7 @@ ${fileContent}
         new Notice("Generated text might be incomplete due to model limits.", 10000);
     }
 
-	let successMessage = "✅ Ad-hoc generation complete.";
+	let successMessage = `✅ Ad-hoc generation complete. ${marksToApply.length} suggestion segment${marksToApply.length === 1 ? "" : "s"} created.`;
 	if (cost !== undefined) {
 		successMessage += ` Est. cost: $${cost.toFixed(4)}`;
 	}

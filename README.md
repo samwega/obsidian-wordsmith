@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.6.0
+**Current Version:** v1.6.1
 
 Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -17,6 +17,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 - [Release History](#release-history)
   - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
+    - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
   - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
   - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
   - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
@@ -68,6 +69,10 @@ This release supercharges your suggestion review workflow, making it faster and 
 **Why this matters:**
 
 Text Transformer now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian. Quickly navigate, focus, and resolve suggested changes—whether editing, rewriting, or generating new content—keeping you firmly in your creative flow.
+
+#### Minor Versions of v.1.6.x
+
+* **v1.6.1**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
