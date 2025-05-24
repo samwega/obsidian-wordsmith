@@ -1,6 +1,6 @@
 // src/suggestion-state.ts
-import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state"; // Added Extension
-import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view"; // Added WidgetType
+import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state";
+import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"; // Removed WidgetType
 
 export interface SuggestionMark {
 	id: string;
@@ -10,10 +10,6 @@ export interface SuggestionMark {
 	isNewlineChange?: boolean;
 	newlineChar?: "\n";
 }
-
-// This symbol is used for display purposes within Decoration.replace for generated newlines
-const NEWLINE_DISPLAY_SYMBOL_FOR_ADDED_GENERATED_NEWLINE = "↵";
-
 
 export const setSuggestionsEffect = StateEffect.define<SuggestionMark[]>();
 export const resolveSuggestionEffect = StateEffect.define<{ id: string }>();
@@ -70,19 +66,17 @@ class SuggestionViewPluginClass {
 	update(update: ViewUpdate): void {
 		let needsRecompute = false;
 
-		if (!update) { // Defensive, might not be hit in typical CM usage
+		if (!update) { 
 			if (this.decorations.size > 0) {
 				this.decorations = Decoration.none;
 			}
 			return;
 		}
 
-		// Reasons to recompute decorations:
 		if (update.docChanged || update.viewportChanged || update.selectionSet) {
 			needsRecompute = true;
 		}
 
-		// Check if the suggestionStateField itself has changed
 		if (update.startState) {
 			const prevMarks = update.startState.field(suggestionStateField, false);
 			const currentMarks = update.state.field(suggestionStateField, false);
@@ -90,14 +84,12 @@ class SuggestionViewPluginClass {
 				needsRecompute = true;
 			}
 		} else {
-			// No startState, likely initial creation. If there are marks, compute.
 			const currentMarks = update.state.field(suggestionStateField, false);
 			if (currentMarks && currentMarks.length > 0) {
 				needsRecompute = true;
 			}
 		}
 
-		// Check if any of our specific effects were dispatched (might be redundant if state also changed, but safe)
 		if (
 			update.transactions.some((tr) =>
 				tr.effects.some(
@@ -116,7 +108,7 @@ class SuggestionViewPluginClass {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("TextTransformer ViewPlugin: Error in update computeDecorations:", e);
-				this.decorations = Decoration.none; // Fallback
+				this.decorations = Decoration.none; 
 			}
 		}
 	}
@@ -127,8 +119,8 @@ class SuggestionViewPluginClass {
 		}
 
 		const marks = view.state.field(suggestionStateField, false);
-		const cursorPos = view.state.selection.main.head; // Get current cursor position
-		const isSelectionEmpty = view.state.selection.main.empty; // Check if it's a cursor, not a range selection
+		const cursorPos = view.state.selection.main.head; 
+		const isSelectionEmpty = view.state.selection.main.empty; 
 
 		if (!marks || marks.length === 0) {
 			return Decoration.none;
@@ -149,12 +141,10 @@ class SuggestionViewPluginClass {
 				continue;
 			}
 
-			// Check if this mark is "active" (cursor at the beginning and no range selection)
 			if (isSelectionEmpty && cursorPos === mark.from) {
-				className += ` ${className}-active`; // e.g., "text-transformer-added text-transformer-added-active"
+				className += ` ${className}-active`; 
 			}
 
-			// Validate mark range
 			if (mark.from >= mark.to) {
 				console.warn(
 					"TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:",
@@ -167,38 +157,15 @@ class SuggestionViewPluginClass {
 				continue;
 			}
 			
-			const actualTextInDoc = view.state.doc.sliceString(mark.from, mark.to);
-
 			try {
-				if (mark.isNewlineChange && mark.type === "added" && actualTextInDoc === "\n") {
-					// This is an "added" newline suggestion where the document contains an actual '\n'.
-					// We want to display it as NEWLINE_DISPLAY_SYMBOL_FOR_ADDED_GENERATED_NEWLINE.
-					const widgetEl = document.createElement("span");
-					widgetEl.className = className; // Apply suggestion styling
-					widgetEl.textContent = NEWLINE_DISPLAY_SYMBOL_FOR_ADDED_GENERATED_NEWLINE;
-
-					const replaceDeco = Decoration.replace({
-						widget: new class extends WidgetType {
-							constructor(readonly el: HTMLElement) { super(); }
-							toDOM() { return this.el; }
-							override eq(other: this) { return other.el.className === this.el.className && other.el.textContent === this.el.textContent; }
-							override ignoreEvent() { return false; }
-						}(widgetEl),
-					});
-					activeDecorations.push(replaceDeco.range(mark.from, mark.to));
-				} else {
-					// All other cases:
-					// - Regular text suggestions (added/removed)
-					// - Newline suggestions from textTransformation (where "↵" or "¶" symbols are already in the document text)
-					// - "removed" newline suggestions (which implies the "¶" symbol is in the doc or it's a diff calculation detail)
-					const decorationInstance = Decoration.mark({
-						attributes: {
-							class: className,
-							spellcheck: "false",
-						},
-					}).range(mark.from, mark.to);
-					activeDecorations.push(decorationInstance);
-				}
+				const decorationInstance = Decoration.mark({
+					attributes: {
+						class: className,
+						spellcheck: "false",
+					},
+				}).range(mark.from, mark.to);
+				activeDecorations.push(decorationInstance);
+				
 			} catch (e) {
 				console.error(
 					`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,

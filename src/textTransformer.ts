@@ -154,56 +154,61 @@ ${fileContent}
 	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); 
 
 	const marksToApply: SuggestionMark[] = [];
-	let currentParseOffsetInGeneratedText = 0; 
+	let textToInsertInDocument = "";
+	let currentParseOffsetInGeneratedText = 0;
+	let currentInsertOffsetInDocument = 0;
+
 
 	while (currentParseOffsetInGeneratedText < normalizedGeneratedText.length) {
-		const markStartInDoc = cursorOffset + currentParseOffsetInGeneratedText;
+		const markStartInDoc = cursorOffset + currentInsertOffsetInDocument;
 		let segmentLengthInGeneratedText = 0;
+		let textSegmentForDocument = "";
 		let isNewlineSegment = false;
-		let actualSegmentText = ""; 
 
 		if (normalizedGeneratedText.startsWith("\n", currentParseOffsetInGeneratedText)) {
 			isNewlineSegment = true;
-			actualSegmentText = "\n";
-			segmentLengthInGeneratedText = 1;
+			textSegmentForDocument = NEWLINE_ADD_SYMBOL; // Insert symbol into document
+			segmentLengthInGeneratedText = 1; // Consumed one '\n' from generated text
 		} else {
 			let nextNewlineIndex = normalizedGeneratedText.indexOf("\n", currentParseOffsetInGeneratedText);
 			if (nextNewlineIndex === -1) {
 				nextNewlineIndex = normalizedGeneratedText.length;
 			}
-			actualSegmentText = normalizedGeneratedText.substring(currentParseOffsetInGeneratedText, nextNewlineIndex);
-			segmentLengthInGeneratedText = actualSegmentText.length;
+			textSegmentForDocument = normalizedGeneratedText.substring(currentParseOffsetInGeneratedText, nextNewlineIndex);
+			segmentLengthInGeneratedText = textSegmentForDocument.length;
 		}
 		
-		if (actualSegmentText.length > 0) {
+		if (textSegmentForDocument.length > 0) { 
+			textToInsertInDocument += textSegmentForDocument;
 			const commonMarkProps = {
 				id: generateSuggestionId(),
 				from: markStartInDoc,
-				to: markStartInDoc + actualSegmentText.length,
-				type: "added" as const, // Use "as const" to ensure 'type' is literal 'added'
+				to: markStartInDoc + textSegmentForDocument.length,
+				type: "added" as const,
 				isNewlineChange: isNewlineSegment,
 			};
 		
 			const mark: SuggestionMark = isNewlineSegment
 				? {
 					  ...commonMarkProps,
-					  newlineChar: "\n" as const, // Property exists with correct type "\n"
+					  newlineChar: "\n" as const, 
 				  }
-				: commonMarkProps; // Property is absent
+				: commonMarkProps; 
 		
 			marksToApply.push(mark);
+			currentInsertOffsetInDocument += textSegmentForDocument.length;
 		}
 		currentParseOffsetInGeneratedText += segmentLengthInGeneratedText;
 	}
 	
 	cm.dispatch(
 		cm.state.update({
-			changes: { from: cursorOffset, to: cursorOffset, insert: normalizedGeneratedText },
+			changes: { from: cursorOffset, to: cursorOffset, insert: textToInsertInDocument },
 			effects: [
-                clearAllSuggestionsEffect.of(null), // Clear any prior suggestions
+                clearAllSuggestionsEffect.of(null), 
                 setSuggestionsEffect.of(marksToApply)
             ],
-			selection: marksToApply.length > 0 ? EditorSelection.cursor(marksToApply[0].from) : EditorSelection.cursor(cursorOffset + normalizedGeneratedText.length),
+			selection: marksToApply.length > 0 ? EditorSelection.cursor(marksToApply[0].from) : EditorSelection.cursor(cursorOffset + textToInsertInDocument.length),
 			scrollIntoView: true,
 		}),
 	);
@@ -375,9 +380,9 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		return false;
 	}
 
-	let textToInsertInEditor = "";
+	let textToInsertInEditor = ""; // This variable name is a bit misleading now for transform, but it's what gets built up from diff
 	const suggestionMarksToApply: SuggestionMark[] = []; 
-	let currentOffsetInEditorText = 0;
+	let currentOffsetInEditorText = 0; // Tracks position *within the new text being constructed*
 
 	for (const part of diffResult) {
 		const partValue = part.value; 
@@ -385,68 +390,67 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;
 			while (currentPosInPartValue < partValue.length) {
-				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
-				let segmentLength = 0;
-				let segmentIsNewline = false;
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText; // Position in final doc
+				let segmentLengthFromDiff = 0; // How much of part.value is processed
+				let textSegmentForEditor = ""; // What actually goes into textToInsertInEditor
 
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
-					segmentLength = 1;
-					segmentIsNewline = true;
+					segmentLengthFromDiff = 1;
+					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r\n", currentPosInPartValue)) {
-					segmentLength = 2;
-					segmentIsNewline = true;
+					segmentLengthFromDiff = 2; // \r\n is 2 chars in diff part value
+					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r", currentPosInPartValue)) {
-					segmentLength = 1;
-					segmentIsNewline = true;
+					segmentLengthFromDiff = 1;
+					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				}
 
-				if (segmentIsNewline) {
-					const symbolToInsert = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
-					textToInsertInEditor += symbolToInsert;
+
+				if (textSegmentForEditor === NEWLINE_ADD_SYMBOL || textSegmentForEditor === NEWLINE_REMOVE_SYMBOL) {
+					textToInsertInEditor += textSegmentForEditor;
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
 						from: markStartPosInDoc,
-						to: markStartPosInDoc + symbolToInsert.length,
+						to: markStartPosInDoc + textSegmentForEditor.length,
 						type: part.added ? "added" : "removed",
 						isNewlineChange: true,
 						newlineChar: "\n", 
 					});
-					currentOffsetInEditorText += symbolToInsert.length;
-					currentPosInPartValue += segmentLength;
-				} else {
-					let nextNewlineIndex = Number.POSITIVE_INFINITY;
+					currentOffsetInEditorText += textSegmentForEditor.length;
+					currentPosInPartValue += segmentLengthFromDiff;
+				} else { // Text segment
+					let nextNewlineIndexInDiffPart = Number.POSITIVE_INFINITY;
 					["\n", "\r\n", "\r"].forEach((nl) => {
 						const idx = partValue.indexOf(nl, currentPosInPartValue);
-						if (idx !== -1) nextNewlineIndex = Math.min(nextNewlineIndex, idx);
+						if (idx !== -1) nextNewlineIndexInDiffPart = Math.min(nextNewlineIndexInDiffPart, idx);
 					});
 
-					const endOfTextSegment =
-						nextNewlineIndex === Number.POSITIVE_INFINITY
+					const endOfTextSegmentInDiffPart =
+						nextNewlineIndexInDiffPart === Number.POSITIVE_INFINITY
 							? partValue.length
-							: nextNewlineIndex;
-					const textSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+							: nextNewlineIndexInDiffPart;
+					
+					textSegmentForEditor = partValue.substring(currentPosInPartValue, endOfTextSegmentInDiffPart);
 
-					textToInsertInEditor += textSegment;
+					textToInsertInEditor += textSegmentForEditor;
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
 						from: markStartPosInDoc,
-						to: markStartPosInDoc + textSegment.length,
+						to: markStartPosInDoc + textSegmentForEditor.length,
 						type: part.added ? "added" : "removed",
+						// isNewlineChange is false for regular text
 					});
-					currentOffsetInEditorText += textSegment.length;
-					currentPosInPartValue = endOfTextSegment;
+					currentOffsetInEditorText += textSegmentForEditor.length;
+					currentPosInPartValue = endOfTextSegmentInDiffPart;
 				}
 			}
-		} else {
+		} else { // Unchanged part
 			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
 			textToInsertInEditor += normalizedUnchangedValue;
 			currentOffsetInEditorText += normalizedUnchangedValue.length;
 		}
 	}
     
-    // suggestionMarksToApply is already sorted by 'from' due to sequential processing of diffResult.
-    // It's also guaranteed to be non-empty if we've reached this point because of the early return 
-    // if diffResult has no added/removed parts.
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
@@ -454,7 +458,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
                 clearAllSuggestionsEffect.of(null), 
                 setSuggestionsEffect.of(suggestionMarksToApply) 
             ],
-			selection: EditorSelection.cursor(suggestionMarksToApply[0].from), // Feature 1: Cursor at start of first suggestion
+			selection: suggestionMarksToApply.length > 0 ? EditorSelection.cursor(suggestionMarksToApply[0].from) : EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
 			scrollIntoView: true,
 		}),
 	);
