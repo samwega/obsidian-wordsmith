@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.6.2
+**Current Version:** v1.6.3
 
 Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -72,8 +72,8 @@ Text Transformer now offers one of the fastest and most ergonomic AI suggestion 
 
 #### Minor Versions of v.1.6.x
 
-* **v1.6.1**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
-* **v1.6.2**—**UI & Workflow Refinements**:
+* **v1.6.2**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
+* **v1.6.3**—**UI & Workflow Refinements**:
   * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
   * **Removed Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
 
