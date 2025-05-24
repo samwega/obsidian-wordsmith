@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.6.1
+**Current Version:** v1.6.2
 
 Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -56,8 +56,8 @@ This release supercharges your suggestion review workflow, making it faster and 
 
 * **Suggestion Navigation Hotkeys:**
   * Effortlessly cycle through all active AI suggestions in your document using new commands:
-    * **"Text Transformer: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
-    * **"Text Transformer: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
+  * **"Text Transformer: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
+  * **"Text Transformer: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
 * **Improved Cursor Behavior:**
   * Whenever new suggestions are generated—whether from a text transformation or an ad-hoc prompt—the cursor is now automatically positioned at the very first suggestion, immediately highlighting it for action. This streamlines the accept/reject workflow and eliminates manual cursor adjustment.
 * **Refined Keyboard-First Editing:**
@@ -73,6 +73,9 @@ Text Transformer now offers one of the fastest and most ergonomic AI suggestion 
 #### Minor Versions of v.1.6.x
 
 * **v1.6.1**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
+* **v1.6.2**—**UI & Workflow Refinements**:
+  * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
+  * **Full Document Transform**: This command now always opens the prompt selection palette (no more default prompt).
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
@@ -80,23 +83,23 @@ This major release introduces a powerful new way to interact with AI: **Ad-hoc C
 
 **Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor**
 
-*   **New Command: "Generate text with ad-hoc prompt (as suggestion)"**
-    *   Trigger this editor command (via hotkey or command palette) to open the new "Context Aware Generator" modal.
-    *   Type your specific instruction (e.g., "brainstorm ideas for X," "write an intro paragraph about Y," "explain Z simply") into the modal.
+* **New Command: "Generate text with ad-hoc prompt (as suggestion)"**
+  *   Trigger this editor command (via hotkey or command palette) to open the new "Context Aware Generator" modal.
+  *   Type your specific instruction (e.g., "brainstorm ideas for X," "write an intro paragraph about Y," "explain Z simply") into the modal.
 *   **Contextual Awareness for Generation:**
-    *   Leverages the settings in your **AI Context Control Panel** (Custom, Dynamic, or Entire Note).
-    *   When Dynamic or Entire Note context is active, a special marker (`<<<GENERATION_TARGET_CURSOR_POSITION>>>`) is inserted at your precise cursor location within the context sent to the AI. This tells the AI *exactly* where you intend the new text to be generated.
-    *   The AI uses this context and marker to produce more relevant and precisely placed generated content.
-*   **Seamless Suggestion Workflow:**
-    *   The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
-    *   You can then accept or reject this generated block just like any other Text Transformer suggestion.
-    *   The cursor automatically moves to the end of the inserted text.
-*   **Modal Enhancements:**
-    *   The "Context Aware Generator" modal automatically focuses the prompt input area.
-    *   A notice appears if you try to submit an empty prompt.
-*   **Streamlined Suggestion Navigation:**
-    *   When using "Accept/Reject Next Suggestion," if there's only **one** suggestion in the entire document, it's now resolved immediately without requiring a second key press (the "scroll and press again" step is skipped).
-    *   For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
+  *   Leverages the settings in your **AI Context Control Panel** (Custom, Dynamic, or Entire Note).
+  *   When Dynamic or Entire Note context is active, a special marker (`<<<GENERATION_TARGET_CURSOR_POSITION>>>`) is inserted at your precise cursor location within the context sent to the AI. This tells the AI *exactly* where you intend the new text to be generated.
+  *   The AI uses this context and marker to produce more relevant and precisely placed generated content.
+* **Seamless Suggestion Workflow:**
+  *   The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
+  *   You can then accept or reject this generated block just like any other Text Transformer suggestion.
+  *   The cursor automatically moves to the end of the inserted text.
+* **Modal Enhancements:**
+  *   The "Context Aware Generator" modal automatically focuses the prompt input area.
+  *   A notice appears if you try to submit an empty prompt.
+* **Streamlined Suggestion Navigation:**
+  *   When using "Accept/Reject Next Suggestion," if there's only **one** suggestion in the entire document, it's now resolved immediately without requiring a second key press (the "scroll and press again" step is skipped).
+  *   For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
 
 **Why this is a game-changer:**
 
@@ -141,9 +144,9 @@ This major update overhauls how AI suggestions are displayed and managed, moving
 * **New Suggestion Engine:**
   * **No More Markdown Markers:** Text Transformer **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
   * **Direct CodeMirror Decorations:** Suggestions are now rendered using **inline-styled CodeMirror 6 decorations**. This means:
-    * Added text is typically shown with a light green background.
-    * Removed text is shown with a light pink background and a line-through effect.
-    * These styles are applied *visually* without altering the underlying text with special characters, providing a cleaner experience and better theme compatibility.
+  * Added text is typically shown with a light green background.
+  * Removed text is shown with a light pink background and a line-through effect.
+  * These styles are applied *visually* without altering the underlying text with special characters, providing a cleaner experience and better theme compatibility.
 * **Robust Internal Logic:**
   * The internal state management for suggestions has been rewritten using a CodeMirror `ViewPlugin` for more direct and efficient handling of decorations.
   * Improved error handling and extensive logging have been added for easier debugging and more stable performance.
@@ -176,19 +179,12 @@ This version significantly enhanced your control over the AI's context and
 streamlined prompt management:
 
 * **Take control of your AI's context with the new Context Control Panel:**
-  * **Dynamic Context:** Automatically include surrounding paragraphs for
-        richer, more relevant AI suggestions.
-  * **Entire Note Context:** Utilize the full content of your current note to
-        inform the AI.
-  * **Custom Context:** Provide your own specific text snippets through a
-        dedicated input area for precise context.
-  * *Note: Dynamic and Entire Note context options are mutually exclusive
-        to ensure clarity.*
-* **New Setting - Dynamic Context Lines:** Fine-tune the amount of surrounding
-    text (number of paragraphs) used by the Dynamic Context feature.
-* **Prompt Management Update:** Added a helpful note in the settings page
-    explaining how to manually edit default prompts by modifying the
-    `data.json` file (requires an Obsidian reload after changes).
+  * **Dynamic Context:** Automatically include surrounding paragraphs for richer, more relevant AI suggestions.
+  * **Entire Note Context:** Utilize the full content of your current note to inform the AI.
+  * **Custom Context:** Provide your own specific text snippets through a dedicated input area for precise context.
+  * *Note: Dynamic and Entire Note context options are mutually exclusive to ensure clarity.*
+* **New Setting - Dynamic Context Lines:** Fine-tune the amount of surrounding text (number of paragraphs) used by the Dynamic Context feature.
+* **Prompt Management Update:** Added a helpful note in the settings page explaining how to manually edit default prompts by modifying the `data.json` file (requires an Obsidian reload after changes).
 
 ### ✨ What's New in v1.1.0 ✨
 

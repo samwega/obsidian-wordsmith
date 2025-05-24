@@ -1,22 +1,23 @@
+// main.ts
 // src/main.ts
-import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian"; // Added Editor
+import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import {
 	clearAllActiveSuggestionsCM6,
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
-    focusNextSuggestionCM6, // Added for Feature 2
-    focusPreviousSuggestionCM6, // Added for Feature 2
+    focusNextSuggestionCM6,
+    focusPreviousSuggestionCM6,
 } from "./suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer"; 
+import { generateTextAndApplyAsSuggestionCM6, textTransformerDocumentCM6, textTransformerTextCM6 } from "./textTransformer";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import { CustomPromptModal } from "./custom-prompt-modal"; 
+import { CustomPromptModal } from "./custom-prompt-modal";
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
-	TextTransformerPrompt, 
+	TextTransformerPrompt,
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
 } from "./settings";
@@ -27,7 +28,13 @@ import {
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	settings!: TextTransformerSettings; 
+	settings!: TextTransformerSettings;
+
+	private _getPaletteEnabledPrompts(): TextTransformerPrompt[] {
+		return this.settings.prompts.filter(
+			(p) => p.enabled && p.showInPromptPalette !== false
+		);
+	}
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
@@ -69,10 +76,10 @@ export default class TextTransformer extends Plugin {
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
 			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
+				const enabledPrompts = this._getPaletteEnabledPrompts();
 				if (enabledPrompts.length === 0) {
 					new Notice(
-						"No enabled prompts. Please configure prompts in Text Transformer settings.",
+						"No enabled prompts for palette. Please configure prompts in Text Transformer settings.",
 					);
 					return;
 				}
@@ -97,19 +104,32 @@ export default class TextTransformer extends Plugin {
 			},
 			icon: "bot-message-square",
 		});
+
 		this.addCommand({
 			id: "textTransformer-full-document",
 			name: "Transform full document",
-			editorCallback: (editor: Editor): void => {
-				const defaultPrompt =
-					this.settings.prompts.find((p) => p.id === this.settings.defaultPromptId) ||
-					this.settings.prompts.find((p) => p.enabled) ||
-					this.settings.prompts[0];
-				if (!defaultPrompt) {
-					new Notice("No default or enabled prompt found for document transformation.");
+			editorCallback: async (editor: Editor): Promise<void> => {
+				const enabledPrompts = this._getPaletteEnabledPrompts();
+				if (enabledPrompts.length === 0) {
+					new Notice(
+						"No enabled prompts for palette. Please configure prompts in Text Transformer settings.",
+					);
 					return;
 				}
-				textTransformerDocumentCM6(this, editor, defaultPrompt);
+				return new Promise<void>((resolve) => {
+					const modal = new PromptPaletteModal(
+						this.app,
+						enabledPrompts,
+						async (prompt: TextTransformerPrompt) => {
+							await textTransformerDocumentCM6(this, editor, prompt);
+							resolve();
+						},
+						() => {
+							resolve();
+						},
+					);
+					modal.open();
+				});
 			},
 			icon: "bot-message-square",
 		});
@@ -145,14 +165,13 @@ export default class TextTransformer extends Plugin {
 			icon: "trash-2",
 		});
 
-        // Feature 2: Suggestion Navigation Commands
         this.addCommand({
             id: "focus-next-suggestion",
             name: "Focus next suggestion",
             editorCallback: (editor: Editor): void => {
                 focusNextSuggestionCM6(this, editor);
             },
-            icon: "arrow-down-circle", 
+            icon: "arrow-down-circle",
         });
 
         this.addCommand({
@@ -215,8 +234,9 @@ export default class TextTransformer extends Plugin {
 					...loadedPrompts.map((p) => ({
 						...(DEFAULT_TEXT_TRANSFORMER_PROMPTS.find((dp) => dp.id === p.id) || {}),
 						...p,
+						showInPromptPalette: p.showInPromptPalette === undefined ? true : p.showInPromptPalette,
 					})),
-					...newPromptsToAdd.map((p) => ({ ...p })),
+					...newPromptsToAdd.map((p) => ({ ...p, showInPromptPalette: p.showInPromptPalette === undefined ? true : p.showInPromptPalette })),
 				];
 			}
 		} else {
@@ -227,6 +247,9 @@ export default class TextTransformer extends Plugin {
 			if (typeof p.enabled === "undefined") {
 				p.enabled = true;
 			}
+            if (typeof p.showInPromptPalette === "undefined") {
+                p.showInPromptPalette = true;
+            }
 		});
 
 		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {

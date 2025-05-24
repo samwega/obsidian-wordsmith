@@ -1,3 +1,4 @@
+// context-control-panel.ts
 import {
 	DropdownComponent,
 	ItemView,
@@ -5,28 +6,29 @@ import {
 	TextAreaComponent,
 	ToggleComponent,
 	WorkspaceLeaf,
-} from "obsidian"; // Added ToggleComponent, DropdownComponent
-import TextTransformer from "./main"; // Import TextTransformer
-import { MODEL_SPECS, SupportedModels } from "./settings-data"; // Import MODEL_SPECS and SupportedModels
+	Notice, // Added Notice
+} from "obsidian";
+import TextTransformer from "./main";
+import { MODEL_SPECS, SupportedModels } from "./settings-data";
 
 export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
 export class ContextControlPanel extends ItemView {
-	private plugin: TextTransformer; // Store plugin instance
+	private plugin: TextTransformer;
 	private useWholeNoteContext = false;
 	private useCustomContext = false;
 	private customContextText = "";
-	private useDynamicContext = false;
+	private useDynamicContext = false; // Will default to false on new panel open
 
-	// To store toggle components for mutual exclusion
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
 	private modelDropdown: DropdownComponent | null = null;
+	private dynamicContextLinesSetting: Setting | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
-		// Accept plugin instance
 		super(leaf);
-		this.plugin = plugin; // Store plugin instance
+		this.plugin = plugin;
+		// this.useDynamicContext = this.plugin.settings.dynamicContextActivePanel ?? false; // Removed this line
 	}
 
 	override getViewType(): string {
@@ -41,7 +43,6 @@ export class ContextControlPanel extends ItemView {
 		return "book-type";
 	}
 
-	// Method to update the dropdown if settings change elsewhere
 	updateModelSelector(): void {
 		if (this.modelDropdown) {
 			this.modelDropdown.setValue(this.plugin.settings.model);
@@ -52,20 +53,18 @@ export class ContextControlPanel extends ItemView {
 		const container = this.contentEl;
 		container.empty();
 
-		// Header container for Title and Model Dropdown
 		const headerContainer = container.createDiv();
 		headerContainer.style.display = "flex";
 		headerContainer.style.alignItems = "center";
-		headerContainer.style.justifyContent = "space-between"; // Pushes dropdown to the right
+		headerContainer.style.justifyContent = "space-between";
 		headerContainer.style.marginBottom = "2px";
 
 		const titleEl = headerContainer.createEl("h4", { text: "Text Transform" });
 		titleEl.style.marginTop = "0px";
-		titleEl.style.marginBottom = "0px"; // Adjusted margin
-		titleEl.style.flexGrow = "1"; // Allow title to take available space
+		titleEl.style.marginBottom = "0px";
+		titleEl.style.flexGrow = "1";
 
 		const modelSelectorContainer = headerContainer.createDiv();
-		// No explicit styling needed here if dropdown handles its own width
 
 		new DropdownComponent(modelSelectorContainer).then((dropdown) => {
 			this.modelDropdown = dropdown;
@@ -77,11 +76,8 @@ export class ContextControlPanel extends ItemView {
 			dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
 				this.plugin.settings.model = value as SupportedModels;
 				await this.plugin.saveSettings();
-				// If settings tab is open, it should ideally reflect this change.
-				// Obsidian's settings tabs usually re-render on display or if forced.
 			});
-			// Adjust dropdown style if necessary, e.g., width or margin
-			dropdown.selectEl.style.maxWidth = "150px"; // Example: constrain width
+			dropdown.selectEl.style.maxWidth = "150px";
 		});
 
 		const subTitleEl = container.createEl("h6", { text: "AI Context Options" });
@@ -93,35 +89,75 @@ export class ContextControlPanel extends ItemView {
 		new Setting(container)
 			.setName("Dynamic context")
 			.setDesc(
-				"Automatically include surrounding paragraphs as context. More expensive!", // Updated desc slightly
+				"Automatically include surrounding paragraphs as context. Configure lines below. More expensive!",
 			)
 			.addToggle((toggle) => {
-				this.dynamicContextToggleComponent = toggle; // Store component
+				this.dynamicContextToggleComponent = toggle;
 				toggle.setValue(this.useDynamicContext).onChange((value) => {
 					this.useDynamicContext = value;
 					if (value && this.wholeNoteContextToggleComponent) {
 						this.useWholeNoteContext = false;
 						this.wholeNoteContextToggleComponent.setValue(false);
 					}
+					if (this.dynamicContextLinesSetting) {
+						if (value) {
+							this.dynamicContextLinesSetting.settingEl.style.display = "";
+						} else {
+							this.dynamicContextLinesSetting.settingEl.style.display = "none";
+						}
+					}
 				});
 			});
 
-		// 2. Entire Note Context Toggle
+		this.dynamicContextLinesSetting = new Setting(container)
+			.setName("Context lines")
+			.setDesc("Paragraphs before/after to include (1-21).")
+			.addText((text) => {
+				text
+					.setPlaceholder(
+						this.plugin.settings.dynamicContextLineCount.toString(),
+					)
+					.setValue(this.plugin.settings.dynamicContextLineCount.toString())
+					.onChange(async (value) => {
+						const numValue = Number.parseInt(value);
+						if (!Number.isNaN(numValue) && numValue >= 1 && numValue <= 21) {
+							this.plugin.settings.dynamicContextLineCount = numValue;
+							await this.plugin.saveSettings();
+						} else {
+							new Notice("Please enter a number between 1 and 21.");
+							text.setValue(this.plugin.settings.dynamicContextLineCount.toString());
+						}
+					});
+				text.inputEl.type = "number";
+				text.inputEl.min = "1";
+				text.inputEl.max = "21";
+			});
+
+		if (this.useDynamicContext) {
+			this.dynamicContextLinesSetting.settingEl.style.display = "";
+		} else {
+			this.dynamicContextLinesSetting.settingEl.style.display = "none";
+		}
+		this.dynamicContextLinesSetting.settingEl.style.paddingLeft = "25px";
+
+
 		new Setting(container)
 			.setName("Entire note as context")
 			.setDesc("More expensive!")
 			.addToggle((toggle) => {
-				this.wholeNoteContextToggleComponent = toggle; // Store component
+				this.wholeNoteContextToggleComponent = toggle;
 				toggle.setValue(this.useWholeNoteContext).onChange((value) => {
 					this.useWholeNoteContext = value;
 					if (value && this.dynamicContextToggleComponent) {
 						this.useDynamicContext = false;
 						this.dynamicContextToggleComponent.setValue(false);
+						if (this.dynamicContextLinesSetting) {
+							this.dynamicContextLinesSetting.settingEl.style.display = "none";
+						}
 					}
 				});
 			});
 
-		// 3. Custom Context Toggle (Independent)
 		new Setting(container)
 			.setName("Custom context")
 			.setDesc("Provide text as context in the input box below.")
@@ -131,7 +167,6 @@ export class ContextControlPanel extends ItemView {
 				}),
 			);
 
-		// 4. Custom Context Input Area (Text Area)
 		const textAreaContainer = container.createDiv("tt-custom-context-container");
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
 			.setPlaceholder(
@@ -151,11 +186,11 @@ Coming soon: [[wikilinks]] support.`,
 	}
 
 	override onClose(): Promise<void> {
-		// Perform any cleanup needed when the view is closed
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
-		this.modelDropdown = null; // Clear reference to dropdown
-		return Promise.resolve(); // Explicitly return a resolved promise
+		this.modelDropdown = null;
+		this.dynamicContextLinesSetting = null;
+		return Promise.resolve();
 	}
 
 	getWholeNoteContextState(): boolean {
