@@ -25,6 +25,10 @@ export class ContextControlPanel extends ItemView {
 	private modelDropdown: DropdownComponent | null = null;
 	private dynamicContextLinesSetting: Setting | null = null;
 
+	private descriptionContainer: HTMLDivElement | null = null;
+	private descriptionIndicator: HTMLSpanElement | null = null;
+	private isDescriptionExpanded = false; // To track the state
+
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
 		super(leaf);
 		this.plugin = plugin; 
@@ -40,7 +44,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getDisplayText(): string {
-		return "Text Transformer Context Control";
+		return "Text Transformer: Context Control";
 	}
 
 	override getIcon(): string {
@@ -63,7 +67,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("h5", { text: "Context" });
+		const titleEl = headerContainer.createEl("h5", { text: "TT" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1"; 
@@ -84,10 +88,83 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px"; 
 		});
 
-		const subTitleEl = container.createEl("h6", { text: "Options:" });
-		subTitleEl.style.marginTop = "0px";
-		subTitleEl.style.marginBottom = "15px";
-		subTitleEl.style.color = "var(--text-muted)";
+
+		
+
+
+
+		// --- Expandable AI Context Options Subtitle ---
+		const contextOptionsHeader = container.createDiv();
+		contextOptionsHeader.style.cursor = "pointer";
+		contextOptionsHeader.style.display = "flex";
+		contextOptionsHeader.style.alignItems = "center";
+		contextOptionsHeader.style.marginTop = "10px"; // Give some space above
+		contextOptionsHeader.style.marginBottom = "5px"; // Space before description or first setting
+
+		this.descriptionIndicator = contextOptionsHeader.createEl("span", { text: this.isDescriptionExpanded ? "▼ " : "▶ " });
+		this.descriptionIndicator.style.marginRight = "5px";
+		this.descriptionIndicator.style.fontSize = "var(--font-ui-small)"; // Indicator size
+        this.descriptionIndicator.style.color = "var(--text-muted)";
+
+
+		const subTitleTextEl = contextOptionsHeader.createEl("div", { text: "Context Options:" }); // Renamed to avoid conflict if you still had subTitleEl
+		subTitleTextEl.style.fontWeight = "bold";
+		subTitleTextEl.style.fontSize = "var(--font-ui-smaller)";
+		subTitleTextEl.style.color = "var(--text-muted)";
+
+		// --- Description Text Container (hidden by default) ---
+		this.descriptionContainer = container.createDiv();
+		this.descriptionContainer.style.display = this.isDescriptionExpanded ? "block" : "none";
+		this.descriptionContainer.style.paddingLeft = "20px"; // Indent the description
+		this.descriptionContainer.style.marginBottom = "10px";
+		this.descriptionContainer.style.fontSize = "var(--font-ui-smaller)";
+		this.descriptionContainer.style.color = "var(--text-muted)";
+		this.descriptionContainer.style.lineHeight = "1.4";
+
+
+		// --------------------------------------------------------------------
+		// CUSTOMIZE YOUR DESCRIPTION TEXT HERE:
+		// Example:
+		const p1 = this.descriptionContainer.createEl("p", {
+			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
+		});
+        p1.style.marginBottom = "3px"; // Optional: Adjust spacing between paragraphs
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
+		});
+
+		this.descriptionContainer.createEl("p", {
+			text: "▶ Lines: represents how many lines before and after the selection are included.",
+		});
+
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
+		});
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Try <RULE: Spell everything backwards.>",
+		});
+		// END OF CUSTOMIZABLE DESCRIPTION TEXT
+		// --------------------------------------------------------------------
+
+
+		contextOptionsHeader.addEventListener("click", () => {
+			this.isDescriptionExpanded = !this.isDescriptionExpanded;
+			if (this.descriptionContainer && this.descriptionIndicator) {
+				if (this.isDescriptionExpanded) {
+					this.descriptionContainer.style.display = "block";
+					this.descriptionIndicator.setText("▼ ");
+				} else {
+					this.descriptionContainer.style.display = "none";
+					this.descriptionIndicator.setText("▶ ");
+				}
+			}
+		});
+
+
+
+
+
+
 
 		// 1. Dynamic Context Toggle
 		new Setting(container)
@@ -175,8 +252,7 @@ export class ContextControlPanel extends ItemView {
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
 			.setPlaceholder(
 				`Add custom context...
-Try "RULE: Spell everything backwards."
-Or include [[notes]] (wip).`,
+Or include [[notes]].`,
 			)
 			.setValue(this.customContextText)
 			.onChange((value) => {
@@ -184,7 +260,7 @@ Or include [[notes]] (wip).`,
 			});
 
 		customContextTextArea.inputEl.style.width = "100%";
-		customContextTextArea.inputEl.style.minHeight = "80px";
+		customContextTextArea.inputEl.style.minHeight = "50px";
 		customContextTextArea.inputEl.style.resize = "vertical";
 		textAreaContainer.style.marginTop = "5px";
 	}
