@@ -63,7 +63,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("h4", { text: "Text Transform" });
+		const titleEl = headerContainer.createEl("h5", { text: "Transformer" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1"; 
@@ -84,7 +84,7 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px"; 
 		});
 
-		const subTitleEl = container.createEl("h6", { text: "Context Settings:" });
+		const subTitleEl = container.createEl("h6", { text: "Context Menu" });
 		subTitleEl.style.marginTop = "0px";
 		subTitleEl.style.marginBottom = "15px";
 		subTitleEl.style.color = "var(--text-muted)";
@@ -92,8 +92,6 @@ export class ContextControlPanel extends ItemView {
 		// 1. Dynamic Context Toggle
 		new Setting(container)
 			.setName("Dynamic")
-			.setDesc(
-			)
 			.addToggle((toggle) => {
 				this.dynamicContextToggleComponent = toggle;
 				toggle.setValue(this.useDynamicContext).onChange((value) => {
@@ -165,7 +163,7 @@ export class ContextControlPanel extends ItemView {
 
 		// 3. Custom Context Toggle (Independent)
 		new Setting(container)
-			.setName("Custom context")
+			.setName("Custom")
 			.addToggle((toggle) =>
 				toggle.setValue(this.useCustomContext).onChange((value) => {
 					this.useCustomContext = value;
@@ -176,9 +174,9 @@ export class ContextControlPanel extends ItemView {
 		const textAreaContainer = container.createDiv("tt-custom-context-container");
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
 			.setPlaceholder(
-				`Add custom context here.
+				`Add custom context...
 Try "RULE: Spell everything backwards."
-Or include [[notes]].`,
+Or include [[notes]] (wip).`,
 			)
 			.setValue(this.customContextText)
 			.onChange((value) => {
