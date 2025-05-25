@@ -1,6 +1,6 @@
 # Text Transformer - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.6.4
+**Current Version:** v1.7.0
 
 Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -47,6 +47,26 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Release History
+
+### ✨ What's New in v1.7.0 – Supercharged Custom Context with Live Wikilinks! ✨
+
+This release significantly enhances how you provide custom contextual information to the AI, making it more powerful, intuitive, and deeply integrated with your Obsidian vault.
+
+**Key Features of v1.7.0:**
+
+*   **Embedded Editor for Custom Context:**
+    *   The plain text area for "Custom Context" in the AI Context Control Panel has been replaced with a **miniature, embedded CodeMirror 6 editor.**
+    *   This offers a more robust and feature-rich input experience, including basic Markdown syntax highlighting.
+*   **Live Wikilink Autocompletion:**
+    *   As you type `[[` within the new Custom Context editor, you'll now get **Obsidian's native-style autocompletion pop-up**, suggesting notes from your vault.
+    *   This makes it incredibly easy and fast to accurately reference and link other notes directly within your custom context.
+*   **Improved User Experience for Context Crafting:**
+    *   Enjoy a more editor-like feel when crafting complex custom contexts, with better text handling and visual cues.
+    *   The placeholder text guides you on using the new wikilink feature.
+
+**Why this matters:**
+
+Crafting the perfect custom context for the AI is now more efficient and powerful. With live wikilink autocompletion, you can effortlessly pull in precise information from across your vault, ensuring the AI has the exact knowledge snippets it needs. This leads to more relevant, accurate, and tailored AI transformations and generations, further boosting your writing productivity within Obsidian.
 
 ### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
 
