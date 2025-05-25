@@ -28,6 +28,7 @@ export class ContextControlPanel extends ItemView {
 	private descriptionContainer: HTMLDivElement | null = null;
 	private descriptionIndicator: HTMLSpanElement | null = null;
 	private isDescriptionExpanded = false; // To track the state
+	private customContextTextAreaContainer: HTMLDivElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
 		super(leaf);
@@ -228,16 +229,33 @@ export class ContextControlPanel extends ItemView {
 
 		// 3. Custom Context Toggle (Independent)
 		new Setting(container)
-			.setName("Custom")
+			.setName("Custom") // Or "Custom context"
+			// .setDesc("Provide text as context in the input box below.") // You can remove/keep the desc
 			.addToggle((toggle) =>
 				toggle.setValue(this.useCustomContext).onChange((value) => {
 					this.useCustomContext = value;
+					// ADD THIS LOGIC to show/hide the text area container:
+					if (this.customContextTextAreaContainer) {
+						if (value) {
+							this.customContextTextAreaContainer.style.display = ""; // Show
+						} else {
+							this.customContextTextAreaContainer.style.display = "none"; // Hide
+						}
+					}
 				}),
 			);
 
 		// 4. Custom Context Input Area (Text Area)
-		const textAreaContainer = container.createDiv("tt-custom-context-container");
-		const customContextTextArea = new TextAreaComponent(textAreaContainer)
+		// Assign to the class member:
+		this.customContextTextAreaContainer = container.createDiv("tt-custom-context-container");
+
+		// Set initial visibility based on the current state of useCustomContext:
+		if (this.customContextTextAreaContainer) {
+			this.customContextTextAreaContainer.style.display = this.useCustomContext ? "" : "none";
+		}
+		
+		// Now use the class member for creating the TextAreaComponent:
+		const customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
 			.setPlaceholder(
 				`Add custom context.
 Can include [[notes]].`,
@@ -248,10 +266,12 @@ Can include [[notes]].`,
 			});
 
 		customContextTextArea.inputEl.style.width = "100%";
-		customContextTextArea.inputEl.style.minHeight = "50px";
+		customContextTextArea.inputEl.style.minHeight = "50px"; // Your existing minHeight
 		customContextTextArea.inputEl.style.resize = "vertical";
-		textAreaContainer.style.marginTop = "5px";
-	}
+		// textAreaContainer.style.marginTop = "5px"; // This style is on the container now
+		if (this.customContextTextAreaContainer) { // Apply margin to the class member
+		    this.customContextTextAreaContainer.style.marginTop = "5px";
+		}
 
 	override onClose(): Promise<void> {
 		this.dynamicContextToggleComponent = null;
