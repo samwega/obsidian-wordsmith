@@ -2,7 +2,7 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { diffWordsWithSpace } from "diff";
-import { Editor, Notice } from "obsidian"; // Removed getFrontMatterInfo
+import { Editor, Notice } from "obsidian"; 
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
 import TextTransformer from "./main";
@@ -58,17 +58,20 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		const view = contextPanelLeaves[0].view;
 		if (view instanceof ContextControlPanel) {
 			const contextPanel = view as ContextControlPanel;
-			const customContext = contextPanel.getCustomContextText();
-			const useDynamic = contextPanel.getDynamicContextState();
-			const useWholeNote = contextPanel.getWholeNoteContextState();
-
-			if (customContext) {
-				contextParts.push(
-					`--- Custom Context Start ---
+			
+			if (contextPanel.getCustomContextState()) {
+				const customContext = await contextPanel.getCustomContextText();
+				if (customContext) {
+					contextParts.push(
+						`--- Custom Context Start ---
 ${customContext}
 --- Custom Context End ---`
-				);
+					);
+				}
 			}
+
+			const useDynamic = contextPanel.getDynamicContextState();
+			const useWholeNote = contextPanel.getWholeNoteContextState();
 
 			if (useDynamic) {
 				const linesToInclude = plugin.settings.dynamicContextLineCount;
@@ -228,7 +231,7 @@ async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
 	editor: Editor,
 	originalText: string,
-	scope: "Selection" | "Paragraph", // "Document" scope removed
+	scope: "Selection" | "Paragraph",
 	promptInfo: TextTransformerPrompt,
 	scopeRangeCm: { from: number; to: number },
 ): Promise<boolean> {
@@ -264,25 +267,29 @@ async function validateAndApplyAIDrivenChanges(
 		const view = contextPanelLeaves[0].view;
 		if (view instanceof ContextControlPanel) {
 			const contextPanel = view as ContextControlPanel;
-			const customText = contextPanel.getCustomContextText();
-			const useWholeNote = contextPanel.getWholeNoteContextState();
-			const useDynamic = contextPanel.getDynamicContextState();
 			const contextParts: string[] = [];
 			const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
 			const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
-
-			if (customText)
-				contextParts.push(
-					`--- Custom User-Provided Context Start ---
+			
+			if (contextPanel.getCustomContextState()) {
+				const customText = await contextPanel.getCustomContextText();
+				if (customText) {
+					contextParts.push(
+						`--- Custom User-Provided Context Start ---
 ${customText}
 --- Custom User-Provided Context End ---`
-				);
+					);
+				}
+			}
+
+			const useWholeNote = contextPanel.getWholeNoteContextState();
+			const useDynamic = contextPanel.getDynamicContextState();
+
 			if (useDynamic) {
 				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
 				let selectionStartLine: number;
 				let selectionEndLine: number;
 
-				// For dynamic context, scopeRangeCm already defines the selection or paragraph
                 const fromPos = editor.offsetToPos(scopeRangeCm.from);
                 const toPos = editor.offsetToPos(scopeRangeCm.to);
 				selectionStartLine = fromPos.line;
@@ -297,7 +304,6 @@ ${customText}
 				for (let i = contextStartLine; i <= contextEndLine; i++)
 					dynamicContextLines.push(editor.getLine(i));
 				let dynamicContextText = dynamicContextLines.join("\n");
-				// Mark the original text within the dynamic context
 				if (dynamicContextText.includes(originalText)) 
 					dynamicContextText = dynamicContextText.replace(
 						originalText,
@@ -313,7 +319,6 @@ ${dynamicContextText}
 				if (currentFile) {
 					const fileContent = await app.vault.cachedRead(currentFile);
 					let wholeNoteContext = fileContent;
-					// Mark the original text within the whole note context
 					if (fileContent.includes(originalText))
 						wholeNoteContext = wholeNoteContext.replace(
 							originalText,
@@ -469,8 +474,6 @@ Est. cost: $${cost?.toFixed(4) || "0.0000"}`,
 	);
 	return true;
 }
-
-// textTransformerDocumentCM6 has been removed
 
 export async function textTransformerTextCM6(
 	plugin: TextTransformer,
