@@ -50,7 +50,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getIcon(): string {
-		return "book-type";
+		return "anvil";
 	}
 
 	updateModelSelector(): void {
@@ -69,7 +69,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between";
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("div", { text: "TT Model" });
+		const titleEl = headerContainer.createEl("div", { text: "WS Model" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px";
 		titleEl.style.flexGrow = "1";

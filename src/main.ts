@@ -95,7 +95,7 @@ export default class TextTransformer extends Plugin {
 					modal.open();
 				});
 			},
-			icon: "bot-message-square",
+			icon: "anvil",
 		});
 
 		this.addCommand({
