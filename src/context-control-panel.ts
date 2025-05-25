@@ -63,6 +63,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
+		const titleEl = headerContainer.createEl("h5", { text: "Context" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1"; 
@@ -83,7 +84,7 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px"; 
 		});
 
-		const subTitleEl = container.createEl("h6", { text: "Context Menu" });
+		const subTitleEl = container.createEl("h6", { text: "Options:" });
 		subTitleEl.style.marginTop = "0px";
 		subTitleEl.style.marginBottom = "15px";
 		subTitleEl.style.color = "var(--text-muted)";
