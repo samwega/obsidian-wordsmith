@@ -272,7 +272,7 @@ Can include [[notes]].`,
 		if (this.customContextTextAreaContainer) { // Apply margin to the class member
 		    this.customContextTextAreaContainer.style.marginTop = "5px";
 		}
-
+	}
 	override onClose(): Promise<void> {
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
