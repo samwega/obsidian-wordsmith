@@ -178,7 +178,7 @@ export class ContextControlPanel extends ItemView {
 			});
 
 		this.dynamicContextLinesSetting = new Setting(container)
-			.setName("  ‣ Lines")
+			.setName("‣  Lines")
 			.addText((text) => {
 				text
 					.setPlaceholder(
@@ -203,6 +203,7 @@ export class ContextControlPanel extends ItemView {
 		
 			if (this.dynamicContextLinesSetting) { // Check if it was successfully created
 				this.dynamicContextLinesSetting.settingEl.style.borderTop = "none";
+				this.dynamicContextLinesSetting.nameEl.style.color = "var(--text-accent)";
 			}
 
 		// Initial visibility based on useDynamicContext state
