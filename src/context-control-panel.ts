@@ -4,11 +4,11 @@ import {
 	ItemView,
 	Notice,
 	Setting,
-	// TextAreaComponent, // No longer used directly for custom context
 	ToggleComponent,
 	WorkspaceLeaf,
-	TFile, // Needed for getCustomContextText
+	TFile,
 } from "obsidian";
+
 import TextTransformer from "./main";
 import { MODEL_SPECS, SupportedModels } from "./settings-data";
 
@@ -32,9 +32,35 @@ import {
 	CompletionContext,
 	CompletionResult,
 } from "@codemirror/autocomplete";
-// import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language"; // Markdown lang includes highlighting
 
 export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
+
+// Custom CM6 theme for the embedded editor
+const customEditorTheme = EditorView.theme({
+  "&": { // Targets the .cm-editor (root)
+    backgroundColor: "var(--input-background)",
+    padding: "0px", // Root editor has no padding, managed by .cm-content
+  },
+  ".cm-scroller": {
+     overflowY: "auto",
+  },
+  ".cm-content": {
+    padding: "var(--size-2-2, 4px) var(--size-2-3, 8px)", // Standard content padding
+    lineHeight: "var(--line-height-normal, 1.5)", // Ensure consistent line height
+  },
+  "&.cm-focused .cm-cursor": {
+    borderLeftColor: "var(--text-cursor, var(--text-accent))" // Use accent for focused cursor
+  },
+  ".cm-cursor, .cm-dropCursor": { // General cursor style
+    borderLeftColor: "var(--text-cursor, var(--text-normal))"
+  },
+  ".cm-placeholder": {
+    color: "var(--text-placeholder)",
+    fontStyle: "italic",
+    // Placeholder is drawn inside .cm-content, so it inherits padding and line-height
+  },
+}, {dark: document.body.hasClass("theme-dark")});
+
 
 export class ContextControlPanel extends ItemView {
 	private plugin: TextTransformer;
@@ -50,16 +76,13 @@ export class ContextControlPanel extends ItemView {
 
 	private descriptionContainer: HTMLDivElement | null = null;
 	private descriptionIndicator: HTMLSpanElement | null = null;
-	private isDescriptionExpanded = false; // To track the state
+	private isDescriptionExpanded = false;
 	private customContextTextAreaContainer: HTMLDivElement | null = null;
-	private customContextEditorView: EditorView | null = null; // For CM6
+	private customContextEditorView: EditorView | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
 		super(leaf);
 		this.plugin = plugin;
-		// Load initial customContextText from settings if it were persistent
-		// For now, it starts empty or with a default.
-		// this.customContextText = this.plugin.settings.customContextDefaultText || "";
 	}
 
 	override getViewType(): string {
@@ -83,29 +106,47 @@ export class ContextControlPanel extends ItemView {
 	private obsidianLinkCompleter(
 		context: CompletionContext,
 	): CompletionResult | null {
-		// Match text like [[link prefix
+		// console.log("TT: obsidianLinkCompleter invoked. Typed text:", context.state.doc.sliceString(0, context.pos));
 		const match = context.matchBefore(/\[\[([^\]]*)$/);
+		// console.log("TT: obsidianLinkCompleter match:", match);
+
 
 		if (!match) {
 			return null;
 		}
 
 		const query = match.text.toLowerCase();
+		if (!this.plugin || !this.plugin.app) {
+			// console.log("TT: Plugin or App not available for link completer.");
+			return null;
+		}
 		const files = this.plugin.app.vault.getMarkdownFiles();
+		// console.log("TT: Files for completion:", files.length);
+
 
 		const options = files
 			.filter((file) => file.basename.toLowerCase().includes(query))
 			.map((file) => ({
 				label: file.basename,
-				apply: `${file.basename}]]`, // This will insert the basename and closing brackets
-				type: "link", // Or "file", "keyword"
-				detail: file.path, // Show file path as detail
+				apply: `${file.basename}]]`,
+				type: "link",
+				detail: file.path,
 			}));
+		// console.log("TT: Completion options:", options.length);
+
+		if (options.length === 0 && query.length > 0) { // Keep suggestion open if typing
+			return {
+				from: match.from + 2,
+				options: [{label: `No matches for "${query}"`, apply: query, type: "no-match"}], // Or empty options
+				filter: false,
+			};
+		}
+
 
 		return {
-			from: match.from + 2, // The start of the text that should be replaced (after "[[")
+			from: match.from + 2,
 			options: options,
-			filter: false, // We've already filtered, CM shouldn't re-filter
+			filter: false,
 		};
 	}
 
@@ -282,7 +323,6 @@ export class ContextControlPanel extends ItemView {
 						? ""
 						: "none";
 				}
-				// Focus the editor when it becomes visible
 				if (value && this.customContextEditorView) {
 					this.customContextEditorView.focus();
 				}
@@ -296,8 +336,12 @@ export class ContextControlPanel extends ItemView {
 			? ""
 			: "none";
 		this.customContextTextAreaContainer.style.marginTop = "5px";
+		// Style the container of the CM editor
+		this.customContextTextAreaContainer.style.border = "1px solid var(--input-border, var(--background-modifier-border))";
+		this.customContextTextAreaContainer.style.borderRadius = "var(--input-radius, 4px)";
+		this.customContextTextAreaContainer.style.padding = "1px"; // To make inner border/focus visible
 
-		// Setup CodeMirror 6 editor
+
 		const editorExtensions: Extension[] = [
 			EditorView.lineWrapping,
 			history(),
@@ -307,20 +351,21 @@ export class ContextControlPanel extends ItemView {
 				...completionKeymap,
 				indentWithTab,
 			]),
-			markdown(), // language support & basic highlighting
-			// syntaxHighlighting(defaultHighlightStyle, { fallback: true }), // Usually not needed if markdown() is used
+			markdown(), // Provides basic Markdown awareness
 			cmPlaceholder(
 				"Add custom context here...\nType [[ to link notes (their content will be embedded).",
 			),
 			autocompletion({
-				override: [this.obsidianLinkCompleter.bind(this)], // Ensure 'this' context
+				override: [this.obsidianLinkCompleter.bind(this)],
 				closeOnBlur: true,
+				activateOnTyping: true, // Ensure it activates
 			}),
 			EditorView.updateListener.of((update) => {
 				if (update.docChanged) {
 					this.customContextText = update.state.doc.toString();
 				}
 			}),
+			customEditorTheme, // Apply our custom theme
 		];
 
 		this.customContextEditorView = new EditorView({
@@ -331,15 +376,10 @@ export class ContextControlPanel extends ItemView {
 			parent: this.customContextTextAreaContainer,
 		});
 
-		// Style the editor to make it look like an input and fit well
 		const cmDOM = this.customContextEditorView.dom;
-		cmDOM.style.minHeight = "80px"; // Decent starting height
-		cmDOM.style.maxHeight = "250px"; // Prevent excessive growth
-		cmDOM.style.overflowY = "auto"; // Allow scrolling
-		cmDOM.style.border = "1px solid var(--input-border, var(--background-modifier-border))";
-		cmDOM.style.borderRadius = "var(--input-radius, 4px)";
-		cmDOM.style.padding = "var(--size-2-2, 4px) var(--size-2-3, 6px)"; // Use Obsidian's padding vars
-		// Background is usually handled by CM's theme or Obsidian's default theme for CM
+		cmDOM.style.minHeight = "60px"; // Approx 3-4 lines
+		cmDOM.style.maxHeight = "200px";
+		cmDOM.addClasses(["cm-s-obsidian"]); // Base Obsidian CM styling
 	}
 
 	override async onClose(): Promise<void> {
@@ -350,7 +390,6 @@ export class ContextControlPanel extends ItemView {
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null;
 		this.dynamicContextLinesSetting = null;
-		// Ensure any other resources are cleaned up
 		return super.onClose();
 	}
 
@@ -362,7 +401,6 @@ export class ContextControlPanel extends ItemView {
 		return this.useCustomContext;
 	}
 
-	// Updated to be async and parse wikilinks as per "previous step" context
 	async getCustomContextText(): Promise<string> {
 		if (!this.useCustomContext || !this.customContextText) {
 			return "";
@@ -374,31 +412,31 @@ export class ContextControlPanel extends ItemView {
 		const contentParts: (string | Promise<string>)[] = [];
 		let lastIndex = 0;
 
+		if (!this.plugin || !this.plugin.app) {
+			console.error(
+				"TextTransformer: Plugin or App instance not available for getCustomContextText.",
+			);
+			return textToProcess;
+		}
+
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
-			// Add text before the wikilink
 			contentParts.push(textToProcess.substring(lastIndex, match.index));
-			
-			const linkFullText = match[1]; // e.g., "My Note", "My Note|Alias", "My Note#Header"
-			// Extract the actual link path (file name, possibly with header/block)
-			// For simplicity, we take everything before a potential alias marker '|'
+
+			const linkFullText = match[1];
 			const linkPathOnly = linkFullText.split("|")[0];
 
-			// Resolve the link. sourcePath is empty as this context is global, not tied to a specific file.
 			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(
 				linkPathOnly,
-				"", 
+				"",
 			);
 
 			if (file instanceof TFile) {
-				// If it's a file, push the promise of its content
 				contentParts.push(this.plugin.app.vault.cachedRead(file));
 			} else {
-				// If not resolved, or not a TFile, keep the original wikilink text
 				contentParts.push(match[0]);
 			}
 			lastIndex = wikilinkRegex.lastIndex;
 		}
-		// Add any remaining text after the last wikilink
 		contentParts.push(textToProcess.substring(lastIndex));
 
 		const resolvedContents = await Promise.all(contentParts);
