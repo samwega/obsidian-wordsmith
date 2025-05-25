@@ -36,9 +36,9 @@ export default class TextTransformer extends Plugin {
 		try {
 			this.registerEditorExtension(textTransformerSuggestionExtensions());
 		} catch (e) {
-			console.error("TextTransformer Plugin: FAILED to register editor extensions!", e);
+			console.error("WordSmith Plugin: FAILED to register editor extensions!", e);
 			new Notice(
-				"TextTransformer Error: Could not register editor extensions. Highlighting will not work.",
+				"WordSmith Error: Could not register editor extensions. Highlighting will not work.",
 				0,
 			);
 		}
@@ -72,7 +72,7 @@ export default class TextTransformer extends Plugin {
 				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 0) {
 					new Notice(
-						"No enabled prompts. Please configure prompts in Text Transformer settings.",
+						"No enabled prompts. Please configure prompts in WordSmith settings.",
 					);
 					return;
 				}

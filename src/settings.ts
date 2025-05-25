@@ -24,7 +24,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Text Transformer Settings" });
+		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);

@@ -34,7 +34,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 ): Promise<void> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
-		new Notice("Text Transformer requires a modern editor version. Cannot apply suggestions.");
+		new Notice("WordSmith requires a modern editor version. Cannot apply suggestions.");
 		return;
 	}
 
@@ -237,7 +237,7 @@ async function validateAndApplyAIDrivenChanges(
 ): Promise<boolean> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
-		new Notice("Text Transformer requires a modern editor version. Cannot apply suggestions.");
+		new Notice("WordSmith requires a modern editor version. Cannot apply suggestions.");
 		return false;
 	}
 

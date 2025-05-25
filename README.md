@@ -1,12 +1,12 @@
-# Text Transformer - AI Writing Assistant for Obsidian
+# WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.7.0
+**Current Version:** v1.7.1
 
-Text Transformer is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
+WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
 **Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
 
-Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, Text Transformer has evolved into a feature-complete AI writing assistant.
+Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
 <img alt="Showcase" width=90% src="https://i.imgur.com/92rfV9X.png">
 
@@ -51,13 +51,17 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 ### ✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨
 
-This upgrade streamlines the process of providing the AI with the precise information needed for optimal results. By integrating seamless note linking into the Custom Context feature, Text Transformer now leverages your interconnected notes, making context building faster, more intuitive, and more powerful.
+This upgrade streamlines the process of providing the AI with the precise information needed for optimal results. By integrating seamless note linking into the Custom Context feature, WordSmith now leverages your interconnected notes, making context building faster, more intuitive, and more powerful.
 
 **Key Features of v1.7.0:**
 
 *   **Smarter Custom Context Input:** Providing custom instructions or reference material to the AI is now more powerful and intuitive.
-*   **Easy Note Linking with `[[`:** You can now type `[[` in the "Custom" context box of the Text Transformer panel to quickly search for and link any note from your vault, seamlessly integrating with your Obsidian workflow.
-*   **Full Note Content Embedding:** When you link notes (e.g., `[[My Style Guide]]`) in the custom context, Text Transformer will now intelligently fetch their **entire content** and include it as part of the context sent to the AI. This means you can easily reference detailed style guides, extensive notes, or specific information without manual copy-pasting!
+*   **Easy Note Linking with `[[`:** You can now type `[[` in the "Custom" context box of the WordSmith panel to quickly search for and link any note from your vault, seamlessly integrating with your Obsidian workflow.
+*   **Full Note Content Embedding:** When you link notes (e.g., `[[My Style Guide]]`) in the custom context, WordSmith will now intelligently fetch their **entire content** and include it as part of the context sent to the AI. This means you can easily reference detailed style guides, extensive notes, or specific information without manual copy-pasting!
+
+#### Minor Versions of v.1.7.x
+
+* **v1.7.1**—Text Transformer **Rebranded as WordSmith**. Developers, note that most code still refers to TextTransformer.
 
 ### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
 
@@ -67,8 +71,8 @@ This release supercharges your suggestion review workflow, making it faster and 
 
 * **Suggestion Navigation Hotkeys:**
   * Effortlessly cycle through all active AI suggestions in your document using new commands:
-  * **"Text Transformer: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
-  * **"Text Transformer: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
+  * **"WordSmith: Focus next suggestion"** – Move your cursor to the start of the next suggestion, making it instantly active for review.
+  * **"WordSmith: Focus previous suggestion"** – Jump back to the previous suggestion with a single keystroke.
 * **Improved Cursor Behavior:**
   * Whenever new suggestions are generated—whether from a text transformation or an ad-hoc prompt—the cursor is now automatically positioned at the very first suggestion, immediately highlighting it for action. This streamlines the accept/reject workflow and eliminates manual cursor adjustment.
 * **Refined Keyboard-First Editing:**
@@ -79,19 +83,19 @@ This release supercharges your suggestion review workflow, making it faster and 
 
 **Why this matters:**
 
-Text Transformer now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian. Quickly navigate, focus, and resolve suggested changes—whether editing, rewriting, or generating new content—keeping you firmly in your creative flow.
+WordSmith now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian. Quickly navigate, focus, and resolve suggested changes—whether editing, rewriting, or generating new content—keeping you firmly in your creative flow.
 
 #### Minor Versions of v.1.6.x
 
 * **v1.6.2**—**Granular Suggestions for Multi-line Generation**: Text generated at the cursor that spans multiple lines is now intelligently split into individual suggestion segments (per line and per newline), allowing for more precise review and control.
 * **v1.6.3**—**UI & Workflow Refinements**:
   * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
-  * **Removed Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
+  * **Removed Legacy Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
 * **v1.6.4**—**Minimal Context Control Side Panel**: All the explanations are now tucked away in a collapsable menu. The menu is as minimal as possible, allowing you to make it narrow and gain space. It is more aesthetically pleasing as well.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
-This major release introduces a powerful new way to interact with AI: **Ad-hoc Contextual Generation directly at your cursor, presented as a suggestion.** Go beyond transforming existing text – now you can generate new content, ideas, or continuations seamlessly within your writing flow.
+This major release introduces a powerful new way to interact with AI: **Ad-hoc Contextual Generation directly at your cursor, presented as a suggestion.** Go beyond processing existing text – now you can generate new content, ideas, or continuations seamlessly within your writing flow.
 
 **Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor**
 
@@ -104,7 +108,7 @@ This major release introduces a powerful new way to interact with AI: **Ad-hoc C
   *   The AI uses this context and marker to produce more relevant and precisely placed generated content.
 * **Seamless Suggestion Workflow:**
   *   The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
-  *   You can then accept or reject this generated block just like any other Text Transformer suggestion.
+  *   You can then accept or reject this generated block just like any other WordSmith suggestion.
   *   The cursor automatically moves to the end of the inserted text.
 * **Modal Enhancements:**
   *   The "Context Aware Generator" modal automatically focuses the prompt input area.
@@ -115,7 +119,7 @@ This major release introduces a powerful new way to interact with AI: **Ad-hoc C
 
 **Why this is a game-changer:**
 
-This feature transforms Text Transformer from primarily an editing/refinement tool into a versatile writing partner capable of both **transforming existing text and generating new content with contextual understanding, all within the familiar suggestion-based workflow.** Whether you're stuck, need a creative boost, or want to quickly draft a section, the Context Aware Generator is ready to assist.
+This feature transforms WordSmith from primarily an editing/refinement tool into a versatile writing partner capable of both **transforming existing text and generating new content with contextual understanding, all within the familiar suggestion-based workflow.** Whether you're stuck, need a creative boost, or want to quickly draft a section, the Context Aware Generator is ready to assist.
 
 ### Minor Versions of v.1.5.x
 
@@ -129,7 +133,7 @@ This feature transforms Text Transformer from primarily an editing/refinement to
 
 ### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
 
-This update brings a crucial enhancement to how Text Transformer handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
+This update brings a crucial enhancement to how WordSmith handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
 
 * **Enhanced Newline Diffing:**
   * Newlines are now consistently marked with green "↵" (added) and pink "¶" (removed).
@@ -154,7 +158,7 @@ This update brings a crucial enhancement to how Text Transformer handles changes
 This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
 
 * **New Suggestion Engine:**
-  * **No More Markdown Markers:** Text Transformer **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
+  * **No More Markdown Markers:** WordSmith **no longer uses** `==highlight==` for additions or `~~strikethrough~~` for removals in the actual document text.
   * **Direct CodeMirror Decorations:** Suggestions are now rendered using **inline-styled CodeMirror 6 decorations**. This means:
   * Added text is typically shown with a light green background.
   * Removed text is shown with a light pink background and a line-through effect.
@@ -212,8 +216,7 @@ Version 1.1.0 expanded your AI model horizons:
 ### ✨ What's New in v1.0.0 ✨
 
 Version 1.0.0 marked the initial major transformation from the original
-Proofreader plugin, introducing core functionalities that define Text
-Transformer today:
+Proofreader plugin, introducing core functionalities that define WordSmith today:
 
 * **Introducing the Prompt Palette:** Moved beyond a single proofreading
     instruction to a versatile palette. Users can select from a variety of
@@ -223,14 +226,14 @@ Transformer today:
     unique prompts. This allows for a highly personalized AI writing assistant
     tailored to specific needs and styles.
 * **Foundation for a Multi-Feature AI Assistant:** This version laid the
-    groundwork for Text Transformer to become a comprehensive AI writing tool,
+    groundwork for WordSmith to become a comprehensive AI writing tool,
     moving beyond basic proofreading to a wider range of text manipulations.
 
 ## Features
 
-Text Transformer empowers you to refine your text directly within Obsidian using a suite of powerful AI capabilities:
+WordSmith empowers you to refine your text directly within Obsidian using a suite of powerful AI capabilities:
 
-* **Versatile Text Transformations via Prompt Palette:** Improve clarity, shorten or lengthen text, fix grammar, simplify language, enhance readability, translate (with dynamic language input), utilize contextual instructions (such as the "Mind the Context!" prompt), and more. Select from a range of built-in prompts or your own creations through an intuitive palette.
+* **Versatile Text Reprocessing via Prompt Palette:** Improve clarity, shorten or lengthen text, fix grammar, simplify language, enhance readability, translate (with dynamic language input), utilize contextual instructions (such as the "Mind the Context!" prompt), and more. Select from a range of built-in prompts or your own creations through an intuitive palette.
 * **Inline Suggestion Review:** AI-generated changes appear directly in your editor. Added text is highlighted (e.g., light green), and removed text is displayed with a different background and strike-through (e.g., light pink). You can accept or reject each change individually or in batches.
 * **Custom Prompts:** Create and save your own prompts tailored to your specific writing needs and workflows.
   * **Flexible Prompt Management:** Easily enable or disable any default or custom prompt using toggles in the settings.
@@ -247,7 +250,7 @@ Text Transformer empowers you to refine your text directly within Obsidian using
 
 ## How It Works: Inline Suggestions
 
-The core strength of Text Transformer lies in its intuitive inline suggestion
+The core strength of WordSmith lies in its intuitive inline suggestion
 system:
 
 1. **Invoke AI:** Select text (or place your cursor in a paragraph) and
@@ -270,7 +273,7 @@ without ever leaving your Obsidian workspace.
 
 ## AI Providers & Models
 
-Text Transformer supports models from both OpenAI and Google, giving you a choice
+WordSmith supports models from both OpenAI and Google, giving you a choice
 based on your preferences for performance and cost.
 
 > [!IMPORTANT]
@@ -314,7 +317,7 @@ Choose the model that best fits your task and budget in the plugin settings.
 
 ### Plugin Installation (via Community Store)
 
-Coming soon! We are working on getting Text Transformer added to the official
+Coming soon! We are working on getting WordSmith added to the official
 Obsidian community plugin store.
 
 In the meantime, please use the [Manual Installation](#manual-installation)
@@ -335,12 +338,12 @@ community store:
     this new `text-transformer` folder.
 6. Reload Obsidian (e.g., close and reopen the app, or use the "Reload app
     without saving" command).
-7. Go to `Settings` -> `Community plugins`, find "Text Transformer" in your
+7. Go to `Settings` -> `Community plugins`, find "WordSmith" in your
     list of installed plugins, and enable it.
 
 ### API Key Setup
 
-You'll need at least one API key to use Text Transformer.
+You'll need at least one API key to use WordSmith.
 
 To get your API key(s):
 
@@ -348,8 +351,7 @@ To get your API key(s):
     * [Create an OpenAI account](https://auth.openai.com/create-account)
         if you don't have one.
     * Go to your [API keys page](https://platform.openai.com/api-keys).
-    * Click `Create new secret key`, name it (e.g., "Obsidian Text
-        Transformer"), and copy the key.
+    * Click `Create new secret key`, name it (e.g., "Obsidian WordSmith"), and copy the key.
 
 2. **Google Gemini:** (Optional)
     * Ensure you have a Google account and visit
@@ -359,7 +361,7 @@ To get your API key(s):
     * Click `Create API key in new project` or `Create API key` in an
         existing project. Copy the key.
 
-3. In Obsidian, go to `Settings → Text Transformer` and paste your copied
+3. In Obsidian, go to `Settings → WordSmith` and paste your copied
     API key(s) into the respective "OpenAI API Key" and/or "Gemini API Key"
     fields.
 
@@ -370,22 +372,21 @@ To get your API key(s):
 
 ## Usage
 
-Text Transformer is designed for a keyboard-centric workflow. Configure your
+WordSmith is designed for a keyboard-centric workflow. Configure your
 preferred hotkeys in Obsidian's settings for the commands below.
 
 <img alt="Showcase of recommended hotkeys" width=70% src="https://i.imgur.com/MJX4Lrt.png">
 
 ### Core Commands
 
-1. **`Text Transformer: Transform selection/paragraph`**: This is your main
+1. **`WordSmith: Transform selection/paragraph`**: This is your main
     command.
     * If you have text selected, it will be used for transformation.
     * If no text is selected, the current paragraph (where your cursor is)
         will be targeted.
     * Invoking this command opens the Prompt Palette, allowing you to choose
         from enabled default and custom prompts.
-2. **`Text Transformer: Transform full document`**: Applies the chosen prompt to
-    the entire content of the current note.
+2. **`WordSmith: Transform full document`**: Applies the chosen prompt to the entire content of the current note.
     * *Use with caution for very long documents, as AI quality can sometimes
         degrade with extremely large inputs, and token costs will be higher.*
 
@@ -393,17 +394,17 @@ preferred hotkeys in Obsidian's settings for the commands below.
 
 Once suggestions are inserted:
 
-* **`Text Transformer: Accept next suggestion`**: Accepts the first AI
+* **`WordSmith: Accept next suggestion`**: Accepts the first AI
     suggestion found after your cursor.
-* **`Text Transformer: Reject next suggestion`**: Rejects the first AI
+* **`WordSmith: Reject next suggestion`**: Rejects the first AI
     suggestion found after your cursor.
-* **`Text Transformer: Accept suggestions in selection/paragraph`**: Accepts
+* **`WordSmith: Accept suggestions in selection/paragraph`**: Accepts
     all AI suggestions within the current text selection (or the current
     paragraph if nothing is selected).
-* **`Text Transformer: Reject suggestions in selection/paragraph`**: Rejects
+* **`WordSmith: Reject suggestions in selection/paragraph`**: Rejects
     all AI suggestions within the current text selection (or current
     paragraph).
-* **`Text Transformer: Clear all active suggestions (reject all)`**: Rejects
+* **`WordSmith: Clear all active suggestions (reject all)`**: Rejects
     all active suggestions in the current document and clears their visual markings.
 
 ### Using the AI Context Control Panel
@@ -416,11 +417,11 @@ sent to the AI with your text.
 The AI Context Control Panel is an `ItemView` that typically opens in one of your
 Obsidian sidebars. Here’s how to access it:
 
-1. **Plugin Enable State:** Make sure the Text Transformer plugin is enabled in
+1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in
     `Settings` -> `Community plugins`. The icon and panel will only be
     available if the plugin is active.
 2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
-    for the command `"Text Transformer: Open AI Context Control Panel"`.
+    for the command `"WordSmith: Open AI Context Control Panel"`.
 
 Once the panel is open, you can drag its icon to reorder is, or
 drag the panel itself to different parts of your workspace (e.e., left
@@ -433,7 +434,7 @@ Once open, you can use the toggles for:
 * **Dynamic Context:** Toggle on to automatically include a configurable number
     of lines (paragraphs) surrounding your selection/current paragraph as
     context for the AI. Adjust the line count in the plugin settings
-    (`Settings → Text Transformer → Dynamic context lines`).
+    (`Settings → WordSmith → Dynamic context lines`).
 * **Entire Note as Context:** Toggle on to send the entire content of the
     current note as context.
 * **Custom Context:** Toggle on and paste any specific text into the provided
@@ -442,10 +443,10 @@ Once open, you can use the toggles for:
 
 ## Customizing Prompts
 
-Tailor Text Transformer to your exact needs:
+Tailor WordSmith to your exact needs:
 
 * **Add Custom Prompts:** In plugin settings
-    (`Settings → Text Transformer → Prompt Management`), click
+    (`Settings → WordSmith → Prompt Management`), click
     "Add Custom Prompt". Give your prompt a name and provide the instructional
     text for the AI.
 * **Manage Prompts:** Enable or disable any default or custom prompt using the
@@ -460,7 +461,7 @@ Tailor Text Transformer to your exact needs:
 
 ## Legacy Text Trasnformer
 
-Prior to v1.3.0, Text Transformer used `==highlighted==` additions and `~~struck-through~~` deletions, using the regex based mechanics of Proofreader.
+Prior to v1.3.0, WordSmith used `==highlighted==` additions and `~~struck-through~~` deletions, using the regex based mechanics of Proofreader.
 
 > [!NOTE]
 > If you prefer the previous suggestion system, as it allows to use `==highlight==` and `~~strikethrough~~` in other markdown based applications, the last version to use this was **v1.2.2**. You can find it on the [releases page](https://github.com/samwega/obsidian-text-transformer/releases/tag/v1.2.2).

@@ -93,7 +93,7 @@ Generate text to fulfill this prompt, considering the provided context and the <
                 max_tokens: prompt.max_tokens ?? settings.max_tokens,
 			}),
 		});
-		console.debug("[TextTransformer plugin] OpenAI response", response);
+		console.debug("[WordSmith plugin] OpenAI response", response);
 	} catch (error) {
 		if ((error as { status: number }).status === 401) {
 			const msg = "OpenAI API key is not valid. Please verify the key in the plugin settings.";

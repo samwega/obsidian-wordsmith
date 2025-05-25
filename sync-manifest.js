@@ -23,7 +23,7 @@ try {
 	manifestJson.author = packageJson.author;
 	manifestJson.description = packageJson.description;
 	manifestJson.authorUrl = "https://github.com/samwega";
-	manifestJson.helpUrl = "https://github.com/samwega/obsidian-text-transformer#readme";
+	manifestJson.helpUrl = "https://github.com/samwega/obsidian-wordsmith#readme";
 	if (manifestJson.fundingUrl) {
 		manifestJson.fundingUrl = undefined;
 	}

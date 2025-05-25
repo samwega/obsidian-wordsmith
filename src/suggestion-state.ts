@@ -58,7 +58,7 @@ class SuggestionViewPluginClass {
 			// Initial computation of decorations
 			this.decorations = this.computeDecorations(view);
 		} catch (e) {
-			console.error("TextTransformer ViewPlugin: Error in constructor computeDecorations:", e);
+			console.error("WordSmith ViewPlugin: Error in constructor computeDecorations:", e);
 			this.decorations = Decoration.none;
 		}
 	}
@@ -107,7 +107,7 @@ class SuggestionViewPluginClass {
 			try {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
-				console.error("TextTransformer ViewPlugin: Error in update computeDecorations:", e);
+				console.error("WordSmith ViewPlugin: Error in update computeDecorations:", e);
 				this.decorations = Decoration.none; 
 			}
 		}
@@ -137,7 +137,7 @@ class SuggestionViewPluginClass {
 			}
 
 			if (!className) {
-				console.warn("TextTransformer ViewPlugin: Mark with unknown type skipped:", mark);
+				console.warn("WordSmith ViewPlugin: Mark with unknown type skipped:", mark);
 				continue;
 			}
 
@@ -147,13 +147,13 @@ class SuggestionViewPluginClass {
 
 			if (mark.from >= mark.to) {
 				console.warn(
-					"TextTransformer ViewPlugin: Invalid mark range (from >= to), skipping:",
+					"WordSmith ViewPlugin: Invalid mark range (from >= to), skipping:",
 					mark,
 				);
 				continue;
 			}
 			if (mark.from < 0 || mark.to > view.state.doc.length) {
-				console.warn("TextTransformer ViewPlugin: Mark range out of bounds, skipping:", mark);
+				console.warn("WordSmith ViewPlugin: Mark range out of bounds, skipping:", mark);
 				continue;
 			}
 			
@@ -168,7 +168,7 @@ class SuggestionViewPluginClass {
 				
 			} catch (e) {
 				console.error(
-					`TextTransformer ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
+					`WordSmith ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
 					e,
 				);
 			}

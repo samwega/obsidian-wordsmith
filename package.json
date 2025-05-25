@@ -1,7 +1,7 @@
 {
-	"name": "text-transformer",
+	"name": "text-wordsmith",
 	"type": "module",
-	"description": "AI-based text transforming to revolutionize your writing. Changes are highlighted as suggestions directly in the editor, allowing you to accept/reject them individually or all at once.",
+	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, multiple AI providers, seamless, keyboard-first workflow.",
 	"author": "Alexander Glavan",
 	"version": "1.7.0",
 	"keywords": [],
@@ -9,7 +9,7 @@
 	"main": "main.js",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/samwega/obsidian-text-transformer.git"
+		"url": "git+https://github.com/samwega/obsidian-wordsmith.git"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

@@ -46,7 +46,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getDisplayText(): string {
-		return "Text Transformer: Context Control";
+		return "WordSmith: Context Control";
 	}
 
 	override getIcon(): string {
@@ -304,7 +304,7 @@ export class ContextControlPanel extends ItemView {
 		let lastIndex = 0;
 
 		if (!this.plugin || !this.plugin.app) {
-			console.error("TextTransformer: Plugin or App instance not available for getCustomContextText.");
+			console.error("WordSmith: Plugin or App instance not available for getCustomContextText.");
 			return textToProcess; 
 		}
 
