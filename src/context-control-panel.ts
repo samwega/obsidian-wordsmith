@@ -67,7 +67,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("div", { text: "Text\nTransformer" });
+		const titleEl = headerContainer.createEl("div", { text: "TT Model" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1";
@@ -90,9 +90,9 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px";
 			// ADD THESE LINES for smaller appearance:
 			dropdown.selectEl.style.fontSize = "var(--font-ui-smaller)"; // Make the font smaller
-			dropdown.selectEl.style.padding = "0px 0px 2px 12px"; // Reduce padding (top/bottom and left/right)
+			dropdown.selectEl.style.padding = "0px 8px"; // Reduce padding (top/bottom and left/right)
 			// You might also need to adjust height if the theme/Obsidian version sets a specific height
-			// dropdown.selectEl.style.height = "auto"; // Or a specific smaller pixel value like "24px"
+			dropdown.selectEl.style.height = "auto"; // Or a specific smaller pixel value like "24px"
 		});
 
 		// --- Expandable AI Context Options Subtitle ---
