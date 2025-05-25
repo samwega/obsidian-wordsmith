@@ -72,7 +72,8 @@ export class ContextControlPanel extends ItemView {
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1";
-		titleEl.style.fontSize = "var(--font-ui-small)";
+		titleEl.style.fontSize = "var(--font-ui-medium)";
+		titleEl.style.color = "var(--text-accent)";
 		titleEl.style.fontWeight = "bold";
 
 		const modelSelectorContainer = headerContainer.createDiv();
@@ -91,7 +92,7 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px";
 			// ADD THESE LINES for smaller appearance:
 			dropdown.selectEl.style.fontSize = "var(--font-ui-smaller)"; // Make the font smaller
-			dropdown.selectEl.style.padding = "0px 8px"; // Reduce padding (top/bottom and left/right)
+			dropdown.selectEl.style.padding = "0px 18px 0px 2px"; // Padding (top/right and bottom/left)
 			// You might also need to adjust height if the theme/Obsidian version sets a specific height
 			dropdown.selectEl.style.height = "auto"; // Or a specific smaller pixel value like "24px"
 		});
@@ -111,7 +112,7 @@ export class ContextControlPanel extends ItemView {
 
 		const subTitleTextEl = contextOptionsHeader.createEl("div", { text: "Context Options:" }); // Renamed to avoid conflict if you still had subTitleEl
 		subTitleTextEl.style.fontWeight = "bold";
-		subTitleTextEl.style.fontSize = "var(--font-ui-smaller)";
+		subTitleTextEl.style.fontSize = "var(--font-ui-small)";
 		subTitleTextEl.style.color = "var(--text-muted)";
 
 		// --- Description Text Container (hidden by default) ---

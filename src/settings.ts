@@ -24,7 +24,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "TextTransformer Settings" });
+		containerEl.createEl("h2", { text: "Text Transformer Settings" });
 
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
@@ -108,9 +108,9 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 `.trim();
 		const modelDescDiv = apiModelSectionContents.createEl("div");
 		modelDescDiv.innerHTML = modelDesc;
-		modelDescDiv.style.marginTop = "10px";
+		modelDescDiv.style.marginTop = "15px";
 		modelDescDiv.style.color = "var(--text-muted)";
-		modelDescDiv.style.fontSize = "var(--font-ui-smaller)";
+		modelDescDiv.style.fontSize = "var(--font-ui-small)";
 	}
 
 	// _renderDynamicContextSection has been removed
