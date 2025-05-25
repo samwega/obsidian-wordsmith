@@ -67,7 +67,7 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("h5", { text: "TT" });
+		const titleEl = headerContainer.createEl("h6", { text: "Trasnform" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
 		titleEl.style.flexGrow = "1"; 
@@ -88,24 +88,18 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px"; 
 		});
 
-
-		
-
-
-
 		// --- Expandable AI Context Options Subtitle ---
 		const contextOptionsHeader = container.createDiv();
 		contextOptionsHeader.style.cursor = "pointer";
 		contextOptionsHeader.style.display = "flex";
 		contextOptionsHeader.style.alignItems = "center";
-		contextOptionsHeader.style.marginTop = "10px"; // Give some space above
+		contextOptionsHeader.style.marginTop = "15px"; // Give some space above
 		contextOptionsHeader.style.marginBottom = "5px"; // Space before description or first setting
 
 		this.descriptionIndicator = contextOptionsHeader.createEl("span", { text: this.isDescriptionExpanded ? "▼ " : "▶ " });
 		this.descriptionIndicator.style.marginRight = "5px";
 		this.descriptionIndicator.style.fontSize = "var(--font-ui-small)"; // Indicator size
         this.descriptionIndicator.style.color = "var(--text-muted)";
-
 
 		const subTitleTextEl = contextOptionsHeader.createEl("div", { text: "Context Options:" }); // Renamed to avoid conflict if you still had subTitleEl
 		subTitleTextEl.style.fontWeight = "bold";
@@ -121,10 +115,6 @@ export class ContextControlPanel extends ItemView {
 		this.descriptionContainer.style.color = "var(--text-muted)";
 		this.descriptionContainer.style.lineHeight = "1.4";
 
-
-		// --------------------------------------------------------------------
-		// CUSTOMIZE YOUR DESCRIPTION TEXT HERE:
-		// Example:
 		const p1 = this.descriptionContainer.createEl("p", {
 			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
 		});
@@ -134,37 +124,28 @@ export class ContextControlPanel extends ItemView {
 		});
 
 		this.descriptionContainer.createEl("p", {
-			text: "▶ Lines: represents how many lines before and after the selection are included.",
+			text: "‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
 		});
 
 		this.descriptionContainer.createEl("p", {
 			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
 		});
 		this.descriptionContainer.createEl("p", {
-			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Try <RULE: Spell everything backwards.>",
+			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Including [[notes]] via wikilinks is currently work in progress. Try <RULE: Spell everything backwards.>",
 		});
-		// END OF CUSTOMIZABLE DESCRIPTION TEXT
-		// --------------------------------------------------------------------
-
 
 		contextOptionsHeader.addEventListener("click", () => {
 			this.isDescriptionExpanded = !this.isDescriptionExpanded;
 			if (this.descriptionContainer && this.descriptionIndicator) {
 				if (this.isDescriptionExpanded) {
 					this.descriptionContainer.style.display = "block";
-					this.descriptionIndicator.setText("▼ ");
+					this.descriptionIndicator.setText("🞃 ");
 				} else {
 					this.descriptionContainer.style.display = "none";
-					this.descriptionIndicator.setText("▶ ");
+					this.descriptionIndicator.setText("‣ ");
 				}
 			}
 		});
-
-
-
-
-
-
 
 		// 1. Dynamic Context Toggle
 		new Setting(container)
@@ -251,8 +232,8 @@ export class ContextControlPanel extends ItemView {
 		const textAreaContainer = container.createDiv("tt-custom-context-container");
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
 			.setPlaceholder(
-				`Add custom context...
-Or include [[notes]].`,
+				`Add custom context.
+Can include [[notes]].`,
 			)
 			.setValue(this.customContextText)
 			.onChange((value) => {
