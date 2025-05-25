@@ -35,29 +35,59 @@ import {
 
 export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
-// Custom CM6 theme for the embedded editor
 const customEditorTheme = EditorView.theme({
-  "&": { // Targets the .cm-editor (root)
-    backgroundColor: "var(--input-background)",
-    padding: "0px", // Root editor has no padding, managed by .cm-content
+  "&.cm-editor": {
+    backgroundColor: "var(--input-background)", // Make editor background distinct
+    // This ensures the editor itself has the input-like background
   },
   ".cm-scroller": {
      overflowY: "auto",
+     fontFamily: "var(--font-interface, var(--font-default))", // Use interface font
+     padding: "0px", // Scroller itself has no padding
   },
   ".cm-content": {
-    padding: "var(--size-2-2, 4px) var(--size-2-3, 8px)", // Standard content padding
-    lineHeight: "var(--line-height-normal, 1.5)", // Ensure consistent line height
-  },
-  "&.cm-focused .cm-cursor": {
-    borderLeftColor: "var(--text-cursor, var(--text-accent))" // Use accent for focused cursor
-  },
-  ".cm-cursor, .cm-dropCursor": { // General cursor style
-    borderLeftColor: "var(--text-cursor, var(--text-normal))"
+    padding: "var(--size-2-2, 4px) var(--size-2-3, 8px)", // Content padding
+    lineHeight: "var(--line-height-normal, 1.5)",
+    caretColor: "var(--text-cursor)", // Primary cursor color
   },
   ".cm-placeholder": {
     color: "var(--text-placeholder)",
     fontStyle: "italic",
-    // Placeholder is drawn inside .cm-content, so it inherits padding and line-height
+    padding: "var(--size-2-2, 4px) var(--size-2-3, 8px)", // Match .cm-content padding
+  },
+  // Styling for the autocompletion tooltip
+  ".cm-tooltip.cm-tooltip-autocomplete": {
+    backgroundColor: "var(--background-secondary)",
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "var(--radius-m, 4px)",
+    boxShadow: "var(--shadow-l, 0 2px 8px rgba(0,0,0,0.1))",
+    color: "var(--text-normal)",
+    marginTop: "var(--size-2-1, 2px)", // Small gap from text
+  },
+  ".cm-tooltip-autocomplete ul": {
+    listStyle: "none",
+    margin: "0",
+    padding: "var(--size-2-1, 2px)", // Inner padding for the list
+    fontFamily: "var(--font-interface, var(--font-default))",
+    maxHeight: "10em", // Limit height of suggestion list
+    overflowY: "auto",
+  },
+  ".cm-tooltip-autocomplete ul li": {
+    padding: "var(--size-2-2, 4px) var(--size-2-3, 8px)",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  ".cm-tooltip-autocomplete ul li[aria-selected]": {
+    backgroundColor: "var(--background-modifier-hover)",
+    color: "var(--text-interactive-active, var(--text-accent))", // Selected item text color
+  },
+  ".cm-tooltip-autocomplete ul li .cm-completionDetail": {
+    marginLeft: "1em",
+    float: "right",
+    color: "var(--text-muted)",
+    fontStyle: "italic",
   },
 }, {dark: document.body.hasClass("theme-dark")});
 
@@ -103,50 +133,45 @@ export class ContextControlPanel extends ItemView {
 		}
 	}
 
-	private obsidianLinkCompleter(
-		context: CompletionContext,
-	): CompletionResult | null {
-		// console.log("TT: obsidianLinkCompleter invoked. Typed text:", context.state.doc.sliceString(0, context.pos));
-		const match = context.matchBefore(/\[\[([^\]]*)$/);
-		// console.log("TT: obsidianLinkCompleter match:", match);
+	private obsidianLinkCompleter(context: CompletionContext): CompletionResult | null {
+		const matchResult = context.matchBefore(/\[\[([^\]\[]*)$/);
 
-
-		if (!match) {
+		if (!matchResult && !(context.explicit && context.matchBefore(/\[\[$/)) ) {
+			// If no direct match for "[[text" and not an explicit request right after "[[", then no suggestions.
+			// The "explicit && matchBefore [[ " handles ctrl+space after typing just [[
 			return null;
 		}
+		
+		let query = "";
+		let fromPos = context.pos;
 
-		const query = match.text.toLowerCase();
-		if (!this.plugin || !this.plugin.app) {
-			// console.log("TT: Plugin or App not available for link completer.");
-			return null;
+		if (matchResult) { // This means we have "[[text" or "[[ "
+			query = matchResult.text.toLowerCase();
+			fromPos = matchResult.from + 2; // Start replacing *after* the "[["
+		} else if (context.explicit && context.matchBefore(/\[\[$/)) {
+			// This case is for when user types "[[" and then explicitly requests completion (e.g. Ctrl+Space)
+			// query remains ""
+			fromPos = context.pos; // Start replacing from cursor, assuming it's right after "[["
+		} else {
+			return null; // Should not be reached if first condition is exhaustive
 		}
+
+		if (!this.plugin || !this.plugin.app) return null;
+		
 		const files = this.plugin.app.vault.getMarkdownFiles();
-		// console.log("TT: Files for completion:", files.length);
-
-
 		const options = files
-			.filter((file) => file.basename.toLowerCase().includes(query))
-			.map((file) => ({
+			.filter(file => file.basename.toLowerCase().includes(query))
+			.map(file => ({
 				label: file.basename,
 				apply: `${file.basename}]]`,
 				type: "link",
 				detail: file.path,
 			}));
-		// console.log("TT: Completion options:", options.length);
-
-		if (options.length === 0 && query.length > 0) { // Keep suggestion open if typing
-			return {
-				from: match.from + 2,
-				options: [{label: `No matches for "${query}"`, apply: query, type: "no-match"}], // Or empty options
-				filter: false,
-			};
-		}
-
-
+		
 		return {
-			from: match.from + 2,
+			from: fromPos,
 			options: options,
-			filter: false,
+			filter: false, 
 		};
 	}
 
@@ -154,6 +179,7 @@ export class ContextControlPanel extends ItemView {
 		const container = this.contentEl;
 		container.empty();
 
+		// ... (header, model dropdown, description - unchanged) ...
 		const headerContainer = container.createDiv();
 		headerContainer.style.display = "flex";
 		headerContainer.style.alignItems = "center";
@@ -248,6 +274,7 @@ export class ContextControlPanel extends ItemView {
 			}
 		});
 
+
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
 			toggle.setValue(this.useDynamicContext).onChange((value) => {
@@ -336,11 +363,10 @@ export class ContextControlPanel extends ItemView {
 			? ""
 			: "none";
 		this.customContextTextAreaContainer.style.marginTop = "5px";
-		// Style the container of the CM editor
 		this.customContextTextAreaContainer.style.border = "1px solid var(--input-border, var(--background-modifier-border))";
 		this.customContextTextAreaContainer.style.borderRadius = "var(--input-radius, 4px)";
-		this.customContextTextAreaContainer.style.padding = "1px"; // To make inner border/focus visible
-
+		// The container holds the border; CM editor inside will have its own background.
+		// No padding on container, so CM editor theme controls inner padding.
 
 		const editorExtensions: Extension[] = [
 			EditorView.lineWrapping,
@@ -351,21 +377,21 @@ export class ContextControlPanel extends ItemView {
 				...completionKeymap,
 				indentWithTab,
 			]),
-			markdown(), // Provides basic Markdown awareness
+			markdown(),
 			cmPlaceholder(
 				"Add custom context here...\nType [[ to link notes (their content will be embedded).",
 			),
 			autocompletion({
 				override: [this.obsidianLinkCompleter.bind(this)],
 				closeOnBlur: true,
-				activateOnTyping: true, // Ensure it activates
+				activateOnTyping: true, 
 			}),
 			EditorView.updateListener.of((update) => {
 				if (update.docChanged) {
 					this.customContextText = update.state.doc.toString();
 				}
 			}),
-			customEditorTheme, // Apply our custom theme
+			customEditorTheme,
 		];
 
 		this.customContextEditorView = new EditorView({
@@ -377,15 +403,14 @@ export class ContextControlPanel extends ItemView {
 		});
 
 		const cmDOM = this.customContextEditorView.dom;
-		cmDOM.style.minHeight = "60px"; // Approx 3-4 lines
+		cmDOM.style.minHeight = "60px";
 		cmDOM.style.maxHeight = "200px";
-		cmDOM.addClasses(["cm-s-obsidian"]); // Base Obsidian CM styling
+		cmDOM.addClasses(["cm-s-obsidian"]); // Essential for base Obsidian CM styling
 	}
 
 	override async onClose(): Promise<void> {
 		this.customContextEditorView?.destroy();
 		this.customContextEditorView = null;
-
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null;
@@ -405,7 +430,6 @@ export class ContextControlPanel extends ItemView {
 		if (!this.useCustomContext || !this.customContextText) {
 			return "";
 		}
-
 		let textToProcess = this.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
 		let match;
@@ -413,23 +437,15 @@ export class ContextControlPanel extends ItemView {
 		let lastIndex = 0;
 
 		if (!this.plugin || !this.plugin.app) {
-			console.error(
-				"TextTransformer: Plugin or App instance not available for getCustomContextText.",
-			);
+			console.error("TextTransformer: Plugin or App instance not available for getCustomContextText.");
 			return textToProcess;
 		}
 
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
 			contentParts.push(textToProcess.substring(lastIndex, match.index));
-
 			const linkFullText = match[1];
 			const linkPathOnly = linkFullText.split("|")[0];
-
-			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(
-				linkPathOnly,
-				"",
-			);
-
+			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
 			if (file instanceof TFile) {
 				contentParts.push(this.plugin.app.vault.cachedRead(file));
 			} else {
@@ -438,7 +454,6 @@ export class ContextControlPanel extends ItemView {
 			lastIndex = wikilinkRegex.lastIndex;
 		}
 		contentParts.push(textToProcess.substring(lastIndex));
-
 		const resolvedContents = await Promise.all(contentParts);
 		return resolvedContents.join("");
 	}
