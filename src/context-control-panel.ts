@@ -67,10 +67,12 @@ export class ContextControlPanel extends ItemView {
 		headerContainer.style.justifyContent = "space-between"; 
 		headerContainer.style.marginBottom = "2px";
 
-		const titleEl = headerContainer.createEl("h6", { text: "Trasnform" });
+		const titleEl = headerContainer.createEl("div", { text: "Transform" });
 		titleEl.style.marginTop = "0px";
 		titleEl.style.marginBottom = "0px"; 
-		titleEl.style.flexGrow = "1"; 
+		titleEl.style.flexGrow = "1";
+		titleEl.style.fontSize = "var(--font-ui-small)";
+		titleEl.style.fontWeight = "bold";
 
 		const modelSelectorContainer = headerContainer.createDiv();
 
@@ -96,7 +98,7 @@ export class ContextControlPanel extends ItemView {
 		contextOptionsHeader.style.marginTop = "15px"; // Give some space above
 		contextOptionsHeader.style.marginBottom = "5px"; // Space before description or first setting
 
-		this.descriptionIndicator = contextOptionsHeader.createEl("span", { text: this.isDescriptionExpanded ? "▼ " : "▶ " });
+		this.descriptionIndicator = contextOptionsHeader.createEl("span", { text: this.isDescriptionExpanded ? "🞃 " : "‣ " });
 		this.descriptionIndicator.style.marginRight = "5px";
 		this.descriptionIndicator.style.fontSize = "var(--font-ui-small)"; // Indicator size
         this.descriptionIndicator.style.color = "var(--text-muted)";
@@ -124,7 +126,7 @@ export class ContextControlPanel extends ItemView {
 		});
 
 		this.descriptionContainer.createEl("p", {
-			text: "‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
+			text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
 		});
 
 		this.descriptionContainer.createEl("p", {
@@ -169,7 +171,7 @@ export class ContextControlPanel extends ItemView {
 			});
 
 		this.dynamicContextLinesSetting = new Setting(container)
-			.setName("‣ Lines")
+			.setName("  ‣ Lines")
 			.addText((text) => {
 				text
 					.setPlaceholder(
