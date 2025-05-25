@@ -20,12 +20,12 @@ export class ContextControlPanel extends ItemView {
 	private plugin: TextTransformer;
 	private useWholeNoteContext = false;
 	private useCustomContext = false;
-	private customContextText = ""; // Stores the raw text from the TextAreaComponent
+	private customContextText = "";
 	private useDynamicContext = false;
 
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
-	private modelDropdown: DropdownComponent | null = null;
+	private modelDropdown: DropdownComponent | null = null; // Correctly typed
 	private dynamicContextLinesSetting: Setting | null = null;
 
 	private descriptionContainer: HTMLDivElement | null = null;
@@ -34,15 +34,11 @@ export class ContextControlPanel extends ItemView {
 	private customContextTextAreaContainer: HTMLDivElement | null = null;
 	private customContextTextArea: TextAreaComponent | null = null;
 
-	private justInsertedLink = false; // Flag to prevent modal re-trigger
+	private justInsertedLink = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
 		super(leaf);
 		this.plugin = plugin;
-		// Initialize state from plugin settings for toggles if they were meant to be persistent
-		// For this example, we'll assume they load their default (false) or you'd load them here
-		// e.g., this.useDynamicContext = plugin.settings.somePersistedDynamicContextFlag;
-		// this.customContextText = plugin.settings.persistedCustomContext || "";
 	}
 
 	override getViewType(): string {
@@ -54,7 +50,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getIcon(): string {
-		return "book-type"; // Or your preferred icon
+		return "book-type";
 	}
 
 	updateModelSelector(): void {
@@ -67,7 +63,6 @@ export class ContextControlPanel extends ItemView {
 		const container = this.contentEl;
 		container.empty();
 
-		// --- TT Model Section ---
 		const headerContainer = container.createDiv();
 		headerContainer.style.display = "flex";
 		headerContainer.style.alignItems = "center";
@@ -83,26 +78,24 @@ export class ContextControlPanel extends ItemView {
 		titleEl.style.fontWeight = "bold";
 
 		const modelSelectorContainer = headerContainer.createDiv();
-		this.modelDropdown = new DropdownComponent(modelSelectorContainer)
-			.then((dropdown) => {
-				this.modelDropdown = dropdown; // Store for updateModelSelector
-				for (const key in MODEL_SPECS) {
-					if (!Object.hasOwn(MODEL_SPECS, key)) continue;
-					const display = MODEL_SPECS[key as SupportedModels].displayText;
-					dropdown.addOption(key, display);
-				}
-				dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
-					this.plugin.settings.model = value as SupportedModels;
-					await this.plugin.saveSettings();
-				});
-				dropdown.selectEl.style.maxWidth = "150px";
-				dropdown.selectEl.style.fontSize = "var(--font-ui-smaller)";
-				dropdown.selectEl.style.padding = "0px 18px 0px 2px";
-				dropdown.selectEl.style.height = "auto";
-			})
-			.dropdownEl; // Storing the component itself
+		
+		// Corrected DropdownComponent instantiation and assignment
+		this.modelDropdown = new DropdownComponent(modelSelectorContainer);
+		for (const key in MODEL_SPECS) {
+			if (!Object.hasOwn(MODEL_SPECS, key)) continue;
+			const display = MODEL_SPECS[key as SupportedModels].displayText;
+			this.modelDropdown.addOption(key, display);
+		}
+		this.modelDropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
+			this.plugin.settings.model = value as SupportedModels;
+			await this.plugin.saveSettings();
+		});
+		this.modelDropdown.selectEl.style.maxWidth = "150px";
+		this.modelDropdown.selectEl.style.fontSize = "var(--font-ui-smaller)";
+		this.modelDropdown.selectEl.style.padding = "0px 18px 0px 2px";
+		this.modelDropdown.selectEl.style.height = "auto";
 
-		// --- Expandable AI Context Options Subtitle ---
+
 		const contextOptionsHeader = container.createDiv();
 		contextOptionsHeader.style.cursor = "pointer";
 		contextOptionsHeader.style.display = "flex";
@@ -122,7 +115,6 @@ export class ContextControlPanel extends ItemView {
 		subTitleTextEl.style.fontSize = "var(--font-ui-small)";
 		subTitleTextEl.style.color = "var(--text-muted)";
 
-		// --- Description Text Container (hidden by default) ---
 		this.descriptionContainer = container.createDiv();
 		this.descriptionContainer.style.display = this.isDescriptionExpanded ? "block" : "none";
 		this.descriptionContainer.style.paddingLeft = "20px";
@@ -161,7 +153,6 @@ export class ContextControlPanel extends ItemView {
 			}
 		});
 
-		// 1. Dynamic Context Toggle
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
 			toggle.setValue(this.useDynamicContext).onChange((value) => {
@@ -176,7 +167,6 @@ export class ContextControlPanel extends ItemView {
 			});
 		});
 
-		// Dynamic Context Lines Setting (child of Dynamic Context Toggle)
 		this.dynamicContextLinesSetting = new Setting(container)
 			.setName("‣  Lines")
 			.addText((text) => {
@@ -201,10 +191,9 @@ export class ContextControlPanel extends ItemView {
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.style.borderTop = "none";
 			this.dynamicContextLinesSetting.nameEl.style.color = "var(--text-accent)";
-			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "" : "none"; // Initial visibility
+			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "" : "none";
 		}
 
-		// 2. Entire Note Context Toggle
 		new Setting(container).setName("Full note").addToggle((toggle) => {
 			this.wholeNoteContextToggleComponent = toggle;
 			toggle.setValue(this.useWholeNoteContext).onChange((value) => {
@@ -219,7 +208,6 @@ export class ContextControlPanel extends ItemView {
 			});
 		});
 
-		// 3. Custom Context Toggle
 		new Setting(container).setName("Custom").addToggle((toggle) =>
 			toggle.setValue(this.useCustomContext).onChange((value) => {
 				this.useCustomContext = value;
@@ -232,9 +220,8 @@ export class ContextControlPanel extends ItemView {
 			}),
 		);
 
-		// 4. Custom Context Input Area (TextAreaComponent)
 		this.customContextTextAreaContainer = container.createDiv("tt-custom-context-container");
-		this.customContextTextAreaContainer.style.display = this.useCustomContext ? "" : "none"; // Initial visibility
+		this.customContextTextAreaContainer.style.display = this.useCustomContext ? "" : "none";
 		this.customContextTextAreaContainer.style.marginTop = "5px";
 
 		this.customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
@@ -242,7 +229,6 @@ export class ContextControlPanel extends ItemView {
 			.setValue(this.customContextText)
 			.onChange((value) => {
 				this.customContextText = value;
-				// The input event listener below handles [[
 			});
 
 		this.customContextTextArea.inputEl.style.width = "100%";
@@ -263,7 +249,6 @@ export class ContextControlPanel extends ItemView {
 			const match = /\[\[([^\]]*)$/.exec(textBeforeCursor);
 
 			if (match) {
-				// const query = match[1]; // The modal handles the query internally
 				new WikilinkSuggestModal(this.plugin.app, (chosenFile) => {
 					const linkText = `[[${chosenFile.basename}]]`;
 					const textBeforeLinkOpen = textBeforeCursor.substring(0, match.index);
@@ -308,41 +293,40 @@ export class ContextControlPanel extends ItemView {
 
 	async getCustomContextText(): Promise<string> {
 		if (!this.useCustomContext || !this.customContextText) {
-			return "";
+			return ""; 
 		}
 
 		let textToProcess = this.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
 		let match;
-		const contentParts: (string | Promise<string>)[] = [];
+		
+		const partsToResolve: (string | Promise<string>)[] = [];
 		let lastIndex = 0;
 
 		if (!this.plugin || !this.plugin.app) {
 			console.error("TextTransformer: Plugin or App instance not available for getCustomContextText.");
-			return textToProcess; // Return raw text if app is not available
+			return textToProcess; 
 		}
 
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
-			contentParts.push(textToProcess.substring(lastIndex, match.index));
+			partsToResolve.push(textToProcess.substring(lastIndex, match.index)); 
 			
 			const linkFullText = match[1];
-			// Basic handling for alias: take text before |
 			const linkPathOnly = linkFullText.split("|")[0].trim();
-
-			// Attempt to resolve the link
-			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, ""); // Assuming current file path for context is ""
+			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
 
 			if (file instanceof TFile) {
-				contentParts.push(this.plugin.app.vault.cachedRead(file));
+				partsToResolve.push(this.plugin.app.vault.cachedRead(file)); 
 			} else {
-				contentParts.push(match[0]); // Keep original wikilink text if not resolved
+				partsToResolve.push(match[0]); 
 			}
 			lastIndex = wikilinkRegex.lastIndex;
 		}
-		contentParts.push(textToProcess.substring(lastIndex));
+		partsToResolve.push(textToProcess.substring(lastIndex)); 
 
-		const resolvedContents = await Promise.all(contentParts.map(async part => await part));
-		return resolvedContents.join("");
+		const resolvedParts = await Promise.all(partsToResolve);
+		
+		return resolvedParts.join(""); 
 	}
 
 	getDynamicContextState(): boolean {
