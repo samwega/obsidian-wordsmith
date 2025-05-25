@@ -48,25 +48,15 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 ## Release History
 
-### ✨ What's New in v1.7.0 – Supercharged Custom Context with Live Wikilinks! ✨
+### ✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨
 
-This release significantly enhances how you provide custom contextual information to the AI, making it more powerful, intuitive, and deeply integrated with your Obsidian vault.
+This upgrade streamlines the process of providing the AI with the precise information needed for optimal results. By integrating seamless note linking into the Custom Context feature, Text Transformer now leverages your interconnected notes, making context building faster, more intuitive, and more powerful.
 
 **Key Features of v1.7.0:**
 
-*   **Embedded Editor for Custom Context:**
-    *   The plain text area for "Custom Context" in the AI Context Control Panel has been replaced with a **miniature, embedded CodeMirror 6 editor.**
-    *   This offers a more robust and feature-rich input experience, including basic Markdown syntax highlighting.
-*   **Live Wikilink Autocompletion:**
-    *   As you type `[[` within the new Custom Context editor, you'll now get **Obsidian's native-style autocompletion pop-up**, suggesting notes from your vault.
-    *   This makes it incredibly easy and fast to accurately reference and link other notes directly within your custom context.
-*   **Improved User Experience for Context Crafting:**
-    *   Enjoy a more editor-like feel when crafting complex custom contexts, with better text handling and visual cues.
-    *   The placeholder text guides you on using the new wikilink feature.
-
-**Why this matters:**
-
-Crafting the perfect custom context for the AI is now more efficient and powerful. With live wikilink autocompletion, you can effortlessly pull in precise information from across your vault, ensuring the AI has the exact knowledge snippets it needs. This leads to more relevant, accurate, and tailored AI transformations and generations, further boosting your writing productivity within Obsidian.
+*   **Smarter Custom Context Input:** Providing custom instructions or reference material to the AI is now more powerful and intuitive.
+*   **Easy Note Linking with `[[`:** You can now type `[[` in the "Custom" context box of the Text Transformer panel to quickly search for and link any note from your vault, seamlessly integrating with your Obsidian workflow.
+*   **Full Note Content Embedding:** When you link notes (e.g., `[[My Style Guide]]`) in the custom context, Text Transformer will now intelligently fetch their **entire content** and include it as part of the context sent to the AI. This means you can easily reference detailed style guides, extensive notes, or specific information without manual copy-pasting!
 
 ### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
 
