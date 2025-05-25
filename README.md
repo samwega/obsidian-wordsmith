@@ -76,7 +76,7 @@ Text Transformer now offers one of the fastest and most ergonomic AI suggestion 
 * **v1.6.3**—**UI & Workflow Refinements**:
   * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
   * **Removed Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
-* **v1.6.4**—**Made Side Panel UI Minimal**: While it was helpful to have all the explanations deisplayed for new users, I think a minimal panel that takes the least possible space is more desirable. Explanations have been hidden from sight.
+* **v1.6.4**—**Minimal Context Control Side Panel**: All the explanations are now tucked away in a collapsable menu. The menu is as minimal as possible, allowing you to make it narrow and gain space. It is more aesthetically pleasing as well.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 

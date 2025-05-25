@@ -1,7 +1,7 @@
 {
 	"id": "text-transformer",
 	"name": "Text Transformer",
-	"description": "AI-based text transforming to revolutionize your writing. Changes are highlighted as suggestions directly in the editor, allowing you to accept/reject them individually or all at once.",
+	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, multiple AI providers, seamless, keyboard-first workflow.",
 	"version": "1.6.4",
 	"minAppVersion": "1.5.8",
 	"isDesktopOnly": false,
