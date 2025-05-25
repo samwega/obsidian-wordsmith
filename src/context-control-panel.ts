@@ -40,7 +40,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getDisplayText(): string {
-		return "AI Context Control";
+		return "Text Transformer Context Control";
 	}
 
 	override getIcon(): string {
@@ -84,16 +84,15 @@ export class ContextControlPanel extends ItemView {
 			dropdown.selectEl.style.maxWidth = "150px"; 
 		});
 
-		const subTitleEl = container.createEl("h6", { text: "AI Context Options" });
+		const subTitleEl = container.createEl("h6", { text: "Context Settings:" });
 		subTitleEl.style.marginTop = "0px";
 		subTitleEl.style.marginBottom = "15px";
 		subTitleEl.style.color = "var(--text-muted)";
 
 		// 1. Dynamic Context Toggle
 		new Setting(container)
-			.setName("Dynamic context")
+			.setName("Dynamic")
 			.setDesc(
-				"Dynamically include surrounding paragraphs as context.",
 			)
 			.addToggle((toggle) => {
 				this.dynamicContextToggleComponent = toggle;
@@ -114,8 +113,7 @@ export class ContextControlPanel extends ItemView {
 			});
 
 		this.dynamicContextLinesSetting = new Setting(container)
-			.setName("‣ N. of context lines")
-			.setDesc("to include before/after selection (1-21).")
+			.setName("‣ Lines")
 			.addText((text) => {
 				text
 					.setPlaceholder(
@@ -135,7 +133,7 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.type = "number";
 				text.inputEl.min = "1";
 				text.inputEl.max = "21";
-				text.inputEl.style.width = "60px"; // Make the input box smaller
+				text.inputEl.style.width = "40px"; // Make the input box smaller
 			});
 		
 			if (this.dynamicContextLinesSetting) { // Check if it was successfully created
@@ -150,8 +148,7 @@ export class ContextControlPanel extends ItemView {
 
 		// 2. Entire Note Context Toggle
 		new Setting(container)
-			.setName("Entire note as context")
-			.setDesc("More expensive!")
+			.setName("Full note")
 			.addToggle((toggle) => {
 				this.wholeNoteContextToggleComponent = toggle; 
 				toggle.setValue(this.useWholeNoteContext).onChange((value) => {
@@ -169,7 +166,6 @@ export class ContextControlPanel extends ItemView {
 		// 3. Custom Context Toggle (Independent)
 		new Setting(container)
 			.setName("Custom context")
-			.setDesc("Provide text as context in the input box below.")
 			.addToggle((toggle) =>
 				toggle.setValue(this.useCustomContext).onChange((value) => {
 					this.useCustomContext = value;
@@ -180,9 +176,9 @@ export class ContextControlPanel extends ItemView {
 		const textAreaContainer = container.createDiv("tt-custom-context-container");
 		const customContextTextArea = new TextAreaComponent(textAreaContainer)
 			.setPlaceholder(
-				`Paste your custom context here...
-You can also add rules in here, try "Spell everything backwards.".
-Coming soon: [[wikilinks]] support.`,
+				`Add custom context here.
+Try "RULE: Spell everything backwards."
+Or include [[notes]].`,
 			)
 			.setValue(this.customContextText)
 			.onChange((value) => {
@@ -190,7 +186,7 @@ Coming soon: [[wikilinks]] support.`,
 			});
 
 		customContextTextArea.inputEl.style.width = "100%";
-		customContextTextArea.inputEl.style.minHeight = "100px";
+		customContextTextArea.inputEl.style.minHeight = "80px";
 		customContextTextArea.inputEl.style.resize = "vertical";
 		textAreaContainer.style.marginTop = "5px";
 	}
