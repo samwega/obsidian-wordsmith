@@ -16,6 +16,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Release History](#release-history)
+  - [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
   - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
     - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
   - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
