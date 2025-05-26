@@ -8,7 +8,10 @@ WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-i
 
 Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
-<img alt="Showcase" width=90% src="https://i.imgur.com/92rfV9X.png">
+![WordSmith suggestions in action](https://github.com/user-attachments/assets/55831bae-bc4b-4a4a-9448-cf1bc1fb5787)
+
+![WordSmith shorten prompt](https://github.com/user-attachments/assets/0ad1de0f-0d62-4710-9afd-26c1d8ba38a5)
+
 
 ## Features
 
@@ -291,12 +294,10 @@ This feature transforms WordSmith from primarily an editing/refinement tool into
 ### Minor Versions of v.1.5.x
 
 ![image](https://github.com/user-attachments/assets/0c2dd6f5-7529-4d08-8fef-5867de130d3d)
-![image](https://github.com/user-attachments/assets/464f0e0c-d93c-4aa8-bafa-5ab9655358fe)
 
 * **v1.5.1**—**Dynamic Active Suggestion Highlighting:** Implemented strong visual cues – the suggestion targeted by your cursor (when placed at its beginning) now stands out with significantly increased contrast and a glowing outline, making it unmistakably clear which suggestion you're about to accept or reject.
 
 ![image](https://github.com/user-attachments/assets/88076b79-a060-402a-a4cd-61f5ef35adcf)
-![image](https://github.com/user-attachments/assets/31800da0-195d-4096-9156-7cdb33cb9213)
 
 ### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
 
@@ -396,7 +397,7 @@ Proofreader plugin, introducing core functionalities that define WordSmith today
     groundwork for WordSmith to become a comprehensive AI writing tool,
     moving beyond basic proofreading to a wider range of text manipulations.
 
-<img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/q8vaqr8.png">
+![Showcase of inline suggestions](https://i.imgur.com/q8vaqr8.png))
 
 ## Installation & Setup
 
