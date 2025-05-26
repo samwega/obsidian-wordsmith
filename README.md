@@ -262,24 +262,8 @@ Proofreader plugin, introducing core functionalities that define WordSmith today
     groundwork for WordSmith to become a comprehensive AI writing tool,
     moving beyond basic proofreading to a wider range of text manipulations.
 
-## Features
+![image](https://github.com/user-attachments/assets/b95943ff-fff1-4a96-a098-d72a15862ad3)
 
-WordSmith empowers you to refine your text directly within Obsidian using a suite of powerful AI capabilities:
-
-* **Versatile Text Reprocessing via Prompt Palette:** Improve clarity, shorten or lengthen text, fix grammar, simplify language, enhance readability, translate (with dynamic language input), utilize contextual instructions (such as the "Mind the Context!" prompt), and more. Select from a range of built-in prompts or your own creations through an intuitive palette.
-* **Inline Suggestion Review:** AI-generated changes appear directly in your editor. Added text is highlighted (e.g., light green), and removed text is displayed with a different background and strike-through (e.g., light pink). You can accept or reject each change individually or in batches.
-* **Custom Prompts:** Create and save your own prompts tailored to your specific writing needs and workflows.
-  * **Flexible Prompt Management:** Easily enable or disable any default or custom prompt using toggles in the settings.
-* **Advanced AI Context Control:** Precisely manage the information sent to the AI for more accurate and relevant transformations:
-  * **Dynamic Context:** Automatically include surrounding text from your note. Adjust how many lines above and below the line you're currently on are included.
-  * **Entire Note Context:** Use the full content of your current note.
-  * **Custom Context:** Paste any specific text into the provided AI Context Control Panel.
-  * **Multiple AI Provider Support:** Choose between OpenAI (GPT models) and Google (Gemini models) to best suit your needs for quality, speed, and cost.
-* **Ad-hoc Contextual Generation at Cursor:** Instantly generate new text, ideas, or continuations exactly where your cursor is placed, leveraging surrounding context for highly relevant suggestions—all seamlessly inserted as reviewable inline suggestions.
-* **Keyboard-First Workflow:** Designed for efficiency, with comprehensive hotkey support for all major actions.
-* **Dynamic Active Suggestion Highlighting:** Suggestions targeted by your cursor (when placed at their beginning) are now visually emphasized with increased contrast and a glowing outline, making it easy to see which suggestion you are about to accept or reject.
-
-<img alt="Showcase of model settings" width=90% src="https://i.imgur.com/DbuXLxx.png">
 
 ## How It Works: Inline Suggestions
 
@@ -412,16 +396,16 @@ preferred hotkeys in Obsidian's settings for the commands below. In the screensh
 
 ### Core Commands
 
-1. **`WordSmith: Transform selection/paragraph`**: This is your main
-    command.
+1. `WordSmith: Open Al Context Control Panel`: no need to hotkey this, just trigger it once from the drop-down menu to add it to the Side Panel (then move it wherever)
+2. `WordSmith: Transform selection/paragraph`: This is your main command.
     * If you have text selected, it will be used for transformation.
-    * If no text is selected, the current paragraph (where your cursor is)
-        will be targeted.
-    * Invoking this command opens the Prompt Palette, allowing you to choose
-        from enabled default and custom prompts.
-2. **`WordSmith: Transform full document`**: Applies the chosen prompt to the entire content of the current note.
-    * *Use with caution for very long documents, as AI quality can sometimes
-        degrade with extremely large inputs, and token costs will be higher.*
+    * If no text is selected, the current paragraph (where your cursor is) will be targeted.
+    * Invoking this command opens the Prompt Palette, allowing you to choose from enabled default and custom prompts.
+3. `WordSmith: Prompt Based Context Aware Generation at Cursor`: Pretty self Explanatory. Pick your context, type a prompt, et voilà!
+4. `WordSmith Accept/Reject next suggestion`: are also self explanatory. Whether your next (highlighted) suggestion is red (to be removed) or green (to be added), you can accept or reject it here
+5. `WordSmith Accept/Reject in selection/paragraph`: similarly, accept/reject the whole paragraph where the cursor currently is
+6. `WordSmith: Focus previous/next suggestion`: moves the cursor at the beginning of the next/previous suggestion, highlighting it (brighter, with glowing border)
+7. `WordSmith: Clear all active suggestions (reject all)`: self explanatory, if you want to remove/reject all the remaining suggestions. Note: suggestions that have already been accepted or rejected will not be undone. You can use Ctrl-Z to undo those. 
 
 ### Managing Suggestions
 
