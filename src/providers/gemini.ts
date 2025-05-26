@@ -22,7 +22,8 @@ export async function geminiRequest(
 	let fullPrompt = "";
 
 	if (isGenerationTask) {
-		fullPrompt = "You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt.";
+		fullPrompt =
+			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt.";
 		if (additionalContextForAI?.includes("<<<GENERATION_TARGET_CURSOR_POSITION>>>")) {
 			fullPrompt +=
 				" The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '<<<GENERATION_TARGET_CURSOR_POSITION>>>'. " +
