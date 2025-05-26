@@ -29,7 +29,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 * Manual and (planned) community plugin installation  
 * **Persistent suggestions** across Obsidian reloads
 
-![WordSmith - Context Side Panel](https://github.com/user-attachments/assets/13481397-c314-4afe-8c36-cbdd2d68228d)
+![WordSmith Settings and Context Side Pane](https://github.com/user-attachments/assets/66408578-1130-4b3f-a7b8-ea6bebe18f85)
 
 ## Table of contents
 
@@ -70,6 +70,102 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 * [About the Developer](#about-the-developer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Usage
+
+WordSmith is designed for a keyboard-centric workflow. Configure your
+preferred hotkeys in Obsidian's settings for the commands below. In the screenshot you can see a workable suggested setup, but feel free to make it your own:
+
+![image](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
+
+### Commands:
+
+1. `WordSmith: Open Al Context Control Panel`: no need to hotkey this, just trigger it once from the drop-down menu to add it to the Side Panel (then move it wherever)
+2. `WordSmith: Transform selection/paragraph`: This is your main command.
+    * If you have text selected, it will be used for transformation.
+    * If no text is selected, the current paragraph (where your cursor is) will be targeted.
+    * Invoking this command opens the Prompt Palette, allowing you to choose from enabled default and custom prompts.
+3. `WordSmith: Prompt Based Context Aware Generation at Cursor`: set up your context, type a prompt, et voilà! Type `[[` to include any note in your context.
+4. `WordSmith Accept/Reject next suggestion`:  whether your next (highlighted) suggestion is red (to be removed) or green (to be added), you can accept or reject it with these commands
+5. `WordSmith Accept/Reject in selection/paragraph`: accept/reject the whole paragraph where the cursor currently is
+6. `WordSmith: Focus previous/next suggestion`: moves the cursor at the beginning of the next/previous suggestion, highlighting it (brighter, with glowing border)
+7. `WordSmith: Clear all active suggestions (reject all)`: reject all the *remaining* suggestions. Note: suggestions that have already been accepted or rejected will not be undone. You can use Ctrl-Z to undo those. 
+
+### Using the AI Context Control Panel
+
+The AI Context Control Panel allows you to manage what contextual information is
+sent to the AI with your text.
+
+**How to Open the Panel:**
+
+1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in
+    `Settings` -> `Community plugins`. The icon and panel will only be
+    available if the plugin is active.
+2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
+    for the command `"WordSmith: Open AI Context Control Panel"`.
+
+Once the panel is open, you can drag its icon to reorder is, or
+drag the panel itself to different parts of your workspace (e.e., left
+sidebar, right sidebar, or even as a new tab in the main workspace).
+
+**Panel Options:**
+
+Once open, you can use the toggles for:
+
+* **Dynamic Context:** Toggle on to automatically include a configurable number
+    of lines (paragraphs) surrounding your selection/current paragraph as
+    context for the AI. Adjust the line count in the plugin settings
+    (`Settings → WordSmith → Dynamic context lines`).
+* **Entire Note as Context:** Toggle on to send the entire content of the
+    current note as context.
+* **Custom Context:** Toggle on and paste any specific text into the provided
+    text area to use as context. This overrides Dynamic and Entire Note context
+    if active.
+
+### Customizing Prompts
+
+Tailor WordSmith to your exact needs:
+
+* **Add Custom Prompts:** In plugin settings
+    (`Settings → WordSmith → Prompt Management`), click
+    "Add Custom Prompt". Give your prompt a name and provide the instructional
+    text for the AI.
+* **Manage Prompts:** Enable or disable any default or custom prompt using the
+    toggles in the settings.
+* **Edit/Delete Custom Prompts:** Use the pencil and trash icons next to your
+    custom prompts.
+* **Advanced - Modify Default Prompts:** If you need to alter the behavior of
+    default prompts, you can find them in
+    `[YourVault]/.obsidian/plugins/text-transformer/data.json`. Edit this file
+    directly (be cautious!) and reload Obsidian for changes to take effect.
+    It's often safer to create a new custom prompt based on a default one.
+
+### API Key Setup
+
+You'll need at least one API key to use WordSmith. To get your API key(s):
+
+1. **OpenAI:** (Optional)
+    * [Create an OpenAI account](https://auth.openai.com/create-account)
+        if you don't have one.
+    * Go to your [API keys page](https://platform.openai.com/api-keys).
+    * Click `Create new secret key`, name it (e.g., "Obsidian WordSmith"), and copy the key.
+
+2. **Google Gemini:** (Optional)
+    * Ensure you have a Google account and visit
+        [Google AI Studio](https://aistudio.google.com).
+    * Navigate to the [API key page](https://aistudio.google.com/app/apikey)
+        (you might need to create a project first).
+    * Click `Create API key in new project` or `Create API key` in an
+        existing project. Copy the key.
+
+3. In Obsidian, go to `Settings → WordSmith` and paste your copied
+    API key(s) into the respective "OpenAI API Key" and/or "Gemini API Key"
+    fields.
+
+> [!TIP]
+> It's wise to monitor your API usage to avoid unexpected costs. Links to
+> usage dashboards are provided in the
+> [AI Providers & Models](#ai-providers--models) section.
 
 ## Release History
 
@@ -151,6 +247,8 @@ This major release introduces a powerful new way to interact with AI: **Ad-hoc C
   * For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
 
 **Why this is a game-changer:**
+
+![WordSmith - Context Side Panel](https://github.com/user-attachments/assets/13481397-c314-4afe-8c36-cbdd2d68228d)
 
 This feature transforms WordSmith from primarily an editing/refinement tool into a versatile writing partner capable of both **transforming existing text and generating new content with contextual understanding, all within the familiar suggestion-based workflow.** Whether you're stuck, need a creative boost, or want to quickly draft a section, the Context Aware Generator is ready to assist.
 
@@ -262,30 +360,6 @@ Proofreader plugin, introducing core functionalities that define WordSmith today
     groundwork for WordSmith to become a comprehensive AI writing tool,
     moving beyond basic proofreading to a wider range of text manipulations.
 
-![image](https://github.com/user-attachments/assets/b95943ff-fff1-4a96-a098-d72a15862ad3)
-
-
-## How It Works: Inline Suggestions
-
-The core strength of WordSmith lies in its intuitive inline suggestion
-system:
-
-1. **Invoke AI:** Select text (or place your cursor in a paragraph) and
-    trigger a transformation command via hotkey or the command palette.
-2. **Choose Your Prompt:** Select from default or your custom-created prompts
-    using the Prompt Palette.
-3. **See Instant Changes:** The AI processes your text, and suggestions appear
-    directly in your editor – additions are typically highlighted with a light green
-    background, and deletions are shown with a light pink background and
-    struck through. These are visual cues powered by CodeMirror decorations and do not insert
-    special characters like `==` or `~~` into your text.
-4. **You're in Control:** Use dedicated commands (and hotkeys) to accept or
-    reject each individual suggestion, or accept/reject all suggestions
-    within the current selection/paragraph at once.
-
-This seamless process allows for rapid iteration and refinement of your writing
-without ever leaving your Obsidian workspace.
-
 <img alt="Showcase of inline suggestions" width=90% src="https://i.imgur.com/q8vaqr8.png">
 
 ## AI Providers & Models
@@ -358,35 +432,6 @@ community store:
 7. Go to `Settings` -> `Community plugins`, find "WordSmith" in your
     list of installed plugins, and enable it.
 
-### API Key Setup
-
-You'll need at least one API key to use WordSmith.
-
-To get your API key(s):
-
-1. **OpenAI:** (Optional)
-    * [Create an OpenAI account](https://auth.openai.com/create-account)
-        if you don't have one.
-    * Go to your [API keys page](https://platform.openai.com/api-keys).
-    * Click `Create new secret key`, name it (e.g., "Obsidian WordSmith"), and copy the key.
-
-2. **Google Gemini:** (Optional)
-    * Ensure you have a Google account and visit
-        [Google AI Studio](https://aistudio.google.com).
-    * Navigate to the [API key page](https://aistudio.google.com/app/apikey)
-        (you might need to create a project first).
-    * Click `Create API key in new project` or `Create API key` in an
-        existing project. Copy the key.
-
-3. In Obsidian, go to `Settings → WordSmith` and paste your copied
-    API key(s) into the respective "OpenAI API Key" and/or "Gemini API Key"
-    fields.
-
-> [!TIP]
-> It's wise to monitor your API usage to avoid unexpected costs. Links to
-> usage dashboards are provided in the
-> [AI Providers & Models](#ai-providers--models) section.
-
 ## Usage
 
 WordSmith is designed for a keyboard-centric workflow. Configure your
@@ -394,89 +439,7 @@ preferred hotkeys in Obsidian's settings for the commands below. In the screensh
 
 ![WordSmith command palette](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
 
-### Core Commands
-
-1. `WordSmith: Open Al Context Control Panel`: no need to hotkey this, just trigger it once from the drop-down menu to add it to the Side Panel (then move it wherever)
-2. `WordSmith: Transform selection/paragraph`: This is your main command.
-    * If you have text selected, it will be used for transformation.
-    * If no text is selected, the current paragraph (where your cursor is) will be targeted.
-    * Invoking this command opens the Prompt Palette, allowing you to choose from enabled default and custom prompts.
-3. `WordSmith: Prompt Based Context Aware Generation at Cursor`: Pretty self Explanatory. Pick your context, type a prompt, et voilà!
-4. `WordSmith Accept/Reject next suggestion`: are also self explanatory. Whether your next (highlighted) suggestion is red (to be removed) or green (to be added), you can accept or reject it here
-5. `WordSmith Accept/Reject in selection/paragraph`: similarly, accept/reject the whole paragraph where the cursor currently is
-6. `WordSmith: Focus previous/next suggestion`: moves the cursor at the beginning of the next/previous suggestion, highlighting it (brighter, with glowing border)
-7. `WordSmith: Clear all active suggestions (reject all)`: self explanatory, if you want to remove/reject all the remaining suggestions. Note: suggestions that have already been accepted or rejected will not be undone. You can use Ctrl-Z to undo those. 
-
-### Managing Suggestions
-
-Once suggestions are inserted:
-
-* **`WordSmith: Accept next suggestion`**: Accepts the first AI
-    suggestion found after your cursor.
-* **`WordSmith: Reject next suggestion`**: Rejects the first AI
-    suggestion found after your cursor.
-* **`WordSmith: Accept suggestions in selection/paragraph`**: Accepts
-    all AI suggestions within the current text selection (or the current
-    paragraph if nothing is selected).
-* **`WordSmith: Reject suggestions in selection/paragraph`**: Rejects
-    all AI suggestions within the current text selection (or current
-    paragraph).
-* **`WordSmith: Clear all active suggestions (reject all)`**: Rejects
-    all active suggestions in the current document and clears their visual markings.
-
-### Using the AI Context Control Panel
-
-The AI Context Control Panel allows you to manage what contextual information is
-sent to the AI with your text.
-
-**How to Open the Panel:**
-
-The AI Context Control Panel is an `ItemView` that typically opens in one of your
-Obsidian sidebars. Here's how to access it:
-
-1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in
-    `Settings` -> `Community plugins`. The icon and panel will only be
-    available if the plugin is active.
-2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
-    for the command `"WordSmith: Open AI Context Control Panel"`.
-
-Once the panel is open, you can drag its icon to reorder is, or
-drag the panel itself to different parts of your workspace (e.e., left
-sidebar, right sidebar, or even as a new tab in the main workspace).
-
-**Panel Options:**
-
-Once open, you can use the toggles for:
-
-* **Dynamic Context:** Toggle on to automatically include a configurable number
-    of lines (paragraphs) surrounding your selection/current paragraph as
-    context for the AI. Adjust the line count in the plugin settings
-    (`Settings → WordSmith → Dynamic context lines`).
-* **Entire Note as Context:** Toggle on to send the entire content of the
-    current note as context.
-* **Custom Context:** Toggle on and paste any specific text into the provided
-    text area to use as context. This overrides Dynamic and Entire Note context
-    if active.
-
-## Customizing Prompts
-
-Tailor WordSmith to your exact needs:
-
-* **Add Custom Prompts:** In plugin settings
-    (`Settings → WordSmith → Prompt Management`), click
-    "Add Custom Prompt". Give your prompt a name and provide the instructional
-    text for the AI.
-* **Manage Prompts:** Enable or disable any default or custom prompt using the
-    toggles in the settings.
-* **Edit/Delete Custom Prompts:** Use the pencil and trash icons next to your
-    custom prompts.
-* **Advanced - Modify Default Prompts:** If you need to alter the behavior of
-    default prompts, you can find them in
-    `[YourVault]/.obsidian/plugins/text-transformer/data.json`. Edit this file
-    directly (be cautious!) and reload Obsidian for changes to take effect.
-    It's often safer to create a new custom prompt based on a default one.
-
-## Legacy Text Trasnformer
+## Legacy Text Transformer
 
 Prior to v1.3.0, WordSmith used `==highlighted==` additions and `~~struck-through~~` deletions, using the regex based mechanics of Proofreader.
 
