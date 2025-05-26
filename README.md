@@ -10,6 +10,27 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 <img alt="Showcase" width=90% src="https://i.imgur.com/92rfV9X.png">
 
+## Features
+
+* **Inline AI suggestions**: additions/deletions rendered via CodeMirror decorations, individual accept/reject workflow  
+* **Custom & Default Prompt Palette** for text transformation (improve, shorten, lengthen, fix grammar, refine structure, translate, and many more, or user defined ones
+* **All Processing and Generation is Context-Aware**—the AI doesn't just receive the selected text to be processed or the prompt: you include as much (or as little) context as you wish  
+* **Context control in Side Pane:**
+  * Dynamic Context (configurable lines before and after)
+  * Whole Note
+  * Custom Context (including embedded note linking with [[wikilinks]]!)  
+* Ad-hoc **Generation at Cursor** with prompt input, also context aware
+* **Keyboard-first workflow**: hotkeys for all main actions and suggestion navigation  
+* **Granular suggestion management**: per-suggestion, selection/paragraph, or all  
+* **BYOK:** Bring your own API key—only pay what you use  
+* Multiple AI provider/model support: *OpenAI (GPT-4.1, mini, nano)*, *Google Gemini 2.5 (Pro, Flash)*  
+* **Great Prompt Management Settings UI:** enable/disable prompts or create new one.
+* Robust error handling, performance, and **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
+* Manual and (planned) community plugin installation  
+* **Persistent suggestions** across Obsidian reloads
+
+![WordSmith - Context Side Panel](https://github.com/user-attachments/assets/13481397-c314-4afe-8c36-cbdd2d68228d)
+
 ## Table of contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -73,7 +94,7 @@ This upgrade streamlines the process of providing the AI with the precise inform
 
 #### Minor Versions of v.1.7.x
 
-* **v1.7.1**—Text Transformer **Rebranded as WordSmith**. Developers, note that most code still refers to TextTransformer.
+* **v1.7.1**—*Text Transformer* **Rebranded as WordSmith**. Developers, note that most code still refers to TextTransformer.
 
 ### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
 
@@ -90,12 +111,12 @@ This release supercharges your suggestion review workflow, making it faster and 
 * **Refined Keyboard-First Editing:**
   * Combined with dynamic active suggestion highlighting (from v1.5.1), these navigation enhancements make it easier than ever to see, select, and act on the exact change you want—all without leaving the keyboard.
 * **Under-the-Hood Improvements:**
-  * Minor performance and stability tweaks for smoother suggestion handling.
   * Removed the legacy toggles in Settings to ask the AI not to modify text in quotation marks ("") and citations (lines starting with >). They were not working at all and required a much more involved implementation. Will add the feature in a future release if people ask for it.
+  * Minor performance and stability tweaks for smoother suggestion handling.
 
 **Why this matters:**
 
-WordSmith now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian. Quickly navigate, focus, and resolve suggested changes—whether editing, rewriting, or generating new content—keeping you firmly in your creative flow.
+WordSmith now offers one of the fastest and most ergonomic AI suggestion review experiences in Obsidian—keeping you firmly in your creative flow.
 
 #### Minor Versions of v.1.6.x
 
@@ -103,7 +124,7 @@ WordSmith now offers one of the fastest and most ergonomic AI suggestion review 
 * **v1.6.3**—**UI & Workflow Refinements**:
   * **Context Panel**: "Dynamic context lines" input now lives in the AI Context Control side panel, only showing when "Dynamic context" is on.
   * **Removed Legacy Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
-* **v1.6.4**—**Minimal Context Control Side Panel**: All the explanations are now tucked away in a collapsable menu. The menu is as minimal as possible, allowing you to make it narrow and gain space. It is more aesthetically pleasing as well.
+* **v1.6.4**—**Minimalistic Context Control Side Panel**: All the explanations are now tucked away in a collapsible menu. The menu is as minimal as possible, allowing you to make it narrow and gain space. It is more aesthetically pleasing as well.
 
 ### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
 
@@ -385,9 +406,9 @@ To get your API key(s):
 ## Usage
 
 WordSmith is designed for a keyboard-centric workflow. Configure your
-preferred hotkeys in Obsidian's settings for the commands below.
+preferred hotkeys in Obsidian's settings for the commands below. In the screenshot you can see a workable suggested setup, but feel free to make it your own:
 
-<img alt="Showcase of recommended hotkeys" width=70% src="https://i.imgur.com/MJX4Lrt.png">
+![WordSmith command palette](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
 
 ### Core Commands
 
