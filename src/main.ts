@@ -3,31 +3,28 @@ import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian"; // Added Edito
 
 import {
 	clearAllActiveSuggestionsCM6,
+	focusNextSuggestionCM6,
+	focusPreviousSuggestionCM6,
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
-    focusNextSuggestionCM6, 
-    focusPreviousSuggestionCM6, 
 } from "./suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { generateTextAndApplyAsSuggestionCM6, textTransformerTextCM6 } from "./textTransformer"; 
+import { generateTextAndApplyAsSuggestionCM6, textTransformerTextCM6 } from "./textTransformer";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import { CustomPromptModal } from "./custom-prompt-modal"; 
+import { CustomPromptModal } from "./custom-prompt-modal";
 import { PromptPaletteModal } from "./prompt-palette";
 import {
 	DEFAULT_SETTINGS,
-	TextTransformerPrompt, 
+	TextTransformerPrompt,
 	TextTransformerSettings,
 	TextTransformerSettingsMenu,
 } from "./settings";
-import {
-	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	MODEL_SPECS,
-} from "./settings-data";
+import { DEFAULT_TEXT_TRANSFORMER_PROMPTS, MODEL_SPECS } from "./settings-data";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	settings!: TextTransformerSettings; 
+	settings!: TextTransformerSettings;
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
@@ -54,16 +51,16 @@ export default class TextTransformer extends Plugin {
 			icon: "settings-2",
 		});
 
-        this.addCommand({
-            id: "generate-text-with-ad-hoc-prompt-suggestion",
-            name: "Prompt Based Context Aware Generation at Cursor",
-            icon: "wand-2",
-            editorCallback: async (editor: Editor) => {
-                new CustomPromptModal(this.app, async (promptText) => {
-                    await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
-                }).open();
-            },
-        });
+		this.addCommand({
+			id: "generate-text-with-ad-hoc-prompt-suggestion",
+			name: "Prompt Based Context Aware Generation at Cursor",
+			icon: "wand-2",
+			editorCallback: (editor: Editor): void => {
+				new CustomPromptModal(this.app, async (promptText) => {
+					await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
+				}).open();
+			},
+		});
 
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",
@@ -71,9 +68,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: async (editor: Editor): Promise<void> => {
 				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
 				if (enabledPrompts.length === 0) {
-					new Notice(
-						"No enabled prompts. Please configure prompts in WordSmith settings.",
-					);
+					new Notice("No enabled prompts. Please configure prompts in WordSmith settings.");
 					return;
 				}
 				if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
@@ -129,24 +124,23 @@ export default class TextTransformer extends Plugin {
 			icon: "trash-2",
 		});
 
-        this.addCommand({
-            id: "focus-next-suggestion",
-            name: "Focus next suggestion",
-            editorCallback: (editor: Editor): void => {
-                focusNextSuggestionCM6(this, editor);
-            },
-            icon: "arrow-down-circle", 
-        });
+		this.addCommand({
+			id: "focus-next-suggestion",
+			name: "Focus next suggestion",
+			editorCallback: (editor: Editor): void => {
+				focusNextSuggestionCM6(this, editor);
+			},
+			icon: "arrow-down-circle",
+		});
 
-        this.addCommand({
-            id: "focus-previous-suggestion",
-            name: "Focus previous suggestion",
-            editorCallback: (editor: Editor): void => {
-                focusPreviousSuggestionCM6(this, editor);
-            },
-            icon: "arrow-up-circle",
-        });
-
+		this.addCommand({
+			id: "focus-previous-suggestion",
+			name: "Focus previous suggestion",
+			editorCallback: (editor: Editor): void => {
+				focusPreviousSuggestionCM6(this, editor);
+			},
+			icon: "arrow-up-circle",
+		});
 
 		console.info(this.manifest.name + " Plugin loaded successfully.");
 	}
@@ -183,10 +177,11 @@ export default class TextTransformer extends Plugin {
 		const loaded = (await this.loadData()) as Partial<TextTransformerSettings> | null;
 
 		if (loaded) {
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { prompts: loadedPrompts, defaultPromptId: _removedDefaultPromptId, ...otherLoadedSettings } = loaded as any; // Cast to any to handle potentially removed defaultPromptId
+			const tempDefaultSettings = { ...DEFAULT_SETTINGS };
+			tempDefaultSettings.defaultPromptId = undefined;
+			const { prompts: loadedPrompts, ...otherLoadedSettings } =
+				loaded as Partial<TextTransformerSettings>;
 			Object.assign(this.settings, otherLoadedSettings);
-
 
 			if (!Array.isArray(loadedPrompts) || loadedPrompts.length === 0) {
 				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => ({ ...p }));
@@ -217,14 +212,17 @@ export default class TextTransformer extends Plugin {
 		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {
 			this.settings.model = DEFAULT_SETTINGS.model;
 		}
-        
-		// Ensure all settings have a default value
-        const tempDefaultSettings = {...DEFAULT_SETTINGS};
-        delete tempDefaultSettings.defaultPromptId; 
 
-		for (const key of Object.keys(tempDefaultSettings) as Array<keyof Omit<TextTransformerSettings, 'defaultPromptId'>>) {
+		// Ensure all settings have a default value
+		const tempDefaultSettings = { ...DEFAULT_SETTINGS };
+		tempDefaultSettings.defaultPromptId = undefined;
+
+		for (const key of Object.keys(tempDefaultSettings) as Array<
+			keyof Omit<TextTransformerSettings, "defaultPromptId">
+		>) {
 			if (typeof this.settings[key] === "undefined") {
-				(this.settings as any)[key] = DEFAULT_SETTINGS[key as keyof TextTransformerSettings];
+				(this.settings as unknown as Record<string, unknown>)[key] =
+					DEFAULT_SETTINGS[key as keyof TextTransformerSettings];
 			}
 		}
 	}

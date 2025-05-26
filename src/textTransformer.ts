@@ -2,7 +2,7 @@
 import { EditorSelection } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { diffWordsWithSpace } from "diff";
-import { Editor, Notice } from "obsidian"; 
+import { Editor, Notice } from "obsidian";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
 import TextTransformer from "./main";
@@ -39,11 +39,8 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) { 
-		new Notice(
-			"There are already active suggestions. Please accept or reject them first.",
-			6000,
-		);
+	if (existingSuggestions && existingSuggestions.length > 0) {
+		new Notice("There are already active suggestions. Please accept or reject them first.", 6000);
 		return;
 	}
 
@@ -51,21 +48,21 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	let additionalContextForAI = "";
 	const contextParts: string[] = [];
 	const currentFile = app.workspace.getActiveFile();
-	const cursorOffset = cm.state.selection.main.head; 
+	const cursorOffset = cm.state.selection.main.head;
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 	if (contextPanelLeaves.length > 0) {
 		const view = contextPanelLeaves[0].view;
 		if (view instanceof ContextControlPanel) {
 			const contextPanel = view as ContextControlPanel;
-			
+
 			if (contextPanel.getCustomContextState()) {
 				const customContext = await contextPanel.getCustomContextText();
 				if (customContext) {
 					contextParts.push(
 						`--- Custom Context Start ---
 ${customContext}
---- Custom Context End ---`
+--- Custom Context End ---`,
 					);
 				}
 			}
@@ -79,7 +76,7 @@ ${customContext}
 				const cursorLineNum = doc.lineAt(cursorOffset).number;
 				const startLineNum = Math.max(1, cursorLineNum - linesToInclude);
 				const endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
-				
+
 				let finalDynamicContext = "";
 				for (let i = startLineNum; i <= endLineNum; i++) {
 					const line = doc.line(i);
@@ -89,28 +86,33 @@ ${customContext}
 
 					if (cursorOffset >= lineStartOffset && cursorOffset <= lineEndOffset) {
 						const charPosInLine = cursorOffset - lineStartOffset;
-						finalDynamicContext += lineText.substring(0, charPosInLine) + GENERATION_TARGET_CURSOR_MARKER + lineText.substring(charPosInLine);
+						finalDynamicContext +=
+							lineText.substring(0, charPosInLine) +
+							GENERATION_TARGET_CURSOR_MARKER +
+							lineText.substring(charPosInLine);
 					} else {
 						finalDynamicContext += lineText;
 					}
 					if (i < endLineNum) {
-						finalDynamicContext += "\n"; 
+						finalDynamicContext += "\n";
 					}
 				}
 				contextParts.push(
 					`--- Dynamic Context Start ---
 ${finalDynamicContext}
---- Dynamic Context End ---`
+--- Dynamic Context End ---`,
 				);
-
 			} else if (useWholeNote && currentFile) {
 				let fileContent = await app.vault.cachedRead(currentFile);
 				const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
-				fileContent = fileContent.substring(0, safeCursorOffset) + GENERATION_TARGET_CURSOR_MARKER + fileContent.substring(safeCursorOffset);
+				fileContent =
+					fileContent.substring(0, safeCursorOffset) +
+					GENERATION_TARGET_CURSOR_MARKER +
+					fileContent.substring(safeCursorOffset);
 				contextParts.push(
 					`--- Entire Note Context Start ---
 ${fileContent}
---- Entire Note Context End ---`
+--- Entire Note Context End ---`,
 				);
 			}
 		}
@@ -121,25 +123,28 @@ ${fileContent}
 
 `);
 	}
-	
+
 	const adHocPrompt: TextTransformerPrompt = {
 		id: "ad-hoc-generation",
 		name: "Ad-hoc Generation",
 		text: userPromptText,
-        isDefault: false, 
-        enabled: true,
-        showInPromptPalette: false,
+		isDefault: false,
+		enabled: true,
+		showInPromptPalette: false,
 	};
 
 	const notice = new Notice("🤖 Generating text via ad-hoc prompt...", 0);
-	let response;
+	let response: { newText: string; isOverlength: boolean; cost: number } | undefined;
 	try {
-		const oldTextForAI = ""; 
+		const oldTextForAI = "";
 		response = settings.model.startsWith("gemini-")
 			? await geminiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI, true)
 			: await openAiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI);
 	} catch (error) {
-		new Notice(`AI request failed: ${error instanceof Error ? error.message : String(error)}`, 6000);
+		new Notice(
+			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,
+			6000,
+		);
 		notice.hide();
 		return;
 	} finally {
@@ -148,18 +153,17 @@ ${fileContent}
 
 	const { newText: generatedText, cost, isOverlength } = response || {};
 
-	if (!generatedText) { 
+	if (!generatedText) {
 		new Notice("AI did not return any generated text.", 5000);
 		return;
 	}
 
-	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n"); 
+	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n");
 
 	const marksToApply: SuggestionMark[] = [];
 	let textToInsertInDocument = "";
 	let currentParseOffsetInGeneratedText = 0;
 	let currentInsertOffsetInDocument = 0;
-
 
 	while (currentParseOffsetInGeneratedText < normalizedGeneratedText.length) {
 		const markStartInDoc = cursorOffset + currentInsertOffsetInDocument;
@@ -169,18 +173,24 @@ ${fileContent}
 
 		if (normalizedGeneratedText.startsWith("\n", currentParseOffsetInGeneratedText)) {
 			isNewlineSegment = true;
-			textSegmentForDocument = NEWLINE_ADD_SYMBOL; 
-			segmentLengthInGeneratedText = 1; 
+			textSegmentForDocument = NEWLINE_ADD_SYMBOL;
+			segmentLengthInGeneratedText = 1;
 		} else {
-			let nextNewlineIndex = normalizedGeneratedText.indexOf("\n", currentParseOffsetInGeneratedText);
+			let nextNewlineIndex = normalizedGeneratedText.indexOf(
+				"\n",
+				currentParseOffsetInGeneratedText,
+			);
 			if (nextNewlineIndex === -1) {
 				nextNewlineIndex = normalizedGeneratedText.length;
 			}
-			textSegmentForDocument = normalizedGeneratedText.substring(currentParseOffsetInGeneratedText, nextNewlineIndex);
+			textSegmentForDocument = normalizedGeneratedText.substring(
+				currentParseOffsetInGeneratedText,
+				nextNewlineIndex,
+			);
 			segmentLengthInGeneratedText = textSegmentForDocument.length;
 		}
-		
-		if (textSegmentForDocument.length > 0) { 
+
+		if (textSegmentForDocument.length > 0) {
 			textToInsertInDocument += textSegmentForDocument;
 			const commonMarkProps = {
 				id: generateSuggestionId(),
@@ -189,35 +199,35 @@ ${fileContent}
 				type: "added" as const,
 				isNewlineChange: isNewlineSegment,
 			};
-		
+
 			const mark: SuggestionMark = isNewlineSegment
 				? {
-					  ...commonMarkProps,
-					  newlineChar: "\n" as const, 
-				  }
-				: commonMarkProps; 
-		
+						...commonMarkProps,
+						newlineChar: "\n" as const,
+					}
+				: commonMarkProps;
+
 			marksToApply.push(mark);
 			currentInsertOffsetInDocument += textSegmentForDocument.length;
 		}
 		currentParseOffsetInGeneratedText += segmentLengthInGeneratedText;
 	}
-	
+
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: cursorOffset, to: cursorOffset, insert: textToInsertInDocument },
-			effects: [
-                clearAllSuggestionsEffect.of(null), 
-                setSuggestionsEffect.of(marksToApply)
-            ],
-			selection: marksToApply.length > 0 ? EditorSelection.cursor(marksToApply[0].from) : EditorSelection.cursor(cursorOffset + textToInsertInDocument.length),
+			effects: [clearAllSuggestionsEffect.of(null), setSuggestionsEffect.of(marksToApply)],
+			selection:
+				marksToApply.length > 0
+					? EditorSelection.cursor(marksToApply[0].from)
+					: EditorSelection.cursor(cursorOffset + textToInsertInDocument.length),
 			scrollIntoView: true,
 		}),
 	);
-    
-    if (isOverlength) {
-        new Notice("Generated text might be incomplete due to model limits.", 10000);
-    }
+
+	if (isOverlength) {
+		new Notice("Generated text might be incomplete due to model limits.", 10000);
+	}
 
 	let successMessage = `✅ Ad-hoc generation complete. ${marksToApply.length} suggestion segment${marksToApply.length === 1 ? "" : "s"} created.`;
 	if (cost !== undefined) {
@@ -225,7 +235,6 @@ ${fileContent}
 	}
 	new Notice(successMessage, 5000);
 }
-
 
 async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
@@ -247,7 +256,7 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) { 
+	if (existingSuggestions && existingSuggestions.length > 0) {
 		new Notice(
 			`${scope} already has active suggestions. Please accept or reject them first.`,
 			6000,
@@ -270,14 +279,14 @@ async function validateAndApplyAIDrivenChanges(
 			const contextParts: string[] = [];
 			const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
 			const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
-			
+
 			if (contextPanel.getCustomContextState()) {
 				const customText = await contextPanel.getCustomContextText();
 				if (customText) {
 					contextParts.push(
 						`--- Custom User-Provided Context Start ---
 ${customText}
---- Custom User-Provided Context End ---`
+--- Custom User-Provided Context End ---`,
 					);
 				}
 			}
@@ -287,14 +296,9 @@ ${customText}
 
 			if (useDynamic) {
 				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
-				let selectionStartLine: number;
-				let selectionEndLine: number;
+				const selectionStartLine: number = editor.offsetToPos(scopeRangeCm.from).line;
+				const selectionEndLine: number = editor.offsetToPos(scopeRangeCm.to).line;
 
-                const fromPos = editor.offsetToPos(scopeRangeCm.from);
-                const toPos = editor.offsetToPos(scopeRangeCm.to);
-				selectionStartLine = fromPos.line;
-				selectionEndLine = toPos.line;
-				
 				const contextStartLine = Math.max(0, selectionStartLine - linesToIncludeAround);
 				const contextEndLine = Math.min(
 					editor.lastLine(),
@@ -304,7 +308,7 @@ ${customText}
 				for (let i = contextStartLine; i <= contextEndLine; i++)
 					dynamicContextLines.push(editor.getLine(i));
 				let dynamicContextText = dynamicContextLines.join("\n");
-				if (dynamicContextText.includes(originalText)) 
+				if (dynamicContextText.includes(originalText))
 					dynamicContextText = dynamicContextText.replace(
 						originalText,
 						`${markerStart}${originalText}${markerEnd}`,
@@ -312,7 +316,7 @@ ${customText}
 				contextParts.push(
 					`--- Dynamic Context Start ---
 ${dynamicContextText}
---- Dynamic Context End ---`
+--- Dynamic Context End ---`,
 				);
 			} else if (useWholeNote) {
 				const currentFile = app.workspace.getActiveFile();
@@ -327,7 +331,7 @@ ${dynamicContextText}
 					contextParts.push(
 						`--- Whole Note Context Start ---
 ${wholeNoteContext}
---- Whole Note Context End ---`
+--- Whole Note Context End ---`,
 					);
 				}
 			}
@@ -358,7 +362,10 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI)
 			: await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
 	} catch (error) {
-		new Notice(`AI request failed: ${error instanceof Error ? error.message : String(error)}`, 6000);
+		new Notice(
+			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,
+			6000,
+		);
 		notice.hide();
 		return false;
 	}
@@ -383,33 +390,35 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		return false;
 	}
 
-	let textToInsertInEditor = ""; 
-	const suggestionMarksToApply: SuggestionMark[] = []; 
-	let currentOffsetInEditorText = 0; 
+	let textToInsertInEditor = "";
+	const suggestionMarksToApply: SuggestionMark[] = [];
+	let currentOffsetInEditorText = 0;
 
 	for (const part of diffResult) {
-		const partValue = part.value; 
+		const partValue = part.value;
 
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;
 			while (currentPosInPartValue < partValue.length) {
-				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText; 
-				let segmentLengthFromDiff = 0; 
-				let textSegmentForEditor = ""; 
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
+				let segmentLengthFromDiff = 0;
+				let textSegmentForEditor = "";
 
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
 					segmentLengthFromDiff = 1;
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r\n", currentPosInPartValue)) {
-					segmentLengthFromDiff = 2; 
+					segmentLengthFromDiff = 2;
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				} else if (partValue.startsWith("\r", currentPosInPartValue)) {
 					segmentLengthFromDiff = 1;
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
 				}
 
-
-				if (textSegmentForEditor === NEWLINE_ADD_SYMBOL || textSegmentForEditor === NEWLINE_REMOVE_SYMBOL) {
+				if (
+					textSegmentForEditor === NEWLINE_ADD_SYMBOL ||
+					textSegmentForEditor === NEWLINE_REMOVE_SYMBOL
+				) {
 					textToInsertInEditor += textSegmentForEditor;
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
@@ -417,23 +426,27 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 						to: markStartPosInDoc + textSegmentForEditor.length,
 						type: part.added ? "added" : "removed",
 						isNewlineChange: true,
-						newlineChar: "\n", 
+						newlineChar: "\n",
 					});
 					currentOffsetInEditorText += textSegmentForEditor.length;
 					currentPosInPartValue += segmentLengthFromDiff;
-				} else { 
+				} else {
 					let nextNewlineIndexInDiffPart = Number.POSITIVE_INFINITY;
 					["\n", "\r\n", "\r"].forEach((nl) => {
 						const idx = partValue.indexOf(nl, currentPosInPartValue);
-						if (idx !== -1) nextNewlineIndexInDiffPart = Math.min(nextNewlineIndexInDiffPart, idx);
+						if (idx !== -1)
+							nextNewlineIndexInDiffPart = Math.min(nextNewlineIndexInDiffPart, idx);
 					});
 
 					const endOfTextSegmentInDiffPart =
 						nextNewlineIndexInDiffPart === Number.POSITIVE_INFINITY
 							? partValue.length
 							: nextNewlineIndexInDiffPart;
-					
-					textSegmentForEditor = partValue.substring(currentPosInPartValue, endOfTextSegmentInDiffPart);
+
+					textSegmentForEditor = partValue.substring(
+						currentPosInPartValue,
+						endOfTextSegmentInDiffPart,
+					);
 
 					textToInsertInEditor += textSegmentForEditor;
 					suggestionMarksToApply.push({
@@ -446,21 +459,24 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 					currentPosInPartValue = endOfTextSegmentInDiffPart;
 				}
 			}
-		} else { 
+		} else {
 			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
 			textToInsertInEditor += normalizedUnchangedValue;
 			currentOffsetInEditorText += normalizedUnchangedValue.length;
 		}
 	}
-    
+
 	cm.dispatch(
 		cm.state.update({
 			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
 			effects: [
-                clearAllSuggestionsEffect.of(null), 
-                setSuggestionsEffect.of(suggestionMarksToApply) 
-            ],
-			selection: suggestionMarksToApply.length > 0 ? EditorSelection.cursor(suggestionMarksToApply[0].from) : EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
+				clearAllSuggestionsEffect.of(null),
+				setSuggestionsEffect.of(suggestionMarksToApply),
+			],
+			selection:
+				suggestionMarksToApply.length > 0
+					? EditorSelection.cursor(suggestionMarksToApply[0].from)
+					: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
 			scrollIntoView: true,
 		}),
 	);

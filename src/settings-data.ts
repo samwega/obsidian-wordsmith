@@ -67,52 +67,62 @@ export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
 //──────────────────────────────────────────────────────────────────────────────
 
 export interface TextTransformerPrompt {
-	id: string; 
-	name: string; 
-	text: string; 
-	isDefault: boolean; 
-	enabled: boolean; 
-    model?: SupportedModels; 
-    temperature?: number; 
-    frequency_penalty?: number; 
-    presence_penalty?: number; 
-    max_tokens?: number; 
-    showInPromptPalette?: boolean; 
+	id: string;
+	name: string;
+	text: string;
+	isDefault: boolean;
+	enabled: boolean;
+	model?: SupportedModels;
+	temperature?: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	frequency_penalty?: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	presence_penalty?: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	max_tokens?: number;
+	showInPromptPalette?: boolean;
 }
 
 export interface TextTransformerSettings {
 	openAiApiKey: string;
 	geminiApiKey: string;
-	model: SupportedModels; 
-	prompts: TextTransformerPrompt[]; 
-	alwaysShowPromptSelection: boolean; 
+	model: SupportedModels;
+	prompts: TextTransformerPrompt[];
+	alwaysShowPromptSelection: boolean;
 	dynamicContextLineCount: number;
 	translationLanguage: string;
 	longInputThreshold: number;
 	veryLongInputThreshold: number;
-    temperature: number; 
-    frequency_penalty: number; 
-    presence_penalty: number; 
-    max_tokens: number; 
+	temperature: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	frequency_penalty: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	presence_penalty: number;
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	max_tokens: number;
 }
 
-export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> & { defaultPromptId?: string | null } = {
+export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> & {
+	defaultPromptId?: string | null | undefined;
+} = {
 	openAiApiKey: "",
 	geminiApiKey: "",
 	model: "gpt-4.1-nano",
-	prompts: [], 
+	prompts: [],
 	alwaysShowPromptSelection: false,
-	dynamicContextLineCount: 3, 
+	dynamicContextLineCount: 3,
 	translationLanguage: "English",
 	longInputThreshold: 1500,
 	veryLongInputThreshold: 15000,
-    temperature: 0.7, 
-    frequency_penalty: 0, 
-    presence_penalty: 0, 
-    max_tokens: 2048, 
+	temperature: 0.7,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	frequency_penalty: 0,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	presence_penalty: 0,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	max_tokens: 2048,
 };
 // Note: defaultPromptId was removed from DEFAULT_SETTINGS structure as it's no longer part of TextTransformerSettings
-
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
@@ -121,7 +131,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Please make suggestions how to improve clarity, readability, grammar, and language of the following text. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "shorten",
@@ -129,7 +139,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Shorten the following text while preserving its meaning and clarity. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "lengthen",
@@ -137,7 +147,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Expand and elaborate the following text for greater detail and depth, but do not add unrelated information. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "fix-grammar",
@@ -145,7 +155,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional proofreader. Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "simplify-language",
@@ -153,7 +163,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "enhance-readability",
@@ -161,7 +171,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. Improve the readability and flow of the following text. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "mind-the-context",
@@ -169,7 +179,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional editor. You will receive a text selection, and a context. Do to the text whatever the context says, strictly. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 	{
 		id: "translate",
@@ -177,7 +187,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		text: "Act as a professional translator. Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
-        showInPromptPalette: true,
+		showInPromptPalette: true,
 	},
 ];
 

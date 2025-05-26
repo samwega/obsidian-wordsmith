@@ -57,7 +57,7 @@ build-and-reload:
 
 check-all:
     @echo "Running Biome check..."
-    npx @biomejs/biome check --write.
+    npx @biomejs/biome check --write
     @echo "Running TypeScript check..."
     npx tsc --noEmit --skipLibCheck --strict
     @echo "Running Markdownlint check..."
