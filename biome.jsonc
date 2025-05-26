@@ -10,7 +10,7 @@
 				"noSecrets": "off" // buggy, many false positives
 			},
 			"complexity": {
-				"noExcessiveCognitiveComplexity": "info",
+				"noExcessiveCognitiveComplexity": "off",
 				"useSimplifiedLogicExpression": "off", // complains about negated and-conditions
 				"noForEach": "off" // Disabled due to auto-fix issues with string literals
 			},

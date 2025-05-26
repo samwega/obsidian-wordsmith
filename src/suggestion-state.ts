@@ -66,7 +66,7 @@ class SuggestionViewPluginClass {
 	update(update: ViewUpdate): void {
 		let needsRecompute = false;
 
-		if (!update) { 
+		if (!update) {
 			if (this.decorations.size > 0) {
 				this.decorations = Decoration.none;
 			}
@@ -108,7 +108,7 @@ class SuggestionViewPluginClass {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("WordSmith ViewPlugin: Error in update computeDecorations:", e);
-				this.decorations = Decoration.none; 
+				this.decorations = Decoration.none;
 			}
 		}
 	}
@@ -119,8 +119,8 @@ class SuggestionViewPluginClass {
 		}
 
 		const marks = view.state.field(suggestionStateField, false);
-		const cursorPos = view.state.selection.main.head; 
-		const isSelectionEmpty = view.state.selection.main.empty; 
+		const cursorPos = view.state.selection.main.head;
+		const isSelectionEmpty = view.state.selection.main.empty;
 
 		if (!marks || marks.length === 0) {
 			return Decoration.none;
@@ -128,7 +128,7 @@ class SuggestionViewPluginClass {
 
 		const activeDecorations: Range<Decoration>[] = [];
 		for (const mark of marks) {
-			let className = ""; 
+			let className = "";
 
 			if (mark.type === "added") {
 				className = "text-transformer-added";
@@ -142,21 +142,18 @@ class SuggestionViewPluginClass {
 			}
 
 			if (isSelectionEmpty && cursorPos === mark.from) {
-				className += ` ${className}-active`; 
+				className += ` ${className}-active`;
 			}
 
 			if (mark.from >= mark.to) {
-				console.warn(
-					"WordSmith ViewPlugin: Invalid mark range (from >= to), skipping:",
-					mark,
-				);
+				console.warn("WordSmith ViewPlugin: Invalid mark range (from >= to), skipping:", mark);
 				continue;
 			}
 			if (mark.from < 0 || mark.to > view.state.doc.length) {
 				console.warn("WordSmith ViewPlugin: Mark range out of bounds, skipping:", mark);
 				continue;
 			}
-			
+
 			try {
 				const decorationInstance = Decoration.mark({
 					attributes: {
@@ -165,7 +162,6 @@ class SuggestionViewPluginClass {
 					},
 				}).range(mark.from, mark.to);
 				activeDecorations.push(decorationInstance);
-				
 			} catch (e) {
 				console.error(
 					`WordSmith ViewPlugin: ERROR creating decoration for Mark ID ${mark.id}. Class: ${className} Error:`,
@@ -184,7 +180,7 @@ const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 		if (pluginInstance?.decorations) {
 			return pluginInstance.decorations;
 		}
-		return Decoration.none; 
+		return Decoration.none;
 	},
 });
 

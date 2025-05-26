@@ -12,7 +12,7 @@ export async function geminiRequest(
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
 	additionalContextForAI?: string,
-    isGenerationTask: boolean = false, // Added to control thinkingConfig and prompt structure
+	isGenerationTask = false, // Added to control thinkingConfig and prompt structure
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.geminiApiKey) {
 		new Notice("Please set your Gemini API key in the plugin settings.");
@@ -21,70 +21,80 @@ export async function geminiRequest(
 
 	let fullPrompt = "";
 
-    if (isGenerationTask) {
-        fullPrompt = "You are an AI assistant tasked with generating text based on a user prompt.";
-        if (additionalContextForAI?.includes("<<<GENERATION_TARGET_CURSOR_POSITION>>>")) {
-            fullPrompt += 
-                " The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '<<<GENERATION_TARGET_CURSOR_POSITION>>>'. " +
-                "This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
-                "Focus on fulfilling the user's ad-hoc prompt as the primary instruction, using the context for awareness. Output ONLY the generated text, without any preambles or explanatory sentences.";
-        } else {
-            fullPrompt += 
-                " Focus on fulfilling the user's ad-hoc prompt as the primary instruction. Output ONLY the generated text, without any preambles or explanatory sentences.";
-        }
-        if (additionalContextForAI) {
-            fullPrompt += `
+	if (isGenerationTask) {
+		fullPrompt = "You are an AI assistant tasked with generating text based on a user prompt.";
+		if (additionalContextForAI?.includes("<<<GENERATION_TARGET_CURSOR_POSITION>>>")) {
+			fullPrompt +=
+				" The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '<<<GENERATION_TARGET_CURSOR_POSITION>>>'. " +
+				"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
+				"Focus on fulfilling the user's ad-hoc prompt as the primary instruction, using the context for awareness. Output ONLY the generated text, without any preambles or explanatory sentences.";
+		} else {
+			fullPrompt +=
+				" Focus on fulfilling the user's ad-hoc prompt as the primary instruction. Output ONLY the generated text, without any preambles or explanatory sentences.";
+		}
+		if (additionalContextForAI) {
+			fullPrompt += `
 
 --- Context Start ---
 ${additionalContextForAI}
 --- Context End ---`;
-        }
-        fullPrompt += `
+		}
+		fullPrompt += `
 
 User's ad-hoc prompt: ${prompt.text}
 
 Generated text:`; // Guide the AI to start generation
-
-    } else { // Existing transformation logic
-        if (additionalContextForAI) {
-            fullPrompt = `You will be provided with context (marked as --- Context Start --- and --- Context End ---) and a text to transform (marked as --- Text to Transform Start --- and --- Text to Transform End ---).
+	} else {
+		// Existing transformation logic
+		if (additionalContextForAI) {
+			fullPrompt = `You will be provided with context (marked as --- Context Start --- and --- Context End ---) and a text to transform (marked as --- Text to Transform Start --- and --- Text to Transform End ---).
 Your task is to apply the specific instruction (e.g., summarize, improve, fix grammar) ONLY to the 'Text to Transform'. Do not comment on or alter the context itself. The context is for your awareness only.
 
 --- Context Start ---
 ${additionalContextForAI}
 --- Context End ---`;
-        }
-        fullPrompt += `
+		}
+		fullPrompt += `
 
 User's instruction: ${prompt.text}
 
 --- Text to Transform Start ---
 ${oldText}
 --- Text to Transform End ---`;
-    }
-
+	}
 
 	let response: RequestUrlResponse;
 	try {
 		const actualModelId = GEMINI_MODEL_ID_MAP[settings.model] || settings.model; // Use this variable
-		const requestBody: Record<string, any> = {
+		const requestBody: {
+			contents: Array<{ parts: Array<{ text: string }> }>;
+			generationConfig: { temperature: number; thinkingConfig?: { thinkingBudget: number } };
+			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
+			tool_config: {
+				// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
+				function_calling_config: { mode: string };
+			};
+		} = {
 			contents: [
 				{
 					parts: [{ text: fullPrompt }],
 				},
 			],
-            generationConfig: {
-                temperature: prompt.temperature ?? settings.temperature,
-            },
-			tool_config: { function_calling_config: { mode: "NONE" } }, 
+			generationConfig: {
+				temperature: prompt.temperature ?? settings.temperature,
+			},
+			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
+			tool_config: {
+				// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
+				function_calling_config: { mode: "NONE" },
+			},
 		};
 
-        if (actualModelId.includes("flash")) {
-            requestBody.generationConfig.thinkingConfig = {
-                thinkingBudget: isGenerationTask ? 1 : 0, 
-            };
-        }
-
+		if (actualModelId.includes("flash")) {
+			requestBody.generationConfig.thinkingConfig = {
+				thinkingBudget: isGenerationTask ? 1 : 0,
+			};
+		}
 
 		response = await requestUrl({
 			url:
@@ -108,21 +118,26 @@ ${oldText}
 
 	const candidates = response.json?.candidates;
 	let newText = candidates?.[0]?.content?.parts?.[0]?.text || "";
-    if (newText.startsWith("Generated text:")){
-        newText = newText.substring("Generated text:".length).trimStart();
-    }
+	if (newText.startsWith("Generated text:")) {
+		newText = newText.substring("Generated text:".length).trimStart();
+	}
 
 	const modelSpec = MODEL_SPECS[settings.model];
-    const outputTokensUsed = response.json?.usageMetadata?.candidatesTokenCount || newText.split(/\s+/).length; 
-    const inputTokensUsed = response.json?.usageMetadata?.promptTokenCount || fullPrompt.split(/\s+/).length;
+	const outputTokensUsed =
+		response.json?.usageMetadata?.candidatesTokenCount ||
+		(newText.split(/\s+/).length > 0 ? newText.split(/\s+/).length : 0);
+	const inputTokensUsed =
+		response.json?.usageMetadata?.promptTokenCount ||
+		(fullPrompt.split(/\s+/).length > 0 ? fullPrompt.split(/\s+/).length : 0);
 
-	const isOverlength = modelSpec.maxOutputTokens ? outputTokensUsed >= modelSpec.maxOutputTokens : false;
-	
-    const cost =
-        modelSpec.costPerMillionTokens ? 
-        (inputTokensUsed * modelSpec.costPerMillionTokens.input) / 1e6 +
-        (outputTokensUsed * modelSpec.costPerMillionTokens.output) / 1e6
-        : 0;
+	const isOverlength = modelSpec.maxOutputTokens
+		? outputTokensUsed >= modelSpec.maxOutputTokens
+		: false;
+
+	const cost = modelSpec.costPerMillionTokens
+		? (inputTokensUsed * modelSpec.costPerMillionTokens.input) / 1e6 +
+			(outputTokensUsed * modelSpec.costPerMillionTokens.output) / 1e6
+		: 0;
 
 	return { newText, isOverlength, cost };
 }

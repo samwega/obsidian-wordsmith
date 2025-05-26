@@ -4,10 +4,10 @@ import {
 	ItemView,
 	Notice,
 	Setting,
+	TFile,
 	TextAreaComponent,
 	ToggleComponent,
 	WorkspaceLeaf,
-	TFile,
 	// App, // App is available via this.plugin.app
 } from "obsidian";
 import TextTransformer from "./main";
@@ -78,7 +78,7 @@ export class ContextControlPanel extends ItemView {
 		titleEl.style.fontWeight = "bold";
 
 		const modelSelectorContainer = headerContainer.createDiv();
-		
+
 		// Corrected DropdownComponent instantiation and assignment
 		this.modelDropdown = new DropdownComponent(modelSelectorContainer);
 		for (const key in MODEL_SPECS) {
@@ -94,7 +94,6 @@ export class ContextControlPanel extends ItemView {
 		this.modelDropdown.selectEl.style.fontSize = "var(--font-ui-smaller)";
 		this.modelDropdown.selectEl.style.padding = "0px 18px 0px 2px";
 		this.modelDropdown.selectEl.style.height = "auto";
-
 
 		const contextOptionsHeader = container.createDiv();
 		contextOptionsHeader.style.cursor = "pointer";
@@ -191,7 +190,9 @@ export class ContextControlPanel extends ItemView {
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.style.borderTop = "none";
 			this.dynamicContextLinesSetting.nameEl.style.color = "var(--text-accent)";
-			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "" : "none";
+			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext
+				? ""
+				: "none";
 		}
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
@@ -245,7 +246,7 @@ export class ContextControlPanel extends ItemView {
 			const text = inputEl.value;
 			const cursorPos = inputEl.selectionStart;
 			const textBeforeCursor = text.substring(0, cursorPos);
-			
+
 			const match = /\[\[([^\]]*)$/.exec(textBeforeCursor);
 
 			if (match) {
@@ -255,15 +256,15 @@ export class ContextControlPanel extends ItemView {
 					const textAfterCursor = text.substring(cursorPos);
 
 					const newText = textBeforeLinkOpen + linkText + textAfterCursor;
-					this.customContextText = newText; 
-					
-					if(this.customContextTextArea){
-						this.customContextTextArea.setValue(newText); 
-						
+					this.customContextText = newText;
+
+					if (this.customContextTextArea) {
+						this.customContextTextArea.setValue(newText);
+
 						const newCursorPos = textBeforeLinkOpen.length + linkText.length;
 						this.customContextTextArea.inputEl.selectionStart = newCursorPos;
 						this.customContextTextArea.inputEl.selectionEnd = newCursorPos;
-						this.justInsertedLink = true; 
+						this.justInsertedLink = true;
 						this.customContextTextArea.inputEl.focus();
 					}
 				}).open();
@@ -293,40 +294,42 @@ export class ContextControlPanel extends ItemView {
 
 	async getCustomContextText(): Promise<string> {
 		if (!this.useCustomContext || !this.customContextText) {
-			return ""; 
+			return "";
 		}
 
-		let textToProcess = this.customContextText;
+		const textToProcess = this.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
-		let match;
-		
-		const partsToResolve: (string | Promise<string>)[] = [];
+		let match: RegExpExecArray | null;
 		let lastIndex = 0;
+
+		const partsToResolve: (string | Promise<string>)[] = [];
 
 		if (!this.plugin || !this.plugin.app) {
 			console.error("WordSmith: Plugin or App instance not available for getCustomContextText.");
-			return textToProcess; 
+			return textToProcess;
 		}
 
-		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
-			partsToResolve.push(textToProcess.substring(lastIndex, match.index)); 
-			
+		while (true) {
+			match = wikilinkRegex.exec(textToProcess);
+			if (match === null) break;
+			partsToResolve.push(textToProcess.substring(lastIndex, match.index));
+
 			const linkFullText = match[1];
 			const linkPathOnly = linkFullText.split("|")[0].trim();
 			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
 
 			if (file instanceof TFile) {
-				partsToResolve.push(this.plugin.app.vault.cachedRead(file)); 
+				partsToResolve.push(this.plugin.app.vault.cachedRead(file));
 			} else {
-				partsToResolve.push(match[0]); 
+				partsToResolve.push(match[0]);
 			}
 			lastIndex = wikilinkRegex.lastIndex;
 		}
-		partsToResolve.push(textToProcess.substring(lastIndex)); 
+		partsToResolve.push(textToProcess.substring(lastIndex));
 
 		const resolvedParts = await Promise.all(partsToResolve);
-		
-		return resolvedParts.join(""); 
+
+		return resolvedParts.join("");
 	}
 
 	getDynamicContextState(): boolean {

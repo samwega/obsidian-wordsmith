@@ -18,89 +18,93 @@ function getCmEditorView(editor: Editor): EditorView | null {
 
 // Helper for Feature 2: Find next suggestion mark for focusing
 // Renamed for clarity to distinguish from findNextSuggestionMark used in resolution.
-function findNextFocusTarget(marks: SuggestionMark[], currentSelectionHead: number): SuggestionMark | null {
-    if (marks.length === 0) return null;
-    // Ensure marks are sorted by their 'from' position
-    const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
-    
-    // Find the first mark whose 'from' position is strictly greater than the current selection head
-    for (const mark of sortedMarks) {
-        if (mark.from > currentSelectionHead) return mark;
-    }
-    // If no mark is found after the current selection head (i.e., cursor is at or after the last mark),
-    // cycle to the very first mark in the document.
-    return sortedMarks[0]; 
+function findNextFocusTarget(
+	marks: SuggestionMark[],
+	currentSelectionHead: number,
+): SuggestionMark | null {
+	if (marks.length === 0) return null;
+	// Ensure marks are sorted by their 'from' position
+	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
+
+	// Find the first mark whose 'from' position is strictly greater than the current selection head
+	for (const mark of sortedMarks) {
+		if (mark.from > currentSelectionHead) return mark;
+	}
+	// If no mark is found after the current selection head (i.e., cursor is at or after the last mark),
+	// cycle to the very first mark in the document.
+	return sortedMarks[0];
 }
 
 // Helper for Feature 2: Find previous suggestion mark for focusing
 // Renamed for clarity.
-function findPreviousFocusTarget(marks: SuggestionMark[], currentSelectionHead: number): SuggestionMark | null {
-    if (marks.length === 0) return null;
-    // Ensure marks are sorted by their 'from' position
-    const sortedMarks = [...marks].sort((a, b) => a.from - b.from); 
+function findPreviousFocusTarget(
+	marks: SuggestionMark[],
+	currentSelectionHead: number,
+): SuggestionMark | null {
+	if (marks.length === 0) return null;
+	// Ensure marks are sorted by their 'from' position
+	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
 
-    let foundMark: SuggestionMark | null = null;
-    // Iterate backwards through the sorted marks to find the last mark
-    // whose 'from' position is strictly less than the current selection head.
-    for (let i = sortedMarks.length - 1; i >= 0; i--) {
-        const mark = sortedMarks[i];
-        if (mark.from < currentSelectionHead) {
-            foundMark = mark;
-            break; 
-        }
-    }
-    // If a mark before the current selection head was found, return it.
-    // Otherwise (i.e., cursor is at or before the first mark), cycle to the very last mark in the document.
-    return foundMark || sortedMarks[sortedMarks.length - 1];
+	let foundMark: SuggestionMark | null = null;
+	// Iterate backwards through the sorted marks to find the last mark
+	// whose 'from' position is strictly less than the current selection head.
+	for (let i = sortedMarks.length - 1; i >= 0; i--) {
+		const mark = sortedMarks[i];
+		if (mark.from < currentSelectionHead) {
+			foundMark = mark;
+			break;
+		}
+	}
+	// If a mark before the current selection head was found, return it.
+	// Otherwise (i.e., cursor is at or before the first mark), cycle to the very last mark in the document.
+	return (foundMark || sortedMarks.at(-1)) ?? null;
 }
 
-
 export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
-    const cm = getCmEditorView(editor);
-    if (!cm) {
-        new Notice("Modern editor version required.");
-        return;
-    }
-    const allMarks = cm.state.field(suggestionStateField, false) || [];
-    if (allMarks.length === 0) {
-        new Notice("No suggestions to navigate.", 2000);
-        return;
-    }
+	const cm = getCmEditorView(editor);
+	if (!cm) {
+		new Notice("Modern editor version required.");
+		return;
+	}
+	const allMarks = cm.state.field(suggestionStateField, false) || [];
+	if (allMarks.length === 0) {
+		new Notice("No suggestions to navigate.", 2000);
+		return;
+	}
 
-    const currentPos = cm.state.selection.main.head;
-    const targetMark = findNextFocusTarget(allMarks, currentPos);
+	const currentPos = cm.state.selection.main.head;
+	const targetMark = findNextFocusTarget(allMarks, currentPos);
 
-    if (targetMark) { 
-        cm.dispatch({
-            selection: EditorSelection.cursor(targetMark.from),
-            effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })
-        });
-    }
+	if (targetMark) {
+		cm.dispatch({
+			selection: EditorSelection.cursor(targetMark.from),
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
+		});
+	}
 }
 
 export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
-    const cm = getCmEditorView(editor);
-    if (!cm) {
-        new Notice("Modern editor version required.");
-        return;
-    }
-    const allMarks = cm.state.field(suggestionStateField, false) || [];
-    if (allMarks.length === 0) {
-        new Notice("No suggestions to navigate.", 2000);
-        return;
-    }
+	const cm = getCmEditorView(editor);
+	if (!cm) {
+		new Notice("Modern editor version required.");
+		return;
+	}
+	const allMarks = cm.state.field(suggestionStateField, false) || [];
+	if (allMarks.length === 0) {
+		new Notice("No suggestions to navigate.", 2000);
+		return;
+	}
 
-    const currentPos = cm.state.selection.main.head;
-    const targetMark = findPreviousFocusTarget(allMarks, currentPos); 
+	const currentPos = cm.state.selection.main.head;
+	const targetMark = findPreviousFocusTarget(allMarks, currentPos);
 
-    if (targetMark) { 
-        cm.dispatch({
-            selection: EditorSelection.cursor(targetMark.from),
-            effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 })
-        });
-    }
+	if (targetMark) {
+		cm.dispatch({
+			selection: EditorSelection.cursor(targetMark.from),
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
+		});
+	}
 }
-
 
 function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMark | null {
 	const marks = cm.state.field(suggestionStateField, false);
@@ -116,7 +120,7 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 }
 
 function isPositionVisible(cm: EditorView, pos: number): boolean {
-    return pos >= cm.viewport.from && pos <= cm.viewport.to;
+	return pos >= cm.viewport.from && pos <= cm.viewport.to;
 }
 
 export function resolveNextSuggestionCM6(
@@ -137,7 +141,7 @@ export function resolveNextSuggestionCM6(
 	}
 
 	let targetMark: SuggestionMark | null;
-	let shouldForceResolve = false; 
+	let shouldForceResolve = false;
 
 	if (allMarksInState.length === 1) {
 		targetMark = allMarksInState[0];
@@ -154,7 +158,7 @@ export function resolveNextSuggestionCM6(
 
 	const currentSelection = cm.state.selection.main;
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
-    
+
 	if (!shouldForceResolve && (!effectivelyOnTarget || !isPositionVisible(cm, targetMark.from))) {
 		cm.dispatch({
 			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
@@ -177,8 +181,8 @@ export function resolveNextSuggestionCM6(
 				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
 			} else {
-                newCursorPosAfterResolve = targetMark.to;
-            }
+				newCursorPosAfterResolve = targetMark.to;
+			}
 		} else if (targetMark.type === "removed") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
 		}
@@ -190,24 +194,25 @@ export function resolveNextSuggestionCM6(
 				textChangeSpec = {
 					from: targetMark.from,
 					to: targetMark.to,
-					insert: targetMark.newlineChar, 
+					insert: targetMark.newlineChar,
 				};
 				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
 			} else {
-                newCursorPosAfterResolve = targetMark.to;
-            }
+				newCursorPosAfterResolve = targetMark.to;
+			}
 		}
 	}
 
-	let currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
+	// biome-ignore lint/suspicious/noExplicitAny: This is required for StateEffect generic
+	const currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
 
-    if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)){
-        currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, {y: "center"}));
-    }
+	if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)) {
+		currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "center" }));
+	}
 
 	const transactionSpec: TransactionSpec = {
 		effects: currentEffects,
-        selection: EditorSelection.cursor(newCursorPosAfterResolve),
+		selection: EditorSelection.cursor(newCursorPosAfterResolve),
 	};
 
 	if (textChangeSpec) {
@@ -224,16 +229,20 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
 		if (!shouldForceResolve && marksAfterResolution.length > 0) {
 			const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
-			if (nextSuggestionToFocus) {
-                if (cm.state.selection.main.head !== nextSuggestionToFocus.from || !isPositionVisible(cm, nextSuggestionToFocus.from)) {
-                    cm.dispatch({
-                        effects: isPositionVisible(cm, nextSuggestionToFocus.from) ? [] : EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-                            y: "center",
-                            yMargin: 50,
-                        }),
-                        selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-                    });
-                }
+			if (
+				nextSuggestionToFocus &&
+				(cm.state.selection.main.head !== nextSuggestionToFocus.from ||
+					!isPositionVisible(cm, nextSuggestionToFocus.from))
+			) {
+				cm.dispatch({
+					effects: isPositionVisible(cm, nextSuggestionToFocus.from)
+						? []
+						: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+								y: "center",
+								yMargin: 50,
+							}),
+					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+				});
 			}
 		}
 	}
@@ -480,7 +489,7 @@ export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: E
 	};
 	if (changesArray.length > 0) {
 		let finalCursorPos = cm.state.selection.main.head;
-		const sortedChangesForCursor = [...changesArray].sort((a,b) => a.from - b.from);
+		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
 		for (const change of sortedChangesForCursor) {
 			if (finalCursorPos > change.from) {
 				if (finalCursorPos <= change.to) {
