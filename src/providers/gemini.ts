@@ -1,7 +1,7 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { TextTransformerPrompt, TextTransformerSettings } from "src/settings";
 import { GEMINI_MODEL_ID_MAP, MODEL_SPECS } from "src/settings-data";
 import { logError } from "src/utils";
+import { TextTransformerPrompt, TextTransformerSettings } from "../settings-data";
 
 /**
  * Send a request to the Gemini API.
@@ -22,7 +22,8 @@ export async function geminiRequest(
 	let fullPrompt = "";
 
 	if (isGenerationTask) {
-		fullPrompt = "You are an AI assistant tasked with generating text based on a user prompt.";
+		fullPrompt =
+			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt.";
 		if (additionalContextForAI?.includes("<<<GENERATION_TARGET_CURSOR_POSITION>>>")) {
 			fullPrompt +=
 				" The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '<<<GENERATION_TARGET_CURSOR_POSITION>>>'. " +

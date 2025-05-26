@@ -1,7 +1,7 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { TextTransformerPrompt, TextTransformerSettings } from "src/settings";
 import { MODEL_SPECS } from "src/settings-data";
 import { logError } from "src/utils";
+import { TextTransformerPrompt, TextTransformerSettings } from "../settings-data";
 
 export async function openAiRequest(
 	settings: TextTransformerSettings,
@@ -14,7 +14,8 @@ export async function openAiRequest(
 		return;
 	}
 
-	let systemMessageContent = "You are an AI assistant helping with text tasks.";
+	let systemMessageContent =
+		"You are an AI assistant embedded in Obsidian helping with text tasks.";
 
 	if (
 		oldText === "" &&

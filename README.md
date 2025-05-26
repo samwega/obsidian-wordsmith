@@ -1,10 +1,10 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.7.1
+**Current Version:** v1.8.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
 Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
@@ -15,40 +15,51 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Release History](#release-history)
-  - [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
-    - [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
-  - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
-    - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
-  - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
-  - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
-  - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
-    - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
-  - [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
-    - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
-  - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
-  - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
-  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
-  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
-- [Features](#features)
-- [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
-- [AI Providers & Models](#ai-providers--models)
-- [Installation & Setup](#installation--setup)
-  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
-  - [Manual Installation](#manual-installation)
-  - [API Key Setup](#api-key-setup)
-- [Usage](#usage)
-  - [Core Commands](#core-commands)
-  - [Managing Suggestions](#managing-suggestions)
-  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
-- [Customizing Prompts](#customizing-prompts)
-- [Legacy Text Trasnformer](#legacy-text-trasnformer)
-- [Plugin Development](#plugin-development)
-- [About the Developer](#about-the-developer)
+* [Release History](#release-history)
+* [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
+* [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
+* [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
+* [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
+* [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
+* [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+* [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
+* [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
+* [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
+* [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
+* [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
+* [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
+* [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
+* [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
+* [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
+* [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+* [Features](#features)
+* [How It Works: Inline Suggestions](#how-it-works-inline-suggestions)
+* [AI Providers & Models](#ai-providers--models)
+* [Installation & Setup](#installation--setup)
+* [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+* [Manual Installation](#manual-installation)
+* [API Key Setup](#api-key-setup)
+* [Usage](#usage)
+* [Core Commands](#core-commands)
+* [Managing Suggestions](#managing-suggestions)
+* [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+* [Customizing Prompts](#customizing-prompts)
+* [Legacy Text Trasnformer](#legacy-text-trasnformer)
+* [Plugin Development](#plugin-development)
+* [About the Developer](#about-the-developer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Release History
+
+### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
+
+This release brings two major improvements to make your AI writing experience more seamless and powerful:
+
+* **Persistent Suggestions Between Reloads:** Your active AI suggestions are now preserved when you reload Obsidian. Previously, if closing the application while suggestions were active, upon returning, you'd see old and new text mixed together and no way to accept/reject or undo it.
+* **Expanded Default Prompts:** A fresh set of carefully crafted default prompts has been added to the collection, giving you more options for text transformation right out of the box. The existing prompts have been recrafted for a more precise output.
+
+**Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
 ### ✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨
 
@@ -56,9 +67,9 @@ This upgrade streamlines the process of providing the AI with the precise inform
 
 **Key Features of v1.7.0:**
 
-*   **Smarter Custom Context Input:** Providing custom instructions or reference material to the AI is now more powerful and intuitive.
-*   **Easy Note Linking with `[[`:** You can now type `[[` in the "Custom" context box of the WordSmith panel to quickly search for and link any note from your vault, seamlessly integrating with your Obsidian workflow.
-*   **Full Note Content Embedding:** When you link notes (e.g., `[[My Style Guide]]`) in the custom context, WordSmith will now intelligently fetch their **entire content** and include it as part of the context sent to the AI. This means you can easily reference detailed style guides, extensive notes, or specific information without manual copy-pasting!
+* **Smarter Custom Context Input:** Providing custom instructions or reference material to the AI is now more powerful and intuitive.
+* **Easy Note Linking with `[[`:** You can now type `[[` in the "Custom" context box of the WordSmith panel to quickly search for and link any note from your vault, seamlessly integrating with your Obsidian workflow.
+* **Full Note Content Embedding:** When you link notes (e.g., `[[My Style Guide]]`) in the custom context, WordSmith will now intelligently fetch their **entire content** and include it as part of the context sent to the AI. This means you can easily reference detailed style guides, extensive notes, or specific information without manual copy-pasting!
 
 #### Minor Versions of v.1.7.x
 
@@ -98,25 +109,25 @@ WordSmith now offers one of the fastest and most ergonomic AI suggestion review 
 
 This major release introduces a powerful new way to interact with AI: **Ad-hoc Contextual Generation directly at your cursor, presented as a suggestion.** Go beyond processing existing text – now you can generate new content, ideas, or continuations seamlessly within your writing flow.
 
-**Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor**
+#### Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor
 
 * **New Command: "Generate text with ad-hoc prompt (as suggestion)"**
-  *   Trigger this editor command (via hotkey or command palette) to open the new "Context Aware Generator" modal.
-  *   Type your specific instruction (e.g., "brainstorm ideas for X," "write an intro paragraph about Y," "explain Z simply") into the modal.
-*   **Contextual Awareness for Generation:**
-  *   Leverages the settings in your **AI Context Control Panel** (Custom, Dynamic, or Entire Note).
-  *   When Dynamic or Entire Note context is active, a special marker (`<<<GENERATION_TARGET_CURSOR_POSITION>>>`) is inserted at your precise cursor location within the context sent to the AI. This tells the AI *exactly* where you intend the new text to be generated.
-  *   The AI uses this context and marker to produce more relevant and precisely placed generated content.
+  * Trigger this editor command (via hotkey or command palette) to open the new "Context Aware Generator" modal.
+  * Type your specific instruction (e.g., "brainstorm ideas for X," "write an intro paragraph about Y," "explain Z simply") into the modal.
+* **Contextual Awareness for Generation:**
+  * Leverages the settings in your **AI Context Control Panel** (Custom, Dynamic, or Entire Note).
+  * When Dynamic or Entire Note context is active, a special marker (`<<<GENERATION_TARGET_CURSOR_POSITION>>>`) is inserted at your precise cursor location within the context sent to the AI. This tells the AI *exactly* where you intend the new text to be generated.
+  * The AI uses this context and marker to produce more relevant and precisely placed generated content.
 * **Seamless Suggestion Workflow:**
-  *   The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
-  *   You can then accept or reject this generated block just like any other WordSmith suggestion.
-  *   The cursor automatically moves to the end of the inserted text.
+  * The AI-generated text is inserted directly at your cursor position as a single "added" suggestion.
+  * You can then accept or reject this generated block just like any other WordSmith suggestion.
+  * The cursor automatically moves to the end of the inserted text.
 * **Modal Enhancements:**
-  *   The "Context Aware Generator" modal automatically focuses the prompt input area.
-  *   A notice appears if you try to submit an empty prompt.
+  * The "Context Aware Generator" modal automatically focuses the prompt input area.
+  * A notice appears if you try to submit an empty prompt.
 * **Streamlined Suggestion Navigation:**
-  *   When using "Accept/Reject Next Suggestion," if there's only **one** suggestion in the entire document, it's now resolved immediately without requiring a second key press (the "scroll and press again" step is skipped).
-  *   For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
+  * When using "Accept/Reject Next Suggestion," if there's only **one** suggestion in the entire document, it's now resolved immediately without requiring a second key press (the "scroll and press again" step is skipped).
+  * For multiple suggestions, the two-step navigation (scroll to suggestion, then press again to act) remains, ensuring you can clearly target specific suggestions.
 
 **Why this is a game-changer:**
 
@@ -416,7 +427,7 @@ sent to the AI with your text.
 **How to Open the Panel:**
 
 The AI Context Control Panel is an `ItemView` that typically opens in one of your
-Obsidian sidebars. Here’s how to access it:
+Obsidian sidebars. Here's how to access it:
 
 1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in
     `Settings` -> `Community plugins`. The icon and panel will only be

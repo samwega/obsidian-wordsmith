@@ -1,14 +1,13 @@
 // src/textTransformer.ts
 import { EditorSelection } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
 import { diffWordsWithSpace } from "diff";
-import { Editor, Notice } from "obsidian";
+import { Editor, Notice, TFile } from "obsidian"; // Added TFile
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
 import TextTransformer from "./main";
 import { geminiRequest } from "./providers/gemini";
 import { openAiRequest } from "./providers/openai";
-import { TextTransformerPrompt } from "./settings";
+import { TextTransformerPrompt } from "./settings-data";
 
 import {
 	SuggestionMark,
@@ -17,15 +16,11 @@ import {
 	setSuggestionsEffect,
 	suggestionStateField,
 } from "./suggestion-state";
+import { getCmEditorView } from "./utils"; // Import from utils
 
 export const NEWLINE_ADD_SYMBOL = "↵";
 export const NEWLINE_REMOVE_SYMBOL = "¶";
 const GENERATION_TARGET_CURSOR_MARKER = "<<<GENERATION_TARGET_CURSOR_POSITION>>>";
-
-function getCmEditorView(editor: Editor): EditorView | null {
-	const cmInstance = editor.cm;
-	return cmInstance instanceof EditorView ? cmInstance : null;
-}
 
 export async function generateTextAndApplyAsSuggestionCM6(
 	plugin: TextTransformer,
@@ -38,6 +33,12 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		return;
 	}
 
+	const currentFile = plugin.app.workspace.getActiveFile(); // Get file for persistence
+	if (!currentFile) {
+		new Notice("WordSmith: No active file to generate suggestions for.", 5000);
+		return;
+	}
+
 	const existingSuggestions = cm.state.field(suggestionStateField, false);
 	if (existingSuggestions && existingSuggestions.length > 0) {
 		new Notice("There are already active suggestions. Please accept or reject them first.", 6000);
@@ -47,7 +48,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	const { app, settings } = plugin;
 	let additionalContextForAI = "";
 	const contextParts: string[] = [];
-	const currentFile = app.workspace.getActiveFile();
+	// const currentFile = app.workspace.getActiveFile(); // Already got it above
 	const cursorOffset = cm.state.selection.main.head;
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
@@ -136,7 +137,7 @@ ${fileContent}
 	const notice = new Notice("🤖 Generating text via ad-hoc prompt...", 0);
 	let response: { newText: string; isOverlength: boolean; cost: number } | undefined;
 	try {
-		const oldTextForAI = "";
+		const oldTextForAI = ""; // For generation tasks, oldText is empty
 		response = settings.model.startsWith("gemini-")
 			? await geminiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI, true)
 			: await openAiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI);
@@ -225,6 +226,9 @@ ${fileContent}
 		}),
 	);
 
+	const newMarksAfterDispatch = cm.state.field(suggestionStateField, false) || [];
+	await plugin.updateFileSuggestions(currentFile.path, newMarksAfterDispatch); // PERSISTENCE CALL
+
 	if (isOverlength) {
 		new Notice("Generated text might be incomplete due to model limits.", 10000);
 	}
@@ -243,6 +247,7 @@ async function validateAndApplyAIDrivenChanges(
 	scope: "Selection" | "Paragraph",
 	promptInfo: TextTransformerPrompt,
 	scopeRangeCm: { from: number; to: number },
+	file: TFile, // Added file for persistence
 ): Promise<boolean> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -265,7 +270,7 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	const { app, settings } = plugin;
-	const fileBefore = app.workspace.getActiveFile()?.path;
+	const fileBeforePath = file.path; // Use passed file's path
 	const longInput = originalText.length > (settings.longInputThreshold || 1500);
 	const veryLongInput = originalText.length > (settings.veryLongInputThreshold || 15000);
 	const notifDuration = longInput ? 0 : 4_000;
@@ -318,22 +323,19 @@ ${customText}
 ${dynamicContextText}
 --- Dynamic Context End ---`,
 				);
-			} else if (useWholeNote) {
-				const currentFile = app.workspace.getActiveFile();
-				if (currentFile) {
-					const fileContent = await app.vault.cachedRead(currentFile);
-					let wholeNoteContext = fileContent;
-					if (fileContent.includes(originalText))
-						wholeNoteContext = wholeNoteContext.replace(
-							originalText,
-							`${markerStart}${originalText}${markerEnd}`,
-						);
-					contextParts.push(
-						`--- Whole Note Context Start ---
+			} else if (useWholeNote && file) {
+				const fileContent = await app.vault.cachedRead(file);
+				let wholeNoteContext = fileContent;
+				if (fileContent.includes(originalText))
+					wholeNoteContext = wholeNoteContext.replace(
+						originalText,
+						`${markerStart}${originalText}${markerEnd}`,
+					);
+				contextParts.push(
+					`--- Whole Note Context Start ---
 ${wholeNoteContext}
 --- Whole Note Context End ---`,
-					);
-				}
+				);
 			}
 			if (contextParts.length > 0) additionalContextForAI = contextParts.join("\n\n");
 		}
@@ -376,7 +378,8 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		new Notice("AI did not return new text.", notifDuration);
 		return false;
 	}
-	if (fileBefore !== app.workspace.getActiveFile()?.path) {
+	if (fileBeforePath !== plugin.app.workspace.getActiveFile()?.path) {
+		// Check against current active file
 		new Notice("⚠️ Active file changed. Aborting.", notifDuration);
 		return false;
 	}
@@ -396,14 +399,12 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 
 	for (const part of diffResult) {
 		const partValue = part.value;
-
 		if (part.added || part.removed) {
 			let currentPosInPartValue = 0;
 			while (currentPosInPartValue < partValue.length) {
 				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
 				let segmentLengthFromDiff = 0;
 				let textSegmentForEditor = "";
-
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
 					segmentLengthFromDiff = 1;
 					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
@@ -437,17 +438,14 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 						if (idx !== -1)
 							nextNewlineIndexInDiffPart = Math.min(nextNewlineIndexInDiffPart, idx);
 					});
-
 					const endOfTextSegmentInDiffPart =
 						nextNewlineIndexInDiffPart === Number.POSITIVE_INFINITY
 							? partValue.length
 							: nextNewlineIndexInDiffPart;
-
 					textSegmentForEditor = partValue.substring(
 						currentPosInPartValue,
 						endOfTextSegmentInDiffPart,
 					);
-
 					textToInsertInEditor += textSegmentForEditor;
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
@@ -481,6 +479,9 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		}),
 	);
 
+	const newMarksAfterDispatch = cm.state.field(suggestionStateField, false) || [];
+	await plugin.updateFileSuggestions(file.path, newMarksAfterDispatch); // PERSISTENCE CALL
+
 	if (isOverlength)
 		new Notice("Text > AI model max output. Suggestions may be incomplete.", 10_000);
 	new Notice(
@@ -495,6 +496,7 @@ export async function textTransformerTextCM6(
 	plugin: TextTransformer,
 	editor: Editor,
 	prompt: TextTransformerPrompt,
+	file: TFile, // Added file for persistence context
 ): Promise<void> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -533,5 +535,13 @@ export async function textTransformerTextCM6(
 		textScope = "Selection";
 		rangeCm = { from: currentCmSelection.from, to: currentCmSelection.to };
 	}
-	await validateAndApplyAIDrivenChanges(plugin, editor, originalText, textScope, prompt, rangeCm);
+	await validateAndApplyAIDrivenChanges(
+		plugin,
+		editor,
+		originalText,
+		textScope,
+		prompt,
+		rangeCm,
+		file,
+	);
 }
