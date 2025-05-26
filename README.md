@@ -27,8 +27,9 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 * **Granular suggestion management**: per-suggestion, selection/paragraph, or all  
 * **BYOK:** Bring your own API key—only pay what you use  
 * Multiple AI provider/model support: *OpenAI (GPT-4.1, mini, nano)*, *Google Gemini 2.5 (Pro, Flash)*  
-* **Great Prompt Management Settings UI:** enable/disable prompts or create new one.
+* **Great Prompt Management Settings UI:** enable/disable prompts or create new one
 * Robust error handling, performance, and **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
+* **Multilingual**—the AI should autodetect the language from Context, selection and/or ad-hoc prompt, and return suggestions in the same language 
 * Manual and (planned) community plugin installation  
 * **Persistent suggestions** across Obsidian reloads
 
