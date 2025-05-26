@@ -36,7 +36,35 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
+- [Usage](#usage)
+  - [Commands:](#commands)
+  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+  - [Customizing Prompts](#customizing-prompts)
+  - [API Key Setup](#api-key-setup)
+- [AI Providers & Models](#ai-providers--models)
+- [Release History](#release-history)
+  - [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
+  - [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
+    - [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
+  - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
+    - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
+  - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+    - [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
+  - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
+  - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
+    - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
+  - [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
+    - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
+  - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
+  - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
+  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
+  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+- [Installation & Setup](#installation--setup)
+  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+  - [Manual Installation](#manual-installation)
+- [Legacy Text Transformer (closest to Proofreader)](#legacy-text-transformer-closest-to-proofreader)
+- [Plugin Development](#plugin-development)
+- [About the Developer](#about-the-developer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
