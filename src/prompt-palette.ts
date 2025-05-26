@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { App, SuggestModal } from "obsidian";
-import { TextTransformerPrompt } from "./settings"; // Assuming settings.ts re-exports TextTransformerPrompt
+import { TextTransformerPrompt } from "./settings-data";
 
 export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
 	private prompts: TextTransformerPrompt[];

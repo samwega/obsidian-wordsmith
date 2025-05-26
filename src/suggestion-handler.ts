@@ -1,53 +1,37 @@
 import { EditorSelection, StateEffect, Text, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-// src/suggestion-handler.ts
-import { Editor, Notice } from "obsidian";
+import { Editor, Notice, TFile } from "obsidian"; // Added TFile
 
-import TextTransformer from "./main"; // Import plugin class
+import TextTransformer from "./main";
 import {
 	SuggestionMark,
 	clearAllSuggestionsEffect,
 	resolveSuggestionEffect,
 	suggestionStateField,
 } from "./suggestion-state";
-
-function getCmEditorView(editor: Editor): EditorView | null {
-	const cmInstance = editor.cm;
-	return cmInstance instanceof EditorView ? cmInstance : null;
-}
+import { getCmEditorView } from "./utils"; // Import from utils
 
 // Helper for Feature 2: Find next suggestion mark for focusing
-// Renamed for clarity to distinguish from findNextSuggestionMark used in resolution.
 function findNextFocusTarget(
 	marks: SuggestionMark[],
 	currentSelectionHead: number,
 ): SuggestionMark | null {
 	if (marks.length === 0) return null;
-	// Ensure marks are sorted by their 'from' position
 	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
-
-	// Find the first mark whose 'from' position is strictly greater than the current selection head
 	for (const mark of sortedMarks) {
 		if (mark.from > currentSelectionHead) return mark;
 	}
-	// If no mark is found after the current selection head (i.e., cursor is at or after the last mark),
-	// cycle to the very first mark in the document.
 	return sortedMarks[0];
 }
 
 // Helper for Feature 2: Find previous suggestion mark for focusing
-// Renamed for clarity.
 function findPreviousFocusTarget(
 	marks: SuggestionMark[],
 	currentSelectionHead: number,
 ): SuggestionMark | null {
 	if (marks.length === 0) return null;
-	// Ensure marks are sorted by their 'from' position
 	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
-
 	let foundMark: SuggestionMark | null = null;
-	// Iterate backwards through the sorted marks to find the last mark
-	// whose 'from' position is strictly less than the current selection head.
 	for (let i = sortedMarks.length - 1; i >= 0; i--) {
 		const mark = sortedMarks[i];
 		if (mark.from < currentSelectionHead) {
@@ -55,8 +39,6 @@ function findPreviousFocusTarget(
 			break;
 		}
 	}
-	// If a mark before the current selection head was found, return it.
-	// Otherwise (i.e., cursor is at or before the first mark), cycle to the very last mark in the document.
 	return (foundMark || sortedMarks.at(-1)) ?? null;
 }
 
@@ -71,10 +53,8 @@ export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor)
 		new Notice("No suggestions to navigate.", 2000);
 		return;
 	}
-
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findNextFocusTarget(allMarks, currentPos);
-
 	if (targetMark) {
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
@@ -94,10 +74,8 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
 		new Notice("No suggestions to navigate.", 2000);
 		return;
 	}
-
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findPreviousFocusTarget(allMarks, currentPos);
-
 	if (targetMark) {
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
@@ -109,10 +87,8 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
 function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMark | null {
 	const marks = cm.state.field(suggestionStateField, false);
 	if (!marks || marks.length === 0) return null;
-
 	const searchStartPos = fromPos !== undefined ? fromPos : cm.state.selection.main.head;
 	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
-
 	for (const mark of sortedMarks) {
 		if (mark.from >= searchStartPos) return mark;
 	}
@@ -124,8 +100,9 @@ function isPositionVisible(cm: EditorView, pos: number): boolean {
 }
 
 export function resolveNextSuggestionCM6(
-	_plugin: TextTransformer,
+	plugin: TextTransformer, // Changed from _plugin
 	editor: Editor,
+	file: TFile, // Added file
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -222,6 +199,7 @@ export function resolveNextSuggestionCM6(
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
+	plugin.updateFileSuggestions(file.path, marksAfterResolution); // PERSISTENCE CALL
 
 	if (marksAfterResolution.length === 0) {
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
@@ -251,13 +229,11 @@ export function resolveNextSuggestionCM6(
 function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: number } {
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
-
 	while (lineFrom.number > 1) {
 		const prevLine = doc.line(lineFrom.number - 1);
 		if (prevLine.text.trim() === "") break;
 		lineFrom = prevLine;
 	}
-
 	while (lineTo.number < doc.lines) {
 		const nextLine = doc.line(lineTo.number + 1);
 		if (nextLine.text.trim() === "") break;
@@ -272,11 +248,9 @@ function* iterateParagraphs(
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
 	if (currentPos >= doc.length && doc.length > 0) return;
-
 	while (currentPos < doc.length) {
 		const line = doc.lineAt(currentPos);
 		let paragraphBeginLineNum = -1;
-
 		for (let n = line.number; n <= doc.lines; n++) {
 			const l = doc.line(n);
 			if (currentPos > l.to && n > line.number) continue;
@@ -285,18 +259,14 @@ function* iterateParagraphs(
 				break;
 			}
 		}
-
 		if (paragraphBeginLineNum === -1) return;
-
 		const paragraphStartLine = doc.line(paragraphBeginLineNum);
 		let paragraphEndLine = paragraphStartLine;
-
 		while (paragraphEndLine.number < doc.lines) {
 			const nextLine = doc.line(paragraphEndLine.number + 1);
 			if (nextLine.text.trim() === "") break;
 			paragraphEndLine = nextLine;
 		}
-
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
 		currentPos = paragraphEndLine.to + 1;
 		if (currentPos >= doc.length) return;
@@ -304,8 +274,9 @@ function* iterateParagraphs(
 }
 
 export function resolveSuggestionsInSelectionCM6(
-	_plugin: TextTransformer,
+	plugin: TextTransformer, // Changed from _plugin
 	editor: Editor,
+	file: TFile, // Added file
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -332,7 +303,6 @@ export function resolveSuggestionsInSelectionCM6(
 		isOperatingOnIdentifiedParagraph = true;
 		const paragraphAtCursor = getParagraphBoundaries(doc, cursorOriginalPos);
 		let pToProcess: { from: number; to: number } | null = null;
-
 		let iterator = iterateParagraphs(doc, paragraphAtCursor.from);
 		for (const p of iterator) {
 			const marksInP = allMarks.filter((mark) => mark.from < p.to && mark.to > p.from);
@@ -341,7 +311,6 @@ export function resolveSuggestionsInSelectionCM6(
 				break;
 			}
 		}
-
 		if (!pToProcess && paragraphAtCursor.from > 0) {
 			iterator = iterateParagraphs(doc, 0);
 			for (const p of iterator) {
@@ -353,9 +322,7 @@ export function resolveSuggestionsInSelectionCM6(
 				}
 			}
 		}
-
 		paragraphToOperateOn = pToProcess;
-
 		if (paragraphToOperateOn) {
 			if (
 				paragraphToOperateOn.from === paragraphAtCursor.from &&
@@ -411,7 +378,6 @@ export function resolveSuggestionsInSelectionCM6(
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
 		let textChange: { from: number; to: number; insert: string } | undefined;
-
 		if (action === "accept") {
 			if (mark.type === "added") {
 				if (mark.isNewlineChange && mark.newlineChar) {
@@ -451,6 +417,9 @@ export function resolveSuggestionsInSelectionCM6(
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
 
+	const newMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
+	plugin.updateFileSuggestions(file.path, newMarksAfterOp); // PERSISTENCE CALL
+
 	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
 	new Notice(noticeMessage, 3000);
 
@@ -460,7 +429,11 @@ export function resolveSuggestionsInSelectionCM6(
 	}
 }
 
-export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: Editor): void {
+export function clearAllActiveSuggestionsCM6(
+	plugin: TextTransformer, // Changed from _plugin
+	editor: Editor,
+	file: TFile, // Added file
+): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		new Notice("Modern editor version required.");
@@ -485,7 +458,7 @@ export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: E
 	}
 
 	const transactionSpec: TransactionSpec = {
-		effects: clearAllSuggestionsEffect.of(null),
+		effects: clearAllSuggestionsEffect.of(null), // This will clear the state field
 	};
 	if (changesArray.length > 0) {
 		let finalCursorPos = cm.state.selection.main.head;
@@ -505,5 +478,10 @@ export function clearAllActiveSuggestionsCM6(_plugin: TextTransformer, editor: E
 		transactionSpec.selection = cm.state.selection;
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
+
+	// After dispatch, the suggestionStateField will be empty due to clearAllSuggestionsEffect
+	const newMarksAfterClear = cm.state.field(suggestionStateField, false) || [];
+	plugin.updateFileSuggestions(file.path, newMarksAfterClear); // PERSISTENCE CALL (will pass empty array)
+
 	new Notice("All active suggestions cleared (changes rejected).", 3000);
 }

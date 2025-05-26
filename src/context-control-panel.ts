@@ -272,7 +272,7 @@ export class ContextControlPanel extends ItemView {
 		});
 	}
 
-	override async onClose(): Promise<void> {
+	override onClose(): Promise<void> {
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null;

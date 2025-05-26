@@ -1,7 +1,7 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { TextTransformerPrompt, TextTransformerSettings } from "src/settings";
 import { MODEL_SPECS } from "src/settings-data";
 import { logError } from "src/utils";
+import { TextTransformerPrompt, TextTransformerSettings } from "../settings-data";
 
 export async function openAiRequest(
 	settings: TextTransformerSettings,

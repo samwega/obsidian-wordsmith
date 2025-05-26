@@ -436,10 +436,3 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		addPromptSetting.settingEl.style.borderTop = "none";
 	}
 }
-
-export { DEFAULT_SETTINGS, MODEL_SPECS } from "./settings-data";
-export type {
-	SupportedModels,
-	TextTransformerPrompt,
-	TextTransformerSettings,
-} from "./settings-data";
