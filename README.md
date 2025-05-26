@@ -1,10 +1,10 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.7.1
+**Current Version:** v1.8.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven.
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
 Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
@@ -16,7 +16,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 * [Release History](#release-history)
-  * [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
+  * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
     * [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
   * [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
     * [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
@@ -49,6 +49,15 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Release History
+
+### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
+
+This release brings two major improvements to make your AI writing experience more seamless and powerful:
+
+* **Persistent Suggestions Between Reloads:** Your active AI suggestions are now preserved when you reload Obsidian. Previously, if closing the application while suggestions were active, upon returning, you'd see old and new text mixed together and no way to accept/reject or undo it.
+* **Expanded Default Prompts:** A fresh set of carefully crafted default prompts has been added to the collection, giving you more options for text transformation right out of the box. The existing prompts have been recrafted for a more precise output.
+
+**Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
 ### ✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨
 

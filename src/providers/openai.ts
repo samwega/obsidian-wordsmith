@@ -14,7 +14,7 @@ export async function openAiRequest(
 		return;
 	}
 
-	let systemMessageContent = "You are an AI assistant helping with text tasks.";
+	let systemMessageContent = "You are an AI assistant embedded in Obsidian helping with text tasks.";
 
 	if (
 		oldText === "" &&

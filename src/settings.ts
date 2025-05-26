@@ -205,7 +205,7 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		const textInput = form.appendChild(document.createElement("textarea"));
 		textInput.placeholder = "Prompt text";
 		textInput.value =
-			"Act as a professional editor. [replace this with your prompt; replace the role too if you want]. Output only the revised text and nothing else. The text is:";
+			"[ROLE]: Professional editor.\n[TASK]: You will receive a text selection. [replace this with your prompt; replace the role too if you want].\nOutput only the revised text and nothing else. The text is:";
 		textInput.setAttribute(
 			"style",
 			"width: 100%;" +
@@ -408,17 +408,8 @@ Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (
 		const addPromptFooter = containerEl.createEl("div");
 		addPromptFooter.style.display = "flex";
 		addPromptFooter.style.alignItems = "center";
-		addPromptFooter.style.justifyContent = "space-between";
+		addPromptFooter.style.justifyContent = "flex-end";
 		addPromptFooter.style.marginTop = "10px";
-
-		const customPromptDesc = addPromptFooter.createEl("p", {
-			text: "If you need to modify the default prompts for some reason, you can find them in your-vault/.obsidian/plugins/wordsmith/data.json - reload obsidian when you're done.",
-		});
-		customPromptDesc.style.fontSize = "var(--font-ui-smaller)";
-		customPromptDesc.style.color = "var(--text-muted)";
-		customPromptDesc.style.marginBottom = "0px";
-		customPromptDesc.style.marginRight = "10px";
-		customPromptDesc.style.flexGrow = "1";
 
 		const addPromptSetting = new Setting(addPromptFooter)
 			.setClass("add-prompt-setting-footer")
