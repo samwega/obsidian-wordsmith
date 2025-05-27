@@ -145,7 +145,7 @@ export class ContextControlPanel extends ItemView {
 					this.wholeNoteContextToggleComponent.setValue(false);
 				}
 				if (this.dynamicContextLinesSetting) {
-					this.dynamicContextLinesSetting.settingEl.style.display = value ? "flex" : "none";
+					this.dynamicContextLinesSetting.settingEl.classList.toggle("is-visible", value);
 				}
 			});
 		});
@@ -174,9 +174,7 @@ export class ContextControlPanel extends ItemView {
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
 			this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
-			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext
-				? "flex"
-				: "none";
+			this.dynamicContextLinesSetting.settingEl.classList.toggle("is-visible", this.useDynamicContext);
 		}
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
@@ -187,7 +185,7 @@ export class ContextControlPanel extends ItemView {
 					this.useDynamicContext = false;
 					this.dynamicContextToggleComponent.setValue(false);
 					if (this.dynamicContextLinesSetting) {
-						this.dynamicContextLinesSetting.settingEl.style.display = "none";
+						this.dynamicContextLinesSetting.settingEl.classList.remove("is-visible");
 					}
 				}
 			});

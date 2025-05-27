@@ -20,6 +20,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		// Reset the form and button instance references when the display is re-rendered
+		this.addPromptForm = null;
+		this.addPromptButtonSettingInstance = null;
+
 		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
 		this._renderApiModelSection(containerEl);
@@ -175,14 +179,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			}
 			form.remove();
 			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
-			// this.display(); // No longer calling full display
+			this.addPromptButtonSettingInstance?.settingEl.show();
+			this.display();
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
 			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
-			// this.display(); // No longer calling full display
+			this.addPromptButtonSettingInstance?.settingEl.show();
 		};
 		return form;
 	}
@@ -228,14 +231,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				enabled: true,
 			});
 			await this.plugin.saveSettings();
-			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
-			// this.display(); // No longer calling full display
+			this.addPromptButtonSettingInstance?.settingEl.show();
+			this.display();
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
 			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
-			// this.display(); // No longer calling full display
+			this.addPromptButtonSettingInstance?.settingEl.show();
 		};
 		return form;
 	}
@@ -294,31 +296,32 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			}
 		}
 
-		if (!this.addPromptButtonSettingInstance) {
-			this.addPromptButtonSettingInstance = new Setting(promptManagementWrapper).addButton(
-				(button) => {
-					button.setButtonText("Add New Prompt").setCta();
-					button.onClick(() => {
-						if (this.addPromptForm) {
-							this.addPromptForm.remove();
-							this.addPromptForm = null;
-						}
-						this.addPromptForm = this._createAddPromptForm();
-						// Insert Add form before the button itself
-						this.addPromptButtonSettingInstance?.settingEl.insertAdjacentElement(
-							"beforebegin",
-							this.addPromptForm,
-						);
-						this.addPromptButtonSettingInstance?.settingEl.hide();
-					});
-				},
-			);
-			this.addPromptButtonSettingInstance.settingEl.classList.add(
-				"tt-add-prompt-button-container",
-			);
-		}
+		// Always create the Setting instance for the button in each render pass
+		this.addPromptButtonSettingInstance = new Setting(promptManagementWrapper)
+			.setName("Add New Prompt") // Keep name for consistency if styles target it
+			.setDesc("Create a new custom prompt for your text transformations.") // Keep desc
+			.addButton((button) => {
+				button.setButtonText("Add New Prompt");
+				button.onClick(() => {
+					if (this.addPromptForm) { // If a form (e.g., edit form) was already open
+						this.addPromptForm.remove();
+						this.addPromptForm = null; // Clear ref to old form
+					}
+					this.addPromptForm = this._createAddPromptForm(); // Create and assign the new add form
+					// Insert Add form before the button itself
+					this.addPromptButtonSettingInstance?.settingEl.insertAdjacentElement(
+						"beforebegin",
+						this.addPromptForm,
+					);
+					this.addPromptButtonSettingInstance?.settingEl.hide(); // Hide button when form is shown
+				});
+			});
+		this.addPromptButtonSettingInstance.settingEl.classList.add(
+			"tt-add-prompt-button-container",
+		);
 
-		if (this.addPromptForm?.classList.contains("tt-add-prompt-form")) {
+		// Visibility logic based on .show() / .hide()
+		if (this.addPromptForm) { // Check if a form (add or edit) is active
 			this.addPromptButtonSettingInstance?.settingEl.hide();
 		} else {
 			this.addPromptButtonSettingInstance?.settingEl.show();
@@ -404,6 +407,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 							// Fallback: if absolutely nothing else, append to grid's parent (less ideal)
 							gridContainer.parentElement?.appendChild(this.addPromptForm);
 						}
+						this.addPromptButtonSettingInstance?.settingEl.hide();
 					});
 			});
 			setting.addExtraButton((btn) => {

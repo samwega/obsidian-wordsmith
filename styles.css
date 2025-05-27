@@ -152,6 +152,7 @@ body.theme-light .text-transformer-removed-active {
 	display: flex; /* Make the setting row itself a flex container */
 	justify-content: flex-end; /* Align controls (button) to the end */
 }
+
 .tt-add-prompt-button-container .setting-item-info {
 	display: none; /* Hide the (empty) name/description part of this setting */
 }
@@ -224,7 +225,7 @@ body.theme-light .text-transformer-removed-active {
 .tt-prompts-grid {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr); /* Two columns */
-	gap: 0px 60px; /* No vertical gap, 10px horizontal gap */
+	gap: 0px 50px; /* No vertical gap, 10px horizontal gap */
 	align-items: center; /* Vertically align items in the center of their cell */
 }
 
@@ -318,12 +319,12 @@ body.theme-light .text-transformer-removed-active {
 .ccp-dynamic-lines-setting {
 	/* Applied to the Setting.settingEl */
 	border-top: none !important; /* Important to override default Setting border */
-	/* display: none; /* Initially hidden, use .is-visible to show */
+	display: none; /* Initially hidden, use .is-visible to show */
 }
 
-/* .ccp-dynamic-lines-setting.is-visible {
+.ccp-dynamic-lines-setting.is-visible {
     display: flex; /* Or 'block' depending on Setting's default display type */
-/* } */
+}
 
 .ccp-dynamic-lines-setting-name {
 	/* Applied to the Setting.nameEl */
