@@ -250,98 +250,104 @@ body.theme-light .text-transformer-removed-active {
 
 /* Styles for ContextControlPanel from context-control-panel.ts */
 .ccp-header-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 2px;
 }
 
 .ccp-title {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    flex-grow: 1;
-    font-size: var(--font-ui-medium);
-    color: var(--text-accent);
-    font-weight: bold;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	flex-grow: 1;
+	font-size: var(--font-ui-medium);
+	color: var(--text-accent);
+	font-weight: bold;
 }
 
-.ccp-model-dropdown-select { /* Applied to the <select> element within the dropdown */
-    max-width: 150px;
-    font-size: var(--font-ui-smaller);
-    padding: 0px 18px 0px 2px; /* Note: Obsidian's default dropdown might have specific padding needs */
-    height: auto;
+.ccp-model-dropdown-select {
+	/* Applied to the <select> element within the dropdown */
+	max-width: 150px;
+	font-size: var(--font-ui-smaller);
+	padding: 0px 18px 0px 2px; /* Note: Obsidian's default dropdown might have specific padding needs */
+	height: auto;
 }
 
 .ccp-context-options-header {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    margin-top: 15px;
-    margin-bottom: 5px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	margin-top: 15px;
+	margin-bottom: 5px;
 }
 
 .ccp-description-indicator {
-    margin-right: 5px;
-    font-size: var(--font-ui-small);
-    color: var(--text-muted);
+	margin-right: 5px;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
 }
 
 .ccp-subtitle {
-    font-weight: bold;
-    font-size: var(--font-ui-small);
-    color: var(--text-muted);
+	font-weight: bold;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
 }
 
 .ccp-description-container {
-    padding-left: 20px;
-    margin-bottom: 10px;
-    font-size: var(--font-ui-smaller);
-    color: var(--text-muted);
-    line-height: 1.4;
-    display: none; /* Initially hidden, use .is-visible to show */
+	padding-left: 20px;
+	margin-bottom: 10px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	line-height: 1.4;
+	display: none; /* Initially hidden, use .is-visible to show */
 }
 
 .ccp-description-container.is-visible {
-    display: block;
+	display: block;
 }
 
-.ccp-description-paragraph { /* A general class for paragraphs in the description */
-    margin-bottom: 3px; /* Default margin, can be overridden if needed */
+.ccp-description-paragraph {
+	/* A general class for paragraphs in the description */
+	margin-bottom: 3px; /* Default margin, can be overridden if needed */
 }
 
-.ccp-description-p1 { 
-    margin-bottom: 3px; 
+.ccp-description-p1 {
+	margin-bottom: 3px;
 }
 
-.ccp-dynamic-lines-setting { /* Applied to the Setting.settingEl */
-    border-top: none !important; /* Important to override default Setting border */
-    /* display: none; /* Initially hidden, use .is-visible to show */
+.ccp-dynamic-lines-setting {
+	/* Applied to the Setting.settingEl */
+	border-top: none !important; /* Important to override default Setting border */
+	/* display: none; /* Initially hidden, use .is-visible to show */
 }
 
 /* .ccp-dynamic-lines-setting.is-visible {
     display: flex; /* Or 'block' depending on Setting's default display type */
 /* } */
 
-.ccp-dynamic-lines-setting-name { /* Applied to the Setting.nameEl */
-    color: var(--text-accent);
+.ccp-dynamic-lines-setting-name {
+	/* Applied to the Setting.nameEl */
+	color: var(--text-accent);
 }
 
-.ccp-dynamic-lines-input { /* Applied to the TextComponent.inputEl */
-    width: 40px;
+.ccp-dynamic-lines-input {
+	/* Applied to the TextComponent.inputEl */
+	width: 40px;
 }
 
 /* Styles for custom context text area in ContextControlPanel */
 .ccp-custom-context-container {
-    margin-top: 5px;
-    display: none; /* Initially hidden */
+	margin-top: 5px;
+	display: none; /* Initially hidden */
 }
 
 .ccp-custom-context-container.is-visible {
-    display: block; /* Or 'flex' if it's a flex container, but 'block' is likely fine for a div */
+	display: block; /* Or 'flex' if it's a flex container, but 'block' is likely fine for a div */
 }
 
-.ccp-custom-context-textarea { /* Applied to the TextAreaComponent.inputEl */
-    width: 100%;
-    min-height: 80px;
-    resize: vertical;
+.ccp-custom-context-textarea {
+	/* Applied to the TextAreaComponent.inputEl */
+	width: 100%;
+	min-height: 80px;
+	resize: vertical;
 }

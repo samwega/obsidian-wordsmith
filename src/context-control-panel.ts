@@ -104,21 +104,29 @@ export class ContextControlPanel extends ItemView {
 		});
 		p1.classList.add("ccp-description-p1");
 
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
-		}).classList.add("ccp-description-paragraph");
+		this.descriptionContainer
+			.createEl("p", {
+				text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
+			})
+			.classList.add("ccp-description-paragraph");
 
-		this.descriptionContainer.createEl("p", {
-			text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
-		}).classList.add("ccp-description-paragraph");
+		this.descriptionContainer
+			.createEl("p", {
+				text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
+			})
+			.classList.add("ccp-description-paragraph");
 
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
-		}).classList.add("ccp-description-paragraph");
+		this.descriptionContainer
+			.createEl("p", {
+				text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
+			})
+			.classList.add("ccp-description-paragraph");
 
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
-		}).classList.add("ccp-description-paragraph");
+		this.descriptionContainer
+			.createEl("p", {
+				text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
+			})
+			.classList.add("ccp-description-paragraph");
 
 		contextOptionsHeader.addEventListener("click", () => {
 			this.isDescriptionExpanded = !this.isDescriptionExpanded;
@@ -166,7 +174,9 @@ export class ContextControlPanel extends ItemView {
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
 			this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
-			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "flex" : "none";
+			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext
+				? "flex"
+				: "none";
 		}
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
