@@ -323,7 +323,7 @@ body.theme-light .text-transformer-removed-active {
 }
 
 .ccp-dynamic-lines-setting.is-visible {
-    display: flex; /* Or 'block' depending on Setting's default display type */
+	display: flex; /* Or 'block' depending on Setting's default display type */
 }
 
 .ccp-dynamic-lines-setting-name {

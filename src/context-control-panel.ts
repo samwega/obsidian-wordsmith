@@ -174,7 +174,10 @@ export class ContextControlPanel extends ItemView {
 		if (this.dynamicContextLinesSetting) {
 			this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
 			this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
-			this.dynamicContextLinesSetting.settingEl.classList.toggle("is-visible", this.useDynamicContext);
+			this.dynamicContextLinesSetting.settingEl.classList.toggle(
+				"is-visible",
+				this.useDynamicContext,
+			);
 		}
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {

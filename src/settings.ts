@@ -303,7 +303,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			.addButton((button) => {
 				button.setButtonText("Add New Prompt");
 				button.onClick(() => {
-					if (this.addPromptForm) { // If a form (e.g., edit form) was already open
+					if (this.addPromptForm) {
+						// If a form (e.g., edit form) was already open
 						this.addPromptForm.remove();
 						this.addPromptForm = null; // Clear ref to old form
 					}
@@ -316,12 +317,11 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					this.addPromptButtonSettingInstance?.settingEl.hide(); // Hide button when form is shown
 				});
 			});
-		this.addPromptButtonSettingInstance.settingEl.classList.add(
-			"tt-add-prompt-button-container",
-		);
+		this.addPromptButtonSettingInstance.settingEl.classList.add("tt-add-prompt-button-container");
 
 		// Visibility logic based on .show() / .hide()
-		if (this.addPromptForm) { // Check if a form (add or edit) is active
+		if (this.addPromptForm) {
+			// Check if a form (add or edit) is active
 			this.addPromptButtonSettingInstance?.settingEl.hide();
 		} else {
 			this.addPromptButtonSettingInstance?.settingEl.show();
