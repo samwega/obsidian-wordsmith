@@ -64,18 +64,10 @@ export class ContextControlPanel extends ItemView {
 		container.empty();
 
 		const headerContainer = container.createDiv();
-		headerContainer.style.display = "flex";
-		headerContainer.style.alignItems = "center";
-		headerContainer.style.justifyContent = "space-between";
-		headerContainer.style.marginBottom = "2px";
+		headerContainer.classList.add("ccp-header-container");
 
 		const titleEl = headerContainer.createEl("div", { text: "WS Model" });
-		titleEl.style.marginTop = "0px";
-		titleEl.style.marginBottom = "0px";
-		titleEl.style.flexGrow = "1";
-		titleEl.style.fontSize = "var(--font-ui-medium)";
-		titleEl.style.color = "var(--text-accent)";
-		titleEl.style.fontWeight = "bold";
+		titleEl.classList.add("ccp-title");
 
 		const modelSelectorContainer = headerContainer.createDiv();
 
@@ -90,65 +82,49 @@ export class ContextControlPanel extends ItemView {
 			this.plugin.settings.model = value as SupportedModels;
 			await this.plugin.saveSettings();
 		});
-		this.modelDropdown.selectEl.style.maxWidth = "150px";
-		this.modelDropdown.selectEl.style.fontSize = "var(--font-ui-smaller)";
-		this.modelDropdown.selectEl.style.padding = "0px 18px 0px 2px";
-		this.modelDropdown.selectEl.style.height = "auto";
+		this.modelDropdown.selectEl.classList.add("ccp-model-dropdown-select");
 
 		const contextOptionsHeader = container.createDiv();
-		contextOptionsHeader.style.cursor = "pointer";
-		contextOptionsHeader.style.display = "flex";
-		contextOptionsHeader.style.alignItems = "center";
-		contextOptionsHeader.style.marginTop = "15px";
-		contextOptionsHeader.style.marginBottom = "5px";
+		contextOptionsHeader.classList.add("ccp-context-options-header");
 
 		this.descriptionIndicator = contextOptionsHeader.createEl("span", {
 			text: this.isDescriptionExpanded ? "🞃 " : "‣ ",
 		});
-		this.descriptionIndicator.style.marginRight = "5px";
-		this.descriptionIndicator.style.fontSize = "var(--font-ui-small)";
-		this.descriptionIndicator.style.color = "var(--text-muted)";
+		this.descriptionIndicator.classList.add("ccp-description-indicator");
 
 		const subTitleTextEl = contextOptionsHeader.createEl("div", { text: "Context Options:" });
-		subTitleTextEl.style.fontWeight = "bold";
-		subTitleTextEl.style.fontSize = "var(--font-ui-small)";
-		subTitleTextEl.style.color = "var(--text-muted)";
+		subTitleTextEl.classList.add("ccp-subtitle");
 
 		this.descriptionContainer = container.createDiv();
-		this.descriptionContainer.style.display = this.isDescriptionExpanded ? "block" : "none";
-		this.descriptionContainer.style.paddingLeft = "20px";
-		this.descriptionContainer.style.marginBottom = "10px";
-		this.descriptionContainer.style.fontSize = "var(--font-ui-smaller)";
-		this.descriptionContainer.style.color = "var(--text-muted)";
-		this.descriptionContainer.style.lineHeight = "1.4";
+		this.descriptionContainer.classList.add("ccp-description-container");
+		if (this.isDescriptionExpanded) this.descriptionContainer.classList.add("is-visible");
 
 		const p1 = this.descriptionContainer.createEl("p", {
 			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
 		});
-		p1.style.marginBottom = "3px";
+		p1.classList.add("ccp-description-p1");
+
 		this.descriptionContainer.createEl("p", {
 			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
-		});
+		}).classList.add("ccp-description-paragraph");
+
 		this.descriptionContainer.createEl("p", {
 			text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
-		});
+		}).classList.add("ccp-description-paragraph");
+
 		this.descriptionContainer.createEl("p", {
 			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
-		});
+		}).classList.add("ccp-description-paragraph");
+
 		this.descriptionContainer.createEl("p", {
 			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
-		});
+		}).classList.add("ccp-description-paragraph");
 
 		contextOptionsHeader.addEventListener("click", () => {
 			this.isDescriptionExpanded = !this.isDescriptionExpanded;
 			if (this.descriptionContainer && this.descriptionIndicator) {
-				if (this.isDescriptionExpanded) {
-					this.descriptionContainer.style.display = "block";
-					this.descriptionIndicator.setText("🞃 ");
-				} else {
-					this.descriptionContainer.style.display = "none";
-					this.descriptionIndicator.setText("‣ ");
-				}
+				this.descriptionContainer.classList.toggle("is-visible", this.isDescriptionExpanded);
+				this.descriptionIndicator.setText(this.isDescriptionExpanded ? "🞃 " : "‣ ");
 			}
 		});
 
@@ -161,7 +137,7 @@ export class ContextControlPanel extends ItemView {
 					this.wholeNoteContextToggleComponent.setValue(false);
 				}
 				if (this.dynamicContextLinesSetting) {
-					this.dynamicContextLinesSetting.settingEl.style.display = value ? "" : "none";
+					this.dynamicContextLinesSetting.settingEl.style.display = value ? "flex" : "none";
 				}
 			});
 		});
@@ -185,14 +161,12 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.type = "number";
 				text.inputEl.min = "1";
 				text.inputEl.max = "21";
-				text.inputEl.style.width = "40px";
+				text.inputEl.classList.add("ccp-dynamic-lines-input");
 			});
 		if (this.dynamicContextLinesSetting) {
-			this.dynamicContextLinesSetting.settingEl.style.borderTop = "none";
-			this.dynamicContextLinesSetting.nameEl.style.color = "var(--text-accent)";
-			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext
-				? ""
-				: "none";
+			this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
+			this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
+			this.dynamicContextLinesSetting.settingEl.style.display = this.useDynamicContext ? "flex" : "none";
 		}
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
@@ -213,7 +187,7 @@ export class ContextControlPanel extends ItemView {
 			toggle.setValue(this.useCustomContext).onChange((value) => {
 				this.useCustomContext = value;
 				if (this.customContextTextAreaContainer) {
-					this.customContextTextAreaContainer.style.display = value ? "" : "none";
+					this.customContextTextAreaContainer.classList.toggle("is-visible", value);
 				}
 				if (value && this.customContextTextArea) {
 					this.customContextTextArea.inputEl.focus();
@@ -221,9 +195,9 @@ export class ContextControlPanel extends ItemView {
 			}),
 		);
 
-		this.customContextTextAreaContainer = container.createDiv("tt-custom-context-container");
-		this.customContextTextAreaContainer.style.display = this.useCustomContext ? "" : "none";
-		this.customContextTextAreaContainer.style.marginTop = "5px";
+		this.customContextTextAreaContainer = container.createDiv();
+		this.customContextTextAreaContainer.classList.add("ccp-custom-context-container");
+		if (this.useCustomContext) this.customContextTextAreaContainer.classList.add("is-visible");
 
 		this.customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
 			.setPlaceholder("Add custom context. Type '[[' to link notes...")
@@ -232,9 +206,7 @@ export class ContextControlPanel extends ItemView {
 				this.customContextText = value;
 			});
 
-		this.customContextTextArea.inputEl.style.width = "100%";
-		this.customContextTextArea.inputEl.style.minHeight = "80px";
-		this.customContextTextArea.inputEl.style.resize = "vertical";
+		this.customContextTextArea.inputEl.classList.add("ccp-custom-context-textarea");
 
 		this.customContextTextArea.inputEl.addEventListener("input", (event) => {
 			if (this.justInsertedLink) {
