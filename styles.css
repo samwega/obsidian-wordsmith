@@ -86,163 +86,164 @@ body.theme-light .text-transformer-removed-active {
 
 /* Styles for CustomPromptModal */
 .custom-prompt-modal-title {
-    text-align: center;
+	text-align: center;
 }
 
 .custom-prompt-modal-textarea {
-    width: 100%;
-    min-height: 300px;
-    min-width: 100%; /* To prevent shrinking, as per original comment */
+	width: 100%;
+	min-height: 300px;
+	min-width: 100%; /* To prevent shrinking, as per original comment */
 }
 
 .custom-prompt-modal-button-container-styles {
-    text-align: center;
-    margin-top: 1em;
+	text-align: center;
+	margin-top: 1em;
 }
 
 /* Styles for TextTransformerSettingsMenu from settings.ts */
 .tt-setting-item.api-model-setting-el {
-    border: none !important; /* Changed from border-top/bottom to all borders none */
-    display: flex;
-    align-items: center;
+	border: none !important; /* Changed from border-top/bottom to all borders none */
+	display: flex;
+	align-items: center;
 }
 
 .tt-api-model-section-contents {
-    margin-top: 0px;
-    padding-left: 25px;
-    display: none; /* Initially hidden */
+	margin-top: 0px;
+	padding-left: 25px;
+	display: none; /* Initially hidden */
 }
 
 .tt-api-model-section-contents.is-visible {
-    display: block;
+	display: block;
 }
 
 .tt-setting-name-el {
-    flex: 1;
+	flex: 1;
 }
 
 .tt-setting-control-el {
-    flex: 0 0 auto;
-    margin-left: 10px;
+	flex: 0 0 auto;
+	margin-left: 10px;
 }
 
 .tt-setting-item.api-key-setting-el {
-    border: none !important; /* Changed from border-top to all borders none */
+	border: none !important; /* Changed from border-top to all borders none */
 }
 
 .tt-model-description {
-    margin-top: 15px;
-    color: var(--text-muted);
-    font-size: var(--font-ui-small);
+	margin-top: 15px;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
 }
 
 .tt-prompt-section-title {
-    color: #b6a84b;
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-bottom: 2px;
-    margin-top: 8px;
+	color: #b6a84b;
+	font-size: 1.1em;
+	font-weight: 600;
+	margin-bottom: 2px;
+	margin-top: 8px;
 }
 
-.tt-add-prompt-button-container { /* This is a Setting.settingEl */
-    margin-top: 10px; /* Original footer margin */
-    border-top: none !important; /* Original setting in footer */
-    padding-right: 0; /* Attempt to align button to the right by removing padding */
-    display: flex; /* Make the setting row itself a flex container */
-    justify-content: flex-end; /* Align controls (button) to the end */
+.tt-add-prompt-button-container {
+	/* This is a Setting.settingEl */
+	margin-top: 10px; /* Original footer margin */
+	border-top: none !important; /* Original setting in footer */
+	padding-right: 0; /* Attempt to align button to the right by removing padding */
+	display: flex; /* Make the setting row itself a flex container */
+	justify-content: flex-end; /* Align controls (button) to the end */
 }
 .tt-add-prompt-button-container .setting-item-info {
-    display: none; /* Hide the (empty) name/description part of this setting */
+	display: none; /* Hide the (empty) name/description part of this setting */
 }
 
 /* Styles for prompt forms (edit and add) */
 .tt-edit-prompt-form,
 .tt-add-prompt-form {
-    width: 100%;
-    margin-top: 15px; /* Add some space above the form */
-    margin-bottom: 15px; /* Add some space below the form */
-    padding: 15px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    box-sizing: border-box; /* Ensure padding and border are included in the width */
+	width: 100%;
+	margin-top: 15px; /* Add some space above the form */
+	margin-bottom: 15px; /* Add some space below the form */
+	padding: 15px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-sizing: border-box; /* Ensure padding and border are included in the width */
 }
 
 .tt-prompt-form-input {
-    padding: 6px;
-    font-size: var(--font-ui-medium);
-    border-radius: 4px;
-    border: 1px solid var(--background-modifier-border);
-    width: 100%;
-    flex-shrink: 0;
-    background-color: var(--input-background, var(--background-secondary)); /* Added for consistency */
-    color: var(--text-normal); /* Added for consistency */
+	padding: 6px;
+	font-size: var(--font-ui-medium);
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	width: 100%;
+	flex-shrink: 0;
+	background-color: var(--input-background, var(--background-secondary)); /* Added for consistency */
+	color: var(--text-normal); /* Added for consistency */
 }
 
 .tt-prompt-form-textarea {
-    width: 100%;
-    box-sizing: border-box !important;
-    height: 240px !important;
-    resize: none !important;
-    overflow-y: auto !important;
-    padding: 6px;
-    border-radius: 4px;
-    border: 1px solid var(--background-modifier-border);
-    background-color: var(--input-background, var(--background-secondary));
-    color: var(--text-normal);
+	width: 100%;
+	box-sizing: border-box !important;
+	height: 240px !important;
+	resize: none !important;
+	overflow-y: auto !important;
+	padding: 6px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--input-background, var(--background-secondary));
+	color: var(--text-normal);
 }
 
 .tt-edit-prompt-button-row,
 .tt-add-prompt-button-row {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    flex-shrink: 0;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	flex-shrink: 0;
 }
 
 .tt-edit-prompt-save-button,
 .tt-add-prompt-save-button {
-    padding: 6px 16px;
-    font-size: var(--font-ui-medium);
-    border-radius: 4px;
-    border: none;
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
+	padding: 6px 16px;
+	font-size: var(--font-ui-medium);
+	border-radius: 4px;
+	border: none;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 }
 
 .tt-edit-prompt-cancel-button,
 .tt-add-prompt-cancel-button {
-    padding: 6px 16px;
-    font-size: var(--font-ui-medium);
-    border-radius: 4px;
-    border: none;
-    background: var(--background-modifier-border);
-    color: var(--text-normal);
+	padding: 6px 16px;
+	font-size: var(--font-ui-medium);
+	border-radius: 4px;
+	border: none;
+	background: var(--background-modifier-border);
+	color: var(--text-normal);
 }
 
 /* Styles for prompt list grid */
 .tt-prompts-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Two columns */
-    gap: 0px 60px; /* No vertical gap, 10px horizontal gap */
-    align-items: center; /* Vertically align items in the center of their cell */
+	display: grid;
+	grid-template-columns: repeat(2, 1fr); /* Two columns */
+	gap: 0px 60px; /* No vertical gap, 10px horizontal gap */
+	align-items: center; /* Vertically align items in the center of their cell */
 }
 
 .tt-prompt-item {
-    /* Styles for individual prompt items in the grid */
-    /* For example, padding, alignment, etc. */
-    border: none !important; /* Added to remove default Setting border */
+	/* Styles for individual prompt items in the grid */
+	/* For example, padding, alignment, etc. */
+	border: none !important; /* Added to remove default Setting border */
 }
 
 .tt-prompt-item.tt-grid-item-left {
-    border-right: 1px solid var(--background-modifier-border);
-    padding-right: 10px !important; /* Ensure padding for separation */
+	border-right: 1px solid var(--background-modifier-border);
+	padding-right: 10px !important; /* Ensure padding for separation */
 }
 
 .tt-prompt-item.tt-grid-item-right {
-    padding-left: 10px !important; /* Ensure padding for separation */
+	padding-left: 10px !important; /* Ensure padding for separation */
 }
 
 .tt-prompt-divider {
-    border-bottom: 1px solid var(--background-modifier-border);
-    margin: 10px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin: 10px 0;
 }
