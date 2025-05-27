@@ -216,6 +216,10 @@ This release brings two major improvements to make your AI writing experience mo
 
 * **Persistent Suggestions Between Reloads:** Your active AI suggestions are now preserved when you reload Obsidian. Previously, if closing the application while suggestions were active, upon returning, you'd see old and new text mixed together and no way to accept/reject or undo it.
 * **Expanded Default Prompts:** A fresh set of carefully crafted default prompts has been added to the collection, giving you more options for text transformation right out of the box. The existing prompts have been recrafted for a more precise output.
+* **Moved all styling from JavaScript or HTML to styles.css** - it required some pretty major refactoring of the UI.
+* **Replaced use of innerHTML (security risk) with safer DOM API**
+* Removed a line which was manually **detaching leaves during the unload process** - an antipattern
+* **Fixed a ton of bugs** which were created in the refactoring process
 
 **Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 

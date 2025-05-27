@@ -436,4 +436,14 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		});
 	}
+
+	override hide(): void {
+		// If a form is open when the settings tab is hidden, remove it and clear the reference.
+		if (this.addPromptForm) {
+			this.addPromptForm.remove(); // Remove from DOM
+			this.addPromptForm = null; // Clear the instance variable
+		}
+		// No need to call super.hide() or empty containerEl here,
+		// as display() handles re-rendering and Component lifecycle manages the tab's main element.
+	}
 }
