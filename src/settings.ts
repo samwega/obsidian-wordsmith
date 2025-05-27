@@ -91,18 +91,40 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		geminiSetting.settingEl.style.borderTop = "none";
 
-		const modelDesc = `
-GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.<br>
-Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).<br><br>
-<strong>Prices are estimates per 1000 tokens or 750 words:</strong><br>
-<strong>GPT 4.1</strong> - intelligence = 4, speed = 3. Price = $0.01<br>
-<strong>GPT 4.1 mini</strong> - intelligence = 3, speed = 4. Price = $0.002<br>
-<strong>GPT 4.1 nano</strong> - intelligence = 2, speed = 5. Price = $0.0005<br>
-<strong>Gemini 2.5 Flash</strong> - intelligence = 3, speed = 5. Price = $0.0005<br>
-<strong>Gemini 2.5 Pro</strong> - intelligence = 4, speed = thinking. Price = $0.011<br>
-`.trim();
+		// Define the structure of the description
+		const contentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> = [
+			{ type: "text", text: "GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading." },
+			{ type: "br" },
+			{ type: "text", text: "Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful)." },
+			{ type: "br" },
+			{ type: "br" },
+			{ type: "strong", text: "Prices are estimates per 1000 tokens or 750 words:" },
+			{ type: "br" },
+			{ type: "strong", text: "GPT 4.1" }, { type: "text", text: " - intelligence = 4, speed = 3. Price = $0.01" },
+			{ type: "br" },
+			{ type: "strong", text: "GPT 4.1 mini" }, { type: "text", text: " - intelligence = 3, speed = 4. Price = $0.002" },
+			{ type: "br" },
+			{ type: "strong", text: "GPT 4.1 nano" }, { type: "text", text: " - intelligence = 2, speed = 5. Price = $0.0005" },
+			{ type: "br" },
+			{ type: "strong", text: "Gemini 2.5 Flash" }, { type: "text", text: " - intelligence = 3, speed = 5. Price = $0.0005" },
+			{ type: "br" },
+			{ type: "strong", text: "Gemini 2.5 Pro" }, { type: "text", text: " - intelligence = 4, speed = thinking. Price = $0.011" },
+			{ type: "br" },
+		];
+
 		const modelDescDiv = apiModelSectionContents.createEl("div");
-		modelDescDiv.innerHTML = modelDesc;
+
+		// Populate the div using DOM manipulation
+		contentStructure.forEach(item => {
+			if (item.type === "text" && typeof item.text === 'string') {
+				modelDescDiv.appendText(item.text);
+			} else if (item.type === "strong" && typeof item.text === 'string') {
+				modelDescDiv.createEl("strong", { text: item.text });
+			} else if (item.type === "br") {
+				modelDescDiv.createEl("br");
+			}
+		});
+
 		modelDescDiv.style.marginTop = "15px";
 		modelDescDiv.style.color = "var(--text-muted)";
 		modelDescDiv.style.fontSize = "var(--font-ui-small)";
