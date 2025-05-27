@@ -1,7 +1,7 @@
 // src/settings.ts
 import { PluginSettingTab, Setting } from "obsidian";
 import TextTransformer from "./main";
-import { DEFAULT_SETTINGS, MODEL_SPECS } from "./settings-data";
+import { MODEL_SPECS } from "./settings-data";
 import type { SupportedModels, TextTransformerPrompt } from "./settings-data";
 
 //──────────────────────────────────────────────────────────────────────────────
@@ -9,6 +9,7 @@ import type { SupportedModels, TextTransformerPrompt } from "./settings-data";
 export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
+	private addPromptButtonSettingInstance: Setting | null = null; // Instance for the button
 
 	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
@@ -29,21 +30,18 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	private _renderApiModelSection(containerEl: HTMLElement): void {
 		const apiModelSetting = new Setting(containerEl).setName("API Keys & Model");
 
-		apiModelSetting.settingEl.style.borderTop = "none";
-		apiModelSetting.settingEl.style.borderBottom = "none";
+		apiModelSetting.settingEl.classList.add("api-model-setting-el");
 
 		const apiModelSectionContents = containerEl.createDiv();
-		apiModelSectionContents.style.display = "none";
-		apiModelSectionContents.style.marginTop = "0px";
-		apiModelSectionContents.style.paddingLeft = "25px";
+		apiModelSectionContents.classList.add("tt-api-model-section-contents");
 
 		apiModelSetting.addButton((button) => {
 			button.setButtonText("Show").onClick(() => {
-				if (apiModelSectionContents.style.display === "none") {
-					apiModelSectionContents.style.display = "block";
+				if (!apiModelSectionContents.classList.contains("is-visible")) {
+					apiModelSectionContents.classList.add("is-visible");
 					button.setButtonText("Hide");
 				} else {
-					apiModelSectionContents.style.display = "none";
+					apiModelSectionContents.classList.remove("is-visible");
 					button.setButtonText("Show");
 				}
 			});
@@ -61,11 +59,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		});
 
-		apiModelSetting.nameEl.style.flex = "1";
-		apiModelSetting.controlEl.style.flex = "0 0 auto";
-		apiModelSetting.controlEl.style.marginLeft = "10px";
-		apiModelSetting.settingEl.style.display = "flex";
-		apiModelSetting.settingEl.style.alignItems = "center";
+		apiModelSetting.nameEl.classList.add("tt-setting-name-el");
+		apiModelSetting.controlEl.classList.add("tt-setting-control-el");
 
 		const openaiSetting = new Setting(apiModelSectionContents)
 			.setName("OpenAI API key")
@@ -77,7 +72,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
-		openaiSetting.settingEl.style.borderTop = "none";
+		openaiSetting.settingEl.classList.add("api-key-setting-el");
 
 		const geminiSetting = new Setting(apiModelSectionContents)
 			.setName("Gemini API key")
@@ -89,7 +84,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 			});
-		geminiSetting.settingEl.style.borderTop = "none";
+		geminiSetting.settingEl.classList.add("api-key-setting-el");
 
 		// Define the structure of the description
 		const contentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> = [
@@ -136,142 +131,88 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			}
 		});
 
-		modelDescDiv.style.marginTop = "15px";
-		modelDescDiv.style.color = "var(--text-muted)";
-		modelDescDiv.style.fontSize = "var(--font-ui-small)";
+		modelDescDiv.classList.add("tt-model-description");
 	}
 
 	// _renderDynamicContextSection has been removed
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
 		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.setAttribute(
-			"style",
-			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
-				"display:flex; flex-direction:column; gap:10px;" +
-				"width:100%; grid-column: 1 / -1;",
-		);
+		form.className = "add-prompt-form"; 
+		form.classList.add("tt-edit-prompt-form");
 
 		const nameInput = form.appendChild(document.createElement("input"));
 		nameInput.type = "text";
 		nameInput.value = prompt.name;
 		nameInput.placeholder = "Prompt name";
-		nameInput.setAttribute(
-			"style",
-			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;",
-		);
+		nameInput.classList.add("tt-prompt-form-input");
 
 		const textInput = form.appendChild(document.createElement("textarea"));
 		textInput.value = prompt.text;
 		textInput.placeholder = "Prompt text";
-		textInput.setAttribute(
-			"style",
-			"width: 100%;" +
-				"box-sizing: border-box !important;" +
-				"height: 240px !important;" +
-				"resize: none !important;" +
-				"overflow-y: auto !important;" +
-				"padding: 6px;" +
-				"border-radius: 4px;" +
-				"border: 1px solid var(--background-modifier-border);" +
-				"background-color: var(--input-background, var(--background-secondary));" +
-				"color: var(--text-normal);",
-		);
+		textInput.classList.add("tt-prompt-form-textarea");
 
 		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.setAttribute(
-			"style",
-			"display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;",
-		);
+		buttonRow.classList.add("tt-edit-prompt-button-row");
 
 		const saveBtn = buttonRow.appendChild(document.createElement("button"));
 		saveBtn.textContent = "Save";
-		saveBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
-		);
+		saveBtn.classList.add("tt-edit-prompt-save-button");
 
 		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
 		cancelBtn.textContent = "Cancel";
-		cancelBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
-		);
+		cancelBtn.classList.add("tt-edit-prompt-cancel-button");
 
 		saveBtn.onclick = async (): Promise<void> => {
 			const newName = (nameInput as HTMLInputElement).value.trim();
 			const newText = (textInput as HTMLTextAreaElement).value.trim();
 			if (!newName || !newText) return;
-			prompt.name = newName;
-			prompt.text = newText;
-			await this.plugin.saveSettings();
-			this.addPromptForm?.remove();
+			const existingPrompt = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
+			if (existingPrompt) {
+				existingPrompt.name = newName;
+				existingPrompt.text = newText;
+				await this.plugin.saveSettings();
+			}
+			form.remove();
 			this.addPromptForm = null;
-			this.display();
+			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
+			// this.display(); // No longer calling full display
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
 			this.addPromptForm = null;
+			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
+			// this.display(); // No longer calling full display
 		};
 		return form;
 	}
 
 	private _createAddPromptForm(): HTMLDivElement {
 		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.setAttribute(
-			"style",
-			"border:1px solid var(--background-modifier-border); background:var(--background-secondary-alt); padding:16px; margin-top:12px; border-radius:8px;" +
-				"display:flex; flex-direction:column; gap:10px;" +
-				"width:100%; grid-column: 1 / -1;",
-		);
+		form.className = "add-prompt-form"; 
+		form.classList.add("tt-add-prompt-form");
 
 		const nameInput = form.appendChild(document.createElement("input"));
 		nameInput.type = "text";
 		nameInput.placeholder = "Prompt name";
-		nameInput.setAttribute(
-			"style",
-			"padding:6px; font-size:var(--font-ui-medium); border-radius:4px; border:1px solid var(--background-modifier-border); width:100%; flex-shrink: 0;",
-		);
+		nameInput.classList.add("tt-prompt-form-input");
 
 		const textInput = form.appendChild(document.createElement("textarea"));
 		textInput.placeholder = "Prompt text";
 		textInput.value =
 			"[ROLE]: Professional editor.\n[TASK]: You will receive a text selection. [replace this with your prompt; replace the role too if you want].\nOutput only the revised text and nothing else. The text is:";
-		textInput.setAttribute(
-			"style",
-			"width: 100%;" +
-				"box-sizing: border-box !important;" +
-				"height: 240px !important;" +
-				"resize: none !important;" +
-				"overflow-y: auto !important;" +
-				"padding: 6px;" +
-				"border-radius: 4px;" +
-				"border: 1px solid var(--background-modifier-border);" +
-				"background-color: var(--input-background, var(--background-secondary));" +
-				"color: var(--text-normal);",
-		);
+		textInput.classList.add("tt-prompt-form-textarea");
 
 		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.setAttribute(
-			"style",
-			"display:flex; gap:8px; justify-content:flex-end; flex-shrink: 0;",
-		);
+		buttonRow.classList.add("tt-add-prompt-button-row");
 
 		const saveBtn = buttonRow.appendChild(document.createElement("button"));
 		saveBtn.textContent = "Save";
-		saveBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--interactive-accent);color:var(--text-on-accent);",
-		);
+		saveBtn.classList.add("tt-add-prompt-save-button");
 
 		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
 		cancelBtn.textContent = "Cancel";
-		cancelBtn.setAttribute(
-			"style",
-			"padding:6px 16px;font-size:var(--font-ui-medium);border-radius:4px;border:none;background:var(--background-modifier-border);color:var(--text-normal);",
-		);
+		cancelBtn.classList.add("tt-add-prompt-cancel-button");
 
 		saveBtn.onclick = async (): Promise<void> => {
 			const name = (nameInput as HTMLInputElement).value.trim();
@@ -287,17 +228,22 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				enabled: true,
 			});
 			await this.plugin.saveSettings();
-			this.display();
+			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
+			// this.display(); // No longer calling full display
 		};
 		cancelBtn.onclick = (): void => {
 			this.addPromptForm?.remove();
 			this.addPromptForm = null;
+			this.addPromptButtonSettingInstance?.settingEl.show(); // Explicitly show button
+			// this.display(); // No longer calling full display
 		};
 		return form;
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
 		containerEl.createEl("h3", { text: "Prompt Management" });
+		// Add a wrapper div with a class for easier targeting of the whole section
+		const promptManagementWrapper = containerEl.createDiv({ cls: 'prompt-management-section-container' });
 
 		const defaultPrompts = this.plugin.settings.prompts.filter(
 			(p: TextTransformerPrompt) => p.isDefault,
@@ -306,157 +252,151 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			(p: TextTransformerPrompt) => !p.isDefault,
 		);
 
-		const defaultTitle = containerEl.createEl("div", { text: "Default Prompts" });
-		defaultTitle.setAttr(
-			"style",
-			"color:#b6a84b;font-size:1.1em;font-weight:600;margin-bottom:2px;margin-top:8px;",
+		promptManagementWrapper.createEl("div", { text: "Default Prompts", cls: "tt-prompt-section-title" }); 
+
+		const defaultPromptsGrid = promptManagementWrapper.createEl("div", { cls: "tt-prompts-grid" });
+		defaultPrompts.forEach((prompt, index) => 
+			this._renderPromptItem(prompt, defaultPromptsGrid, index)
 		);
-		const defaultPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
-		defaultPromptsGrid.style.display = "grid";
-		defaultPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
-		defaultPromptsGrid.style.gap = "0px";
-
-		defaultPrompts.forEach((prompt: TextTransformerPrompt, index: number) => {
-			const settingContainer = defaultPromptsGrid.createEl("div");
-			if (index % 2 === 0) {
-				settingContainer.style.borderRight = "1px solid var(--background-modifier-border)";
-				settingContainer.style.paddingRight = "10px";
-			} else {
-				settingContainer.style.paddingLeft = "10px";
-			}
-			const setting = new Setting(settingContainer);
-
-			if (prompt.id === "translate") {
-				setting.setName("Translate to:");
-
-				setting.addText((text) =>
-					text
-						.setPlaceholder("E.g., Spanish")
-						.setValue(this.plugin.settings.translationLanguage)
-						.onChange(async (value) => {
-							const newLang = value.trim();
-							this.plugin.settings.translationLanguage =
-								newLang || DEFAULT_SETTINGS.translationLanguage;
-
-							const translatePromptObj = this.plugin.settings.prompts.find(
-								(p: TextTransformerPrompt) => p.id === "translate",
-							);
-							if (translatePromptObj) {
-								if (newLang) {
-									translatePromptObj.name = `Translate to ${newLang}—autodetects source language`;
-								} else {
-									translatePromptObj.name = `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`;
-								}
-							}
-							await this.plugin.saveSettings();
-						}),
-				);
-
-				setting.addToggle((tg) => {
-					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(
-							(p: TextTransformerPrompt) => p.id === prompt.id,
-						);
-						if (p) p.enabled = value;
-						await this.plugin.saveSettings();
-					});
-				});
-			} else {
-				setting.setName(prompt.name);
-				setting.addToggle((tg) => {
-					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(
-							(p: TextTransformerPrompt) => p.id === prompt.id,
-						);
-						if (p) p.enabled = value;
-						await this.plugin.saveSettings();
-					});
-				});
-			}
-		});
 
 		if (customPrompts.length > 0) {
-			const divider = containerEl.createEl("div");
-			divider.setAttr(
-				"style",
-				"border-bottom:1px solid var(--background-modifier-border);margin:10px 0 10px 0;",
-			);
-			const customTitle = containerEl.createEl("div", { text: "Custom Prompts" });
-			customTitle.setAttr(
-				"style",
-				"color:#b6a84b;font-size:1.1em;font-weight:600;margin-top:8px;margin-bottom:2px;",
-			);
-			const customPromptsGrid = containerEl.createEl("div", { cls: "prompts-grid" });
-			customPromptsGrid.style.display = "grid";
-			customPromptsGrid.style.gridTemplateColumns = "1fr 1fr";
-			customPromptsGrid.style.gap = "0px";
+			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
+			promptManagementWrapper.createEl("div", { text: "Custom Prompts", cls: "tt-prompt-section-title" }); 
 
-			customPrompts.forEach((prompt: TextTransformerPrompt, index: number) => {
-				const settingContainer = customPromptsGrid.createEl("div");
-				if (index % 2 === 0) {
-					settingContainer.style.borderRight = "1px solid var(--background-modifier-border)";
-					settingContainer.style.paddingRight = "10px";
-				} else {
-					settingContainer.style.paddingLeft = "10px";
-				}
-				const setting = new Setting(settingContainer).setName(prompt.name);
+			const customPromptsGrid = promptManagementWrapper.createEl("div", { cls: "tt-prompts-grid" });
+			customPrompts.forEach((prompt, index) => 
+				this._renderPromptItem(prompt, customPromptsGrid, index)
+			);
+		}
 
-				setting.addExtraButton((btn) => {
-					btn.setIcon("pencil")
-						.setTooltip("Edit")
-						.onClick((): void => {
-							if (this.addPromptForm) return;
-							this.addPromptForm = settingContainer.parentElement?.insertBefore(
-								this._createEditPromptForm(prompt),
-								settingContainer.nextSibling,
-							) as HTMLDivElement;
-						});
-				});
-				setting.addExtraButton((btn) => {
-					btn.setIcon("trash")
-						.setTooltip("Delete")
-						.onClick(async (): Promise<void> => {
-							const realIdx = this.plugin.settings.prompts.findIndex(
-								(p: TextTransformerPrompt) => p.id === prompt.id,
-							);
-							if (realIdx > -1) {
-								this.plugin.settings.prompts.splice(realIdx, 1);
-								await this.plugin.saveSettings();
-								this.display();
-							}
-						});
-				});
-				setting.addToggle((tg) => {
-					tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-						const p = this.plugin.settings.prompts.find(
-							(p: TextTransformerPrompt) => p.id === prompt.id,
-						);
-						if (p) p.enabled = value;
-						await this.plugin.saveSettings();
+		// If an edit form exists from a previous render (e.g. after saving an edit), re-insert it.
+		// This logic might need refinement if it causes issues with new edit form creation.
+		if (this.addPromptForm && this.addPromptForm.classList.contains('tt-edit-prompt-form')) {
+			const addPromptButtonSettingEl = promptManagementWrapper.querySelector('.tt-add-prompt-button-container');
+			if (addPromptButtonSettingEl) {
+				promptManagementWrapper.insertBefore(this.addPromptForm, addPromptButtonSettingEl);
+			} else {
+				promptManagementWrapper.appendChild(this.addPromptForm);
+			}
+		}
+
+		if (!this.addPromptButtonSettingInstance) {
+			this.addPromptButtonSettingInstance = new Setting(promptManagementWrapper)
+				.addButton((button) => {
+					button.setButtonText("Add New Prompt").setCta(); 
+					button.onClick(() => {
+						if (this.addPromptForm) {
+							this.addPromptForm.remove(); 
+							this.addPromptForm = null;
+						}
+						this.addPromptForm = this._createAddPromptForm();
+						// Insert Add form before the button itself
+						this.addPromptButtonSettingInstance?.settingEl.insertAdjacentElement("beforebegin", this.addPromptForm);
+						this.addPromptButtonSettingInstance?.settingEl.hide(); 
 					});
 				});
+			this.addPromptButtonSettingInstance.settingEl.classList.add("tt-add-prompt-button-container"); 
+		} 
+
+		if (this.addPromptForm && this.addPromptForm.classList.contains('tt-add-prompt-form')) {
+			this.addPromptButtonSettingInstance?.settingEl.hide();
+		} else {
+			this.addPromptButtonSettingInstance?.settingEl.show();
+		}
+	}
+
+	private _renderPromptItem(prompt: TextTransformerPrompt, gridContainer: HTMLElement, index: number): void {
+		const setting = new Setting(gridContainer);
+
+		if (prompt.id === "translate") {
+			setting.setName("Translate to:"); // Static name
+
+			setting.addText((text) =>
+				text
+					.setPlaceholder("E.g., Spanish")
+					.setValue(this.plugin.settings.translationLanguage)
+					.onChange(async (value) => {
+						const newLang = value.trim();
+						this.plugin.settings.translationLanguage = newLang;
+
+						// Update the prompt name in the plugin settings for the Command Palette
+						const translatePromptObj = this.plugin.settings.prompts.find(
+							(p: TextTransformerPrompt) => p.id === "translate",
+						);
+						if (translatePromptObj) {
+							const langToDisplay = newLang || this.plugin.DEFAULT_SETTINGS.translationLanguage;
+							const capitalizedLang = langToDisplay.charAt(0).toUpperCase() + langToDisplay.slice(1);
+							translatePromptObj.name = `Translate to ${capitalizedLang}—autodetects source language`;
+						}
+
+						await this.plugin.saveSettings();
+						// DO NOT call setting.setName() or this.display() here to prevent focus loss
+					}),
+			);
+		} else {
+			setting.setName(prompt.name); // For all other prompts
+			// If other prompts might have descriptions, add them here:
+			// if (prompt.description) setting.setDesc(prompt.description);
+		}
+
+		setting.settingEl.classList.add("tt-prompt-item"); 
+
+		if (index % 2 === 0) {
+			setting.settingEl.classList.add("tt-grid-item-left");
+		} else {
+			setting.settingEl.classList.add("tt-grid-item-right");
+		}
+
+		if (!prompt.isDefault) { 
+			setting.addExtraButton((btn) => {
+				btn.setIcon("pencil")
+					.setTooltip("Edit")
+					.onClick((): void => {
+						if (this.addPromptForm) {
+							this.addPromptForm.remove(); 
+							this.addPromptForm = null; // Clear the reference
+						}
+						this.addPromptForm = this._createEditPromptForm(prompt);
+
+						// Find the main container for the prompt management section
+						const promptManagementSection = gridContainer.closest('.prompt-management-section-container'); // Need to add this class to the main container
+						const addPromptButtonContainer = promptManagementSection?.querySelector('.tt-add-prompt-button-container');
+
+						if (promptManagementSection && addPromptButtonContainer) {
+							promptManagementSection.insertBefore(this.addPromptForm, addPromptButtonContainer);
+						} else if (promptManagementSection) {
+							// Fallback if button container not found, append to section
+							promptManagementSection.appendChild(this.addPromptForm);
+						} else {
+							// Fallback: if absolutely nothing else, append to grid's parent (less ideal)
+							gridContainer.parentElement?.appendChild(this.addPromptForm);
+						}
+					});
+			});
+			setting.addExtraButton((btn) => {
+				btn.setIcon("trash")
+					.setTooltip("Delete")
+					.onClick(async (): Promise<void> => {
+						const realIdx = this.plugin.settings.prompts.findIndex(
+							(p: TextTransformerPrompt) => p.id === prompt.id,
+						);
+						if (realIdx > -1) {
+							this.plugin.settings.prompts.splice(realIdx, 1);
+							await this.plugin.saveSettings();
+							this.display();
+						}
+					});
 			});
 		}
 
-		const addPromptFooter = containerEl.createEl("div");
-		addPromptFooter.style.display = "flex";
-		addPromptFooter.style.alignItems = "center";
-		addPromptFooter.style.justifyContent = "flex-end";
-		addPromptFooter.style.marginTop = "10px";
-
-		const addPromptSetting = new Setting(addPromptFooter)
-			.setClass("add-prompt-setting-footer")
-			.addButton((btn) => {
-				btn.setButtonText("Add Custom Prompt").setCta();
-				btn.onClick((): void => {
-					if (this.addPromptForm) return;
-					this.addPromptForm = containerEl.insertBefore(
-						this._createAddPromptForm(),
-						addPromptFooter,
-					) as HTMLDivElement;
-				});
+		setting.addToggle((tg) => {
+			tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
+				const p = this.plugin.settings.prompts.find(
+					(p: TextTransformerPrompt) => p.id === prompt.id,
+				);
+				if (p) p.enabled = value;
+				await this.plugin.saveSettings();
 			});
-		addPromptSetting.settingEl.style.margin = "0";
-		addPromptSetting.settingEl.style.borderTop = "none";
+		});
 	}
 }

@@ -13,8 +13,7 @@ export class CustomPromptModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		const titleEl = contentEl.createEl("h3", { text: "Context Aware Generator" });
-		titleEl.style.textAlign = "center";
+		contentEl.createEl("h3", { text: "Context Aware Generator", cls: "custom-prompt-modal-title" });
 
 		const textArea = new TextAreaComponent(contentEl)
 			.setValue(this.promptText)
@@ -27,9 +26,7 @@ export class CustomPromptModal extends Modal {
 <enter> submits. <shift+enter> for new line.`,
 			);
 
-		textArea.inputEl.style.width = "100%";
-		textArea.inputEl.style.minHeight = "300px";
-		textArea.inputEl.style.minWidth = "100%"; // Prevent shrinking below container width
+		textArea.inputEl.classList.add("custom-prompt-modal-textarea");
 
 		setTimeout(() => {
 			textArea.inputEl.focus();
@@ -42,9 +39,7 @@ export class CustomPromptModal extends Modal {
 			}
 		});
 
-		const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-		buttonContainer.style.textAlign = "center";
-		buttonContainer.style.marginTop = "1em";
+		const buttonContainer = contentEl.createDiv({ cls: ["modal-button-container", "custom-prompt-modal-button-container-styles"] });
 
 		new ButtonComponent(buttonContainer)
 			.setButtonText("Generate at Cursor")

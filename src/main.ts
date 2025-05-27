@@ -35,6 +35,7 @@ import { getCmEditorView } from "./utils";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
+	DEFAULT_SETTINGS = DEFAULT_SETTINGS; // Expose DEFAULT_SETTINGS
 	settings!: TextTransformerSettings;
 	private activeSuggestionsByFile: Record<string, SuggestionMark[]> = {};
 	private suggestionsFilePath!: string;
