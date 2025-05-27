@@ -230,7 +230,6 @@ export default class TextTransformer extends Plugin {
 
 	override onunload(): void {
 		// Event listeners registered with `this.registerEvent` are automatically cleaned up by Obsidian
-		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
 
