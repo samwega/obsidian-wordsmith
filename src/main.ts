@@ -371,16 +371,9 @@ export default class TextTransformer extends Plugin {
 		}
 	}
 
-	private handleActiveLeafChange = async (leaf: WorkspaceLeaf | null): Promise<void> => {
-		if (
-			leaf &&
-			leaf.view instanceof MarkdownView &&
-			leaf.view.file &&
-			leaf.view.editor &&
-			leaf.view.file.extension === "md"
-		) {
-			await this.applyPersistedSuggestionsToEditor(leaf.view.editor, leaf.view);
-		}
+	private handleActiveLeafChange = async (): Promise<void> => {
+		// Do nothing on focus changes - suggestions should persist in the editor state
+		// and only be reapplied during actual reloads
 	};
 
 	private async applyPersistedSuggestionsToEditor(
