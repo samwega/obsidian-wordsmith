@@ -79,6 +79,8 @@ preferred hotkeys in Obsidian's settings for the commands below. In the screensh
 
 ![image](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
 
+Check out the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more advanced user guides.
+
 ### Commands
 
 1. `WordSmith: Open Al Context Control Panel`: no need to hotkey this, just trigger it once from the drop-down menu to add it to the Side Panel (then move it wherever)
