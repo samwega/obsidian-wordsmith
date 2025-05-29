@@ -81,8 +81,8 @@ class SuggestionViewPluginClass {
 			// Suggestions were added or removed
 			needsRecompute = true;
 			// Dispatch an event that the plugin can listen to
-			const event = new CustomEvent('wordsmith-suggestions-changed', {
-				detail: { marks: currentMarks }
+			const event = new CustomEvent("wordsmith-suggestions-changed", {
+				detail: { marks: currentMarks },
 			});
 			window.dispatchEvent(event);
 		}
@@ -202,4 +202,3 @@ export function generateSuggestionId(): string {
 	_suggestionIdCounter++;
 	return `tt-suggestion-${_suggestionIdCounter}`;
 }
-

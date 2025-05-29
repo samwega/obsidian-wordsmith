@@ -58,7 +58,7 @@ export default class TextTransformer extends Plugin {
 		await this.loadSuggestionsData(); // Load persisted suggestions
 
 		// Add event listener for suggestion changes
-		window.addEventListener('wordsmith-suggestions-changed', this.suggestionsChangedListener);
+		window.addEventListener("wordsmith-suggestions-changed", this.suggestionsChangedListener);
 
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
 
@@ -245,7 +245,7 @@ export default class TextTransformer extends Plugin {
 
 	override onunload(): void {
 		// Remove event listener
-		window.removeEventListener('wordsmith-suggestions-changed', this.suggestionsChangedListener);
+		window.removeEventListener("wordsmith-suggestions-changed", this.suggestionsChangedListener);
 		// Event listeners registered with `this.registerEvent` are automatically cleaned up by Obsidian
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
@@ -475,7 +475,9 @@ export default class TextTransformer extends Plugin {
 		}
 	};
 
-	private handleSuggestionsChanged = async (event: CustomEvent<{ marks: SuggestionMark[] }>): Promise<void> => {
+	private handleSuggestionsChanged = async (
+		event: CustomEvent<{ marks: SuggestionMark[] }>,
+	): Promise<void> => {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (activeFile) {
 			await this.updateFileSuggestions(activeFile.path, event.detail.marks);
