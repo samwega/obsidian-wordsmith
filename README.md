@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.8.0
+**Current Version:** v1.8.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -41,23 +41,23 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 * [Usage](#usage)
-  * [Commands:](#commands)
+  * [Commands](#commands)
   * [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
   * [Customizing Prompts](#customizing-prompts)
-  * [API Key Setup](#api-key-setup)
-* [AI Providers & Models](#ai-providers--models)
+  * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
-  * [✨ What's New in v1.8.0 * Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
-  * [✨ What's New in v1.7.0 * Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
+  * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
+    * [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
+  * [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
     * [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
   * [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
     * [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
-  * [✨ What's New in v1.5.0 * Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+  * [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
     * [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
   * [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
-  * [✨ What's New in v1.4.0 * Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
+  * [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
     * [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
-  * [✨ What's New in v1.3.0 * Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
+  * [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
     * [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
   * [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
   * [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
@@ -79,7 +79,7 @@ preferred hotkeys in Obsidian's settings for the commands below. In the screensh
 
 ![image](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
 
-Check out the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more advanced user guides.
+Check out the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more advanced use guides.
 
 ### Commands
 
@@ -143,72 +143,9 @@ Tailor WordSmith to your exact needs:
     directly (be cautious!) and reload Obsidian for changes to take effect.
     It's often safer to create a new custom prompt based on a default one.
 
-### API Key Setup
+### API Key Setup, AI Providers & Models Info
 
-You'll need at least one API key to use WordSmith. To get your API key(s):
-
-1. **OpenAI:** (Optional)
-    * [Create an OpenAI account](https://auth.openai.com/create-account)
-        if you don't have one.
-    * Go to your [API keys page](https://platform.openai.com/api-keys).
-    * Click `Create new secret key`, name it (e.g., "Obsidian WordSmith"), and copy the key.
-
-2. **Google Gemini:** (Optional)
-    * Ensure you have a Google account and visit
-        [Google AI Studio](https://aistudio.google.com).
-    * Navigate to the [API key page](https://aistudio.google.com/app/apikey)
-        (you might need to create a project first).
-    * Click `Create API key in new project` or `Create API key` in an
-        existing project. Copy the key.
-
-3. In Obsidian, go to `Settings → WordSmith` and paste your copied
-    API key(s) into the respective "OpenAI API Key" and/or "Gemini API Key"
-    fields.
-
-> [!TIP]
-> It's wise to monitor your API usage to avoid unexpected costs. Links to
-> usage dashboards are provided in the
-> [AI Providers & Models](#ai-providers--models) section.
-
-## AI Providers & Models
-
-WordSmith supports models from both OpenAI and Google, giving you a choice
-based on your preferences for performance and cost.
-
-> [!IMPORTANT]
-> This plugin requires an **OpenAI API key** and/or a **Gemini API key**. Usage
-> will incur costs with the respective provider (OpenAI or Google) based on
-> the amount of text processed.
-
-**Model Options & Estimated Pricing:**
-
-(Prices are estimates per 1 million tokens, roughly equivalent to 750,000
-words. Please refer to official OpenAI and Google Gemini pricing pages for the
-most up-to-date information. The plugin developer is not responsible for
-discrepancies.)
-
-* **OpenAI:** ([Track Usage](https://platform.openai.com/usage))
-  * **GPT-4.1:** High intelligence, best for complex literary tasks.
-        (Approx. $2 input / $8 output per 1M tokens)
-  * **GPT-4.1-mini:** Good balance of intelligence and speed.
-        (Approx. $0.40 input / $1.60 output per 1M tokens)
-  * **GPT-4.1-nano:** Fastest, most cost-effective for basic proofreading.
-        (Approx. $0.10 input / $0.40 output per 1M tokens)
-* **Google Gemini:** ([Track Usage](https://makersuite.google.com/app/usage))
-  * **Gemini 2.5 Pro:** High intelligence, thorough (can be slower).
-        (Approx. $3.50 input / $10.50 output per 1M tokens)
-  * **Gemini 2.5 Flash:** Very fast and powerful, great all-rounder.
-        (Approx. $0.50 input / $1.50 output per 1M tokens)
-
-**General Guidance:**
-
-* **Intelligence:** Higher intelligence models are generally better for
-    creative tasks, nuanced understanding, and complex instructions, but may be
-    slower and more expensive.
-* **Speed:** Faster models offer quicker turnaround, ideal for iterative
-    editing and proofreading.
-
-Choose the model that best fits your task and budget in the plugin settings.
+See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/obsidian-wordsmith/wiki/API-Key-Setup%2C-AI-Providers%2C-Models) entry.
 
 ## Release History
 
@@ -222,6 +159,10 @@ This release brings two major improvements to make your AI writing experience mo
 * **Replaced use of innerHTML (security risk) with safer DOM API**
 * Removed a line which was manually **detaching leaves during the unload process** - an antipattern
 * **Fixed a ton of bugs** which were created in the refactoring process
+
+#### Minor Versions of v.1.8.x
+
+* **v1.8.1**—Improved built in prompts for improved context use. Created [wiki](https://github.com/samwega/obsidian-wordsmith/wiki) and moved some of the README.md into it. Wiki contains other cool stuff!
 
 **Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
@@ -327,8 +268,6 @@ This update brings a crucial enhancement to how WordSmith handles changes involv
 * **v1.4.2—Adaptive Styling for dark/light themes.**
 * * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
 
----
-
 ### ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
 
 This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
@@ -422,8 +361,7 @@ method below.
 For users who prefer to install manually or are using a version not yet in the
 community store:
 
-1. Go to the [Releases page]
-    (<https://github.com/samwega/obsidian-text-transformer/releases>) on GitHub.
+1. Go to the [Releases page](<https://github.com/samwega/obsidian-wordsmith/releases>) on GitHub.
 2. Find the latest release and download the `main.js`, `manifest.json`, and
     `styles.css` files from the "Assets" section.
 3. In your Obsidian vault, navigate to the `.obsidian/plugins/` directory.
@@ -437,10 +375,7 @@ community store:
 
 ## Legacy Text Transformer (closest to Proofreader)
 
-Prior to v1.3.0, WordSmith used `==highlighted==` additions and `~~struck-through~~` deletions, using the regex based mechanics of Proofreader.
-
-> [!NOTE]
-> If you prefer the previous suggestion system, as it allows to use `==highlight==` and `~~strikethrough~~` in other markdown based applications, the last version to use this was **v1.2.2**. You can find it on the [releases page](https://github.com/samwega/obsidian-text-transformer/releases/tag/v1.2.2).
+See [Legacy Transformer wiki](https://github.com/samwega/obsidian-wordsmith/wiki/Legacy-Text-Transformer)
 
 ## Plugin Development
 
