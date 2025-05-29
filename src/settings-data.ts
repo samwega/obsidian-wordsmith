@@ -100,6 +100,7 @@ export interface TextTransformerSettings {
 	presence_penalty: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
+	saveToClipboard: boolean;
 }
 
 export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> & {
@@ -121,6 +122,7 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> 
 	presence_penalty: 0,
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: 2048,
+	saveToClipboard: false,
 };
 // Note: defaultPromptId was removed from DEFAULT_SETTINGS structure as it's no longer part of TextTransformerSettings
 

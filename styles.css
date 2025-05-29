@@ -96,8 +96,24 @@ body.theme-light .text-transformer-removed-active {
 }
 
 .custom-prompt-modal-button-container-styles {
-	text-align: center;
+	text-align: right;
 	margin-top: 1em;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.custom-prompt-modal-button-container-styles .toggle-container {
+	margin-right: 10px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.custom-prompt-modal-button-container-styles .toggle-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
 }
 
 /* Styles for TextTransformerSettingsMenu from settings.ts */

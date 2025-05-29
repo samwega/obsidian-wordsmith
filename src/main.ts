@@ -74,7 +74,7 @@ export default class TextTransformer extends Plugin {
 			name: "Prompt Based Context Aware Generation at Cursor",
 			icon: "wand-2",
 			editorCallback: (editor: Editor): void => {
-				new CustomPromptModal(this.app, async (promptText) => {
+				new CustomPromptModal(this.app, this, async (promptText) => {
 					// generateTextAndApplyAsSuggestionCM6 will handle updating file suggestions
 					await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
 				}).open();
