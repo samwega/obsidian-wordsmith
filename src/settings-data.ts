@@ -128,7 +128,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "improve",
 		name: "Improve",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Masterfully improve the following text in terms of style, clarity, readability and language. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Masterfully improve the following text in terms of style, clarity, readability and language. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -136,7 +136,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "shorten",
 		name: "Shorten",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Shorten the following text while preserving its meaning and clarity. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Shorten the following text while preserving its meaning and clarity.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -144,7 +144,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "lengthen",
 		name: "Lengthen",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Expand and elaborate the following text for greater detail and depth, but do not add unrelated information. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Expand and elaborate the following text for greater detail and depth, but do not add unrelated information.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -152,7 +152,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "fix-grammar",
 		name: "Fix grammar",
-		text: "[AI ROLE]: Professional proofreader. \n[TASK]: Correct any grammatical, spelling, or punctuation errors in the following text. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional proofreader. \n[TASK]: Correct any grammatical, spelling, or punctuation errors in the following text.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -160,7 +160,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "simplify-language",
 		name: "Simplify language",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -168,7 +168,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "enhance-readability",
 		name: "Enhance readability",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Improve the readability and flow of the following text. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Improve the readability and flow of the following text.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -176,7 +176,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "mind-the-context",
 		name: "Mind the Context!",
-		text: "[AI ROLE]:  Professional editor.\n [TASK]: You will receive a text selection, and a context. Do to the text whatever the context says. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]:  Professional editor.\n [TASK]: You will receive a text selection, and a context which may contain instructions or indications. Do to the text whatever the context says. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -184,7 +184,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "structure",
 		name: "Refine Structure",
-		text: "[AI ROLE]: Expert writing assistant. \n[TASK]: Refine the structure of the following text, in ways compatible with Obsidian Markdown (#headers, - bullet and 1. numbered lists, **bold**, *italics*, etc.) \n[RULE]: Make the minimal changes which  enhance comprehension; \n[RULE]: IMPORTANT: don't overdo it! Minimal is preferable.\nOnly output the revised text. This is the text:",
+		text: "[AI ROLE]: Expert editor.\n[TASK]: Refine the structure of the following text, in ways compatible with Obsidian Markdown (#headers, - bullet and 1. numbered lists, **bold**, *italics*, etc.) \n[RULE]: Make the minimal changes which  enhance comprehension; \n[RULE]: IMPORTANT: don't overdo it! Minimal is preferable.\nIf more context is provided, it should inform the response. Only output the revised text. This is the text:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -192,7 +192,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "cleanup",
 		name: "Cleanup Text/Chat",
-		text: "[AI ROLE]: Professional proofreader. \n[TASK]: Turn the following text or conversation into something that would sound nice and clear if read by text-to-speech, but without changing the content and meaning. Clean up the text received, which may contain chat conversations. Time stamps need not be preserved. If the date is present, it can be written once, at the beginning of the conversation. Multiple consecutive chats from one speaker can be concatenated IF they makes sense as a single paragraph or sentence. Don't change what the speakers say, but you can clean up the syntax and punctuation, expanding an <ic>, an <idk>, etc. Preserve emojis and numerals. Don't add empty lines between. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional proofreader.\n[TASK]: Turn the following text or conversation into something that would flow well if read by text-to-speech, but without changing the content and meaning. Clean up the text received, which MAY contain chat conversations. Remove timestamps. Multiple consecutive messages from one speaker can be concatenated it they makes sense as a single paragraph or sentence. Don't change what the speakers say, but you can clean up the syntax and punctuation, expanding an `ic`, an `idk`, etc. Preserve emojis and numerals. Don't add empty lines between messages.\n[CASE]: If it's a chat between at least two different names (& if date is present): write [### YYYY-MM-DD Conversation] as a title. Below the title, goes the cleaned up conversation.\n[CASE]: If there's only one speaker: do not add title/date, only write the [Name: ] once at the beginning of the first line.\nIf context is provided, it should be considered for the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -200,7 +200,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "flesh-out",
 		name: "Flesh out",
-		text: "[AI ROLE]: Masterful writer. \n[TASK]: You will receive a text. Expand and flesh out this sketch of an article, note, scene, or chapter. Don't be cheesy!  Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Masterful writer. \n[TASK]: You will receive a text. Expand and flesh out this sketch of an article, note, scene, or chapter. Don't be cheesy!\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -208,7 +208,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "translate",
 		name: `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`,
-		text: "[AI ROLE]: Professional translator. \n [TASK]: Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style. Output only the translated text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional translator. \n [TASK]: Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style.\nIf more context is provided, it should inform the response. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -216,7 +216,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "define",
 		name: "Define",
-		text: "[AI ROLE]: Master linguist. \n[TASK]: Add the definition of the word (or expression) right next to it in the format 'word/expression [def: definition]'. If input text is not a single definable word or expression, say just <Error—SelectOneWordOrExpression>. Your output should be a single line of text. The word/expression is:",
+		text: "[AI ROLE]: Master linguist. \n[TASK]: Add the definition(s) of the word (or expression) right next to it in the format 'word/expression [def: definition]'. If input text is not a single definable word or expression, say just <Error—SelectOneWordOrExpression>.\nIf more context is provided, it should inform the response. Your output should be a single line of text. The word/expression is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
