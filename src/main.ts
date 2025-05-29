@@ -1,10 +1,12 @@
 import { StateEffect } from "@codemirror/state";
 // src/main.ts
 import {
+	App,
 	Editor,
 	MarkdownView,
 	Notice,
 	Plugin,
+	PluginManifest,
 	TAbstractFile,
 	TFile,
 	WorkspaceLeaf,
@@ -39,12 +41,24 @@ export default class TextTransformer extends Plugin {
 	settings!: TextTransformerSettings;
 	private activeSuggestionsByFile: Record<string, SuggestionMark[]> = {};
 	private suggestionsFilePath!: string;
+	private suggestionsChangedListener: EventListener;
+
+	constructor(app: App, manifest: PluginManifest) {
+		super(app, manifest);
+		this.suggestionsChangedListener = ((event: Event) => {
+			const customEvent = event as CustomEvent<{ marks: SuggestionMark[] }>;
+			this.handleSuggestionsChanged(customEvent);
+		}) as EventListener;
+	}
 
 	override async onload(): Promise<void> {
 		this.suggestionsFilePath = `${this.manifest.dir}/suggestions.json`;
 
 		await this.loadSettings();
 		await this.loadSuggestionsData(); // Load persisted suggestions
+
+		// Add event listener for suggestion changes
+		window.addEventListener('wordsmith-suggestions-changed', this.suggestionsChangedListener);
 
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
 
@@ -230,6 +244,8 @@ export default class TextTransformer extends Plugin {
 	}
 
 	override onunload(): void {
+		// Remove event listener
+		window.removeEventListener('wordsmith-suggestions-changed', this.suggestionsChangedListener);
 		// Event listeners registered with `this.registerEvent` are automatically cleaned up by Obsidian
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
@@ -456,6 +472,13 @@ export default class TextTransformer extends Plugin {
 		) {
 			delete this.activeSuggestionsByFile[file.path];
 			await this.saveSuggestionsData();
+		}
+	};
+
+	private handleSuggestionsChanged = async (event: CustomEvent<{ marks: SuggestionMark[] }>): Promise<void> => {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (activeFile) {
+			await this.updateFileSuggestions(activeFile.path, event.detail.marks);
 		}
 	};
 }
