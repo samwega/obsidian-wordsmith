@@ -50,10 +50,10 @@ export class CustomPromptModal extends Modal {
 		});
 
 		const toggleContainer = buttonContainer.createDiv("toggle-container");
-		
+
 		toggleContainer.createEl("span", {
 			text: "Save prompt to clipboard",
-			cls: "toggle-label"
+			cls: "toggle-label",
 		});
 
 		new ToggleComponent(toggleContainer)
