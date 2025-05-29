@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.8.1
+**Current Version:** v1.8.2
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -163,6 +163,7 @@ This release brings two major improvements to make your AI writing experience mo
 #### Minor Versions of v.1.8.x
 
 * **v1.8.1**—Improved built in prompts for improved context use. Created [wiki](https://github.com/samwega/obsidian-wordsmith/wiki) and moved some of the README.md into it. Wiki contains other cool stuff!
+* **v1.8.2**—Feature: Now you can automatically save your ad-hoc prompts (Generation at Cursor) to your clipboard if you prefer, so they are not lost if you need to use them again. Works best with a clipboard manager, so your existing clipboard content doesn't get overwritten, but simply added to.
 
 **Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
