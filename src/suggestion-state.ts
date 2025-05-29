@@ -1,6 +1,13 @@
 // src/suggestion-state.ts
 import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView, ViewPlugin, WidgetType } from "@codemirror/view";
+import {
+	Decoration,
+	DecorationSet,
+	EditorView,
+	ViewPlugin,
+	ViewUpdate,
+	WidgetType,
+} from "@codemirror/view";
 import { NEWLINE_ADD_SYMBOL } from "./textTransformer";
 
 export interface SuggestionMark {
@@ -10,7 +17,7 @@ export interface SuggestionMark {
 	type: "added" | "removed";
 	ghostText?: string; // Only for "added" type: the text to display as a ghost.
 	isNewlineChange?: boolean;
-	newlineChar?: "\n"; // Original newline character, e.g. for re-insertion if a removal is rejected or insertion if 'added' is accepted.
+	newlineChar?: "\n" | undefined; // Original newline character, e.g. for re-insertion if a removal is rejected or insertion if 'added' is accepted.
 }
 
 export const setSuggestionsEffect = StateEffect.define<SuggestionMark[]>();
@@ -31,7 +38,9 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 					let to = mark.to; // Default 'to' to original for 'added' type
 
 					if (mark.type === "removed") {
-						to = tr.changes.mapPos(mark.to, 1, MapMode.TrackDel);
+						const mappedTo = tr.changes.mapPos(mark.to, 1, MapMode.TrackDel);
+						if (mappedTo === null) return null;
+						to = mappedTo;
 					} else if (mark.type === "added") {
 						// For 'added' marks, 'to' is the same as 'from'.
 						// If 'from' is valid (not null), 'to' should also be valid and same as 'from'.
@@ -44,7 +53,7 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 						}
 					}
 
-					if (from === null || (mark.type === "removed" && to === null)) {
+					if (from === null) {
 						return null; // Mark's anchor point or entire range was deleted
 					}
 					// For "removed" marks, ensure from < to after mapping
@@ -89,11 +98,11 @@ class GhostTextWidget extends WidgetType {
 		return span;
 	}
 
-	eq(other: GhostTextWidget): boolean {
+	override eq(other: GhostTextWidget): boolean {
 		return other.displayText === this.displayText && other.className === this.className;
 	}
 
-	ignoreEvent(): boolean {
+	override ignoreEvent(): boolean {
 		// if true, the editor will ignore events targetting this widget.
 		// if false, events will be handled by the editor.
 		return false;
@@ -196,7 +205,7 @@ class SuggestionViewPluginClass {
 					const widgetDecoration = Decoration.widget({
 						widget: new GhostTextWidget(displayText, effectiveClassName),
 						side: 1, // Positive side for insertions
-						block: mark.isNewlineChange ? true : undefined, // Make newline symbols block widgets
+						block: !!mark.isNewlineChange, // Always boolean
 					}).range(mark.from);
 					activeDecorations.push(widgetDecoration);
 				} catch (e) {
