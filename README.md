@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.8.2
+**Current Version:** v1.9.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -15,23 +15,24 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
 
 ## Features
 
-* **Inline AI suggestions**: additions/deletions rendered via CodeMirror decorations, individual accept/reject workflow  
+* **Inline AI suggestions**: additions as "ghost text" & addition/deletion highlighting are rendered as CodeMirror6 decorations (doesn't modify your text in any way unless you accept)
+* **Granular suggestion management**: accept/reject per-suggestion, selection/paragraph, or all  
 * **Custom & Default Prompt Palette** for text transformation (improve, shorten, lengthen, fix grammar, refine structure, translate, and many more, or user defined ones
+* Ad-hoc **Generation at Cursor** with prompt input
 * **All Processing and Generation is Context-Aware**—the AI doesn't just receive the selected text to be processed or the prompt: you include as much (or as little) context as you wish  
 * **Context control in Side Pane:**
   * Dynamic Context (configurable lines before and after)
   * Whole Note
   * Custom Context (including embedded note linking with [[wikilinks]]!)  
-* Ad-hoc **Generation at Cursor** with prompt input, also context aware
 * **Keyboard-first workflow**: hotkeys for all main actions and suggestion navigation  
-* **Granular suggestion management**: per-suggestion, selection/paragraph, or all  
 * **BYOK:** Bring your own API key—only pay what you use  
 * Multiple AI provider/model support: *OpenAI (GPT-4.1, mini, nano)*, *Google Gemini 2.5 (Pro, Flash)*  
 * **Great Prompt Management Settings UI:** enable/disable prompts or create new one
-* Robust error handling, performance, and **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
+* Robust error handling, performance
+* **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
 * **Multilingual**—the AI should autodetect the language from Context, selection and/or ad-hoc prompt, and return suggestions in the same language
-* Manual and (planned) community plugin installation  
-* **Persistent suggestions** across Obsidian reloads
+* Manual and (planned) community plugin installation
+* Many more!
 
 ![WordSmith Settings and Context Side Pane](https://github.com/user-attachments/assets/66408578-1130-4b3f-a7b8-ea6bebe18f85)
 
@@ -46,6 +47,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [Customizing Prompts](#customizing-prompts)
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
+  * [✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨](#-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-)
   * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
     * [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
   * [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
@@ -148,6 +150,34 @@ Tailor WordSmith to your exact needs:
 See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/obsidian-wordsmith/wiki/API-Key-Setup%2C-AI-Providers%2C-Models) entry.
 
 ## Release History
+
+### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
+
+This significant architectural update refines how WordSmith presents and manages "added" text suggestions, leading to a smoother, more robust, and performant experience.
+
+* **Native "Ghost Text" for Added Suggestions:**
+  * **No More Direct Text Insertion (Initially):** When the AI suggests adding text (the green highlights), this text is no longer immediately inserted into your note's content.
+  * **CodeMirror 6 Widget Power:** Instead, "added" suggestions are now rendered as "ghost text" using CodeMirror 6's native widget system. This means the green text you see is a visual overlay, and your actual note content remains unchanged until you explicitly "accept" the suggestion.
+  * **Visual Consistency:** The appearance of added suggestions (green background, active highlighting) remains identical, ensuring a familiar user experience.
+  * **Benefits:** This approach is cleaner, reduces the chance of errors with text offsets, and improves performance by leveraging CM6's optimized decoration handling.
+
+* **Simplified Suggestion Resolution:**
+  * Accepting an "added" suggestion now cleanly inserts the ghost text into the document at the correct position.
+  * Rejecting an "added" suggestion simply removes the visual ghost text, as no actual document change had occurred yet.
+  * Rejecting *all* suggestions (`Clear all active suggestions`) is now more straightforward, as it primarily involves clearing visual decorations without needing to revert document changes for "added" text.
+
+* **Removal of File-Based Suggestion Persistence:**
+  * The previous experimental feature that saved active suggestion states (including CM6 decoration details) to a file (`.obsidian/plugins/text-transformer/suggestions.json`) has been **removed**.
+  * **Why?** The new "ghost text" architecture for added suggestions means that the document itself isn't modified until acceptance. For "removed" suggestions, the original text remains until accepted. This simplifies state management significantly. While this means visual suggestions won't persist across full Obsidian restarts *in their visual state*, the underlying document integrity is better preserved, and re-triggering the transformation if needed is a cleaner workflow. This change prioritizes stability and a more native editor integration over the complexity of maintaining visual state persistence across sessions.
+  * **Note**: *This change streamlines the plugin's internal workings and reduces potential points of failure associated with syncing visual states with file content.*
+
+* **Under-the-Hood Optimizations:**
+  * The core logic in `suggestion-state.ts`, `textTransformer.ts`, and `suggestion-handler.ts` has been extensively refactored to support the new ghost text model.
+  * This results in a more maintainable codebase and aligns WordSmith more closely with CodeMirror 6 best practices.
+
+**Why this matters:**
+
+Version 1.9.0 marks a significant step forward in WordSmith's technical foundation. By adopting a more native CodeMirror 6 approach for "added" suggestions, the plugin becomes more robust, performant, and easier to maintain, all while keeping the user interface and core functionality consistent. The removal of file-based suggestion persistence simplifies the plugin's architecture and focuses on a stable, in-session suggestion experience.
 
 ### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
 
