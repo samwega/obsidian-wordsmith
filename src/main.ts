@@ -39,26 +39,13 @@ import { getCmEditorView } from "./utils";
 export default class TextTransformer extends Plugin {
 	defaultSettings = DEFAULT_SETTINGS; // Expose DEFAULT_SETTINGS in camelCase
 	settings!: TextTransformerSettings;
-	private activeSuggestionsByFile: Record<string, SuggestionMark[]> = {};
-	private suggestionsFilePath!: string;
-	private suggestionsChangedListener: EventListener;
 
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
-		this.suggestionsChangedListener = ((event: Event) => {
-			const customEvent = event as CustomEvent<{ marks: SuggestionMark[] }>;
-			this.handleSuggestionsChanged(customEvent);
-		}) as EventListener;
 	}
 
 	override async onload(): Promise<void> {
-		this.suggestionsFilePath = `${this.manifest.dir}/suggestions.json`;
-
 		await this.loadSettings();
-		await this.loadSuggestionsData(); // Load persisted suggestions
-
-		// Add event listener for suggestion changes
-		window.addEventListener("wordsmith-suggestions-changed", this.suggestionsChangedListener);
 
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
 
@@ -218,17 +205,6 @@ export default class TextTransformer extends Plugin {
 			icon: "arrow-up-circle",
 		});
 
-		// Event listeners for persistence
-		this.registerEvent(
-			this.app.workspace.on("active-leaf-change", this.handleActiveLeafChange.bind(this)),
-		);
-		this.registerEvent(this.app.vault.on("delete", this.handleFileDelete.bind(this)));
-
-		this.app.workspace.onLayoutReady(async () => {
-			await this.cleanupStaleSuggestions();
-			await this.applyPersistedSuggestionsToAllOpenFiles();
-		});
-
 		console.info(this.manifest.name + " Plugin loaded successfully.");
 	}
 
@@ -244,9 +220,6 @@ export default class TextTransformer extends Plugin {
 	}
 
 	override onunload(): void {
-		// Remove event listener
-		window.removeEventListener("wordsmith-suggestions-changed", this.suggestionsChangedListener);
-		// Event listeners registered with `this.registerEvent` are automatically cleaned up by Obsidian
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
 
@@ -314,173 +287,4 @@ export default class TextTransformer extends Plugin {
 			}
 		}
 	}
-
-	// --- Suggestion Persistence Logic ---
-
-	async loadSuggestionsData(): Promise<void> {
-		try {
-			if (await this.app.vault.adapter.exists(this.suggestionsFilePath)) {
-				const data = await this.app.vault.adapter.read(this.suggestionsFilePath);
-				if (data) {
-					this.activeSuggestionsByFile = JSON.parse(data);
-				} else {
-					this.activeSuggestionsByFile = {};
-				}
-			} else {
-				this.activeSuggestionsByFile = {};
-			}
-		} catch (error) {
-			console.error("WordSmith: Error loading suggestions data from suggestions.json:", error);
-			this.activeSuggestionsByFile = {}; // Reset on error
-		}
-	}
-
-	async saveSuggestionsData(): Promise<void> {
-		try {
-			await this.app.vault.adapter.write(
-				this.suggestionsFilePath,
-				JSON.stringify(this.activeSuggestionsByFile, null, 2),
-			);
-		} catch (error) {
-			console.error("WordSmith: Error saving suggestions data to suggestions.json:", error);
-			new Notice("WordSmith: Could not save suggestions to disk.");
-		}
-	}
-
-	async updateFileSuggestions(filePath: string, marks: SuggestionMark[]): Promise<void> {
-		if (marks && marks.length > 0) {
-			// Store a deep copy of marks to prevent external modifications to the stored array
-			this.activeSuggestionsByFile[filePath] = marks.map((mark) => ({ ...mark }));
-		} else {
-			delete this.activeSuggestionsByFile[filePath];
-		}
-		await this.saveSuggestionsData();
-	}
-
-	private async cleanupStaleSuggestions(): Promise<void> {
-		let changed = false;
-		for (const filePath in this.activeSuggestionsByFile) {
-			if (Object.hasOwn(this.activeSuggestionsByFile, filePath)) {
-				const file = this.app.vault.getAbstractFileByPath(filePath);
-				if (!(file instanceof TFile && file.extension === "md")) {
-					delete this.activeSuggestionsByFile[filePath];
-					changed = true;
-				}
-			}
-		}
-		if (changed) {
-			await this.saveSuggestionsData();
-		}
-	}
-
-	private async applyPersistedSuggestionsToAllOpenFiles(): Promise<void> {
-		const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
-		for (const leaf of markdownLeaves) {
-			if (
-				leaf.view instanceof MarkdownView &&
-				leaf.view.file &&
-				leaf.view.editor &&
-				leaf.view.file.extension === "md"
-			) {
-				await this.applyPersistedSuggestionsToEditor(leaf.view.editor, leaf.view);
-			}
-		}
-	}
-
-	private handleActiveLeafChange = async (): Promise<void> => {
-		// Do nothing on focus changes - suggestions should persist in the editor state
-		// and only be reapplied during actual reloads
-	};
-
-	private async applyPersistedSuggestionsToEditor(
-		editor: Editor,
-		view: MarkdownView,
-	): Promise<void> {
-		if (!view.file) {
-			console.warn(
-				"WordSmith: applyPersistedSuggestionsToEditor called without a file in view.",
-			);
-			return;
-		}
-
-		const cm = getCmEditorView(editor);
-		if (!cm || !cm.state) {
-			// console.warn(`WordSmith: Could not get CodeMirror 6 EditorView instance for ${view.file.path}, or state is not ready. Suggestions not applied.`);
-			return;
-		}
-
-		const persistedMarks = this.activeSuggestionsByFile[view.file.path];
-		// biome-ignore lint/suspicious/noExplicitAny: StateEffect type
-		const effectsToDispatch: StateEffect<any>[] = [clearAllSuggestionsEffect.of(null)];
-
-		if (persistedMarks && Array.isArray(persistedMarks) && persistedMarks.length > 0) {
-			const docLength = cm.state.doc.length;
-			const validMarks = persistedMarks.filter(
-				(mark) =>
-					typeof mark.from === "number" &&
-					typeof mark.to === "number" &&
-					mark.from <= mark.to &&
-					mark.from >= 0 &&
-					mark.to <= docLength,
-			);
-
-			if (validMarks.length !== persistedMarks.length) {
-				console.warn(
-					`WordSmith: Filtered out ${persistedMarks.length - validMarks.length} invalid/out-of-bounds marks for file ${view.file.path}. This might happen if the file was modified externally.`,
-				);
-			}
-
-			if (validMarks.length > 0) {
-				effectsToDispatch.push(setSuggestionsEffect.of(validMarks.map((m) => ({ ...m })))); // Apply copy
-			} else if (persistedMarks.length > 0 && validMarks.length === 0) {
-				console.warn(
-					`WordSmith: All persisted suggestions for ${view.file.path} were invalid (e.g. file changed drastically). Clearing them from persistence.`,
-				);
-				delete this.activeSuggestionsByFile[view.file.path];
-				// No await here, but save will be triggered if multiple files are processed or by next updateFileSuggestions
-				this.saveSuggestionsData(); // Save this change immediately
-			}
-		}
-
-		// Only dispatch if there's something to do or clear
-		if (cm.state) {
-			// Double check cm.state
-			try {
-				cm.dispatch({ effects: effectsToDispatch });
-			} catch (e) {
-				console.error(
-					`WordSmith: Error dispatching effects to apply persisted suggestions for ${view.file.path}:`,
-					e,
-					"Marks attempted:",
-					persistedMarks,
-				);
-				// If dispatching fails, it's safer to clear persisted marks for this file to prevent loops.
-				delete this.activeSuggestionsByFile[view.file.path];
-				await this.saveSuggestionsData();
-				new Notice(
-					`WordSmith: Error applying suggestions to ${view.file.path}. Cleared for this file. See console.`,
-				);
-			}
-		}
-	}
-
-	private handleFileDelete = async (file: TAbstractFile): Promise<void> => {
-		if (
-			file instanceof TFile &&
-			file.extension === "md" &&
-			Object.hasOwn(this.activeSuggestionsByFile, file.path)
-		) {
-			delete this.activeSuggestionsByFile[file.path];
-			await this.saveSuggestionsData();
-		}
-	};
-
-	private handleSuggestionsChanged = async (
-		event: CustomEvent<{ marks: SuggestionMark[] }>,
-	): Promise<void> => {
-		const activeFile = this.app.workspace.getActiveFile();
-		if (activeFile) {
-			await this.updateFileSuggestions(activeFile.path, event.detail.marks);
-		}
-	};
 }

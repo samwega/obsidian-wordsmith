@@ -199,29 +199,27 @@ export function resolveNextSuggestionCM6(
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
-	plugin.updateFileSuggestions(file.path, marksAfterResolution); // PERSISTENCE CALL
 
 	if (marksAfterResolution.length === 0) {
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-		if (!shouldForceResolve && marksAfterResolution.length > 0) {
-			const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
-			if (
-				nextSuggestionToFocus &&
-				(cm.state.selection.main.head !== nextSuggestionToFocus.from ||
-					!isPositionVisible(cm, nextSuggestionToFocus.from))
-			) {
-				cm.dispatch({
-					effects: isPositionVisible(cm, nextSuggestionToFocus.from)
-						? []
-						: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-								y: "center",
-								yMargin: 50,
-							}),
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-				});
-			}
+		// Always jump to the next suggestion after resolving
+		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
+		if (
+			nextSuggestionToFocus &&
+			(cm.state.selection.main.head !== nextSuggestionToFocus.from ||
+				!isPositionVisible(cm, nextSuggestionToFocus.from))
+		) {
+			cm.dispatch({
+				effects: isPositionVisible(cm, nextSuggestionToFocus.from)
+					? []
+					: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+							y: "center",
+							yMargin: 50,
+						}),
+				selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+			});
 		}
 	}
 }
@@ -418,7 +416,6 @@ export function resolveSuggestionsInSelectionCM6(
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const newMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
-	plugin.updateFileSuggestions(file.path, newMarksAfterOp); // PERSISTENCE CALL
 
 	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
 	new Notice(noticeMessage, 3000);
@@ -481,7 +478,6 @@ export function clearAllActiveSuggestionsCM6(
 
 	// After dispatch, the suggestionStateField will be empty due to clearAllSuggestionsEffect
 	const newMarksAfterClear = cm.state.field(suggestionStateField, false) || [];
-	plugin.updateFileSuggestions(file.path, newMarksAfterClear); // PERSISTENCE CALL (will pass empty array)
 
 	new Notice("All active suggestions cleared (changes rejected).", 3000);
 }

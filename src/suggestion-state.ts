@@ -51,14 +51,12 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 
 class SuggestionViewPluginClass {
 	decorations: DecorationSet;
-	private lastMarks: SuggestionMark[] = [];
 
 	constructor(view: EditorView) {
 		this.decorations = Decoration.none;
 		try {
 			// Initial computation of decorations
 			this.decorations = this.computeDecorations(view);
-			this.lastMarks = view.state.field(suggestionStateField, false) || [];
 		} catch (e) {
 			console.error("WordSmith ViewPlugin: Error in constructor computeDecorations:", e);
 			this.decorations = Decoration.none;
@@ -75,26 +73,13 @@ class SuggestionViewPluginClass {
 			return;
 		}
 
-		// Check if suggestions were removed
-		const currentMarks = update.state.field(suggestionStateField, false) || [];
-		if (currentMarks.length !== this.lastMarks.length) {
-			// Suggestions were added or removed
-			needsRecompute = true;
-			// Dispatch an event that the plugin can listen to
-			const event = new CustomEvent("wordsmith-suggestions-changed", {
-				detail: { marks: currentMarks },
-			});
-			window.dispatchEvent(event);
-		}
-		this.lastMarks = currentMarks;
-
 		if (update.docChanged || update.viewportChanged || update.selectionSet) {
 			needsRecompute = true;
 		}
 
 		if (update.startState) {
 			const prevMarks = update.startState.field(suggestionStateField, false);
-			if (prevMarks !== currentMarks) {
+			if (prevMarks !== update.state.field(suggestionStateField, false)) {
 				needsRecompute = true;
 			}
 		}
