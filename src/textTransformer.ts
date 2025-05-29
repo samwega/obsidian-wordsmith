@@ -226,9 +226,6 @@ ${fileContent}
 		}),
 	);
 
-	const newMarksAfterDispatch = cm.state.field(suggestionStateField, false) || [];
-	await plugin.updateFileSuggestions(currentFile.path, newMarksAfterDispatch); // PERSISTENCE CALL
-
 	if (isOverlength) {
 		new Notice("Generated text might be incomplete due to model limits.", 10000);
 	}
@@ -478,9 +475,6 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 			scrollIntoView: true,
 		}),
 	);
-
-	const newMarksAfterDispatch = cm.state.field(suggestionStateField, false) || [];
-	await plugin.updateFileSuggestions(file.path, newMarksAfterDispatch); // PERSISTENCE CALL
 
 	if (isOverlength)
 		new Notice("Text > AI model max output. Suggestions may be incomplete.", 10_000);

@@ -1,16 +1,5 @@
-import { StateEffect } from "@codemirror/state";
 // src/main.ts
-import {
-	App,
-	Editor,
-	MarkdownView,
-	Notice,
-	Plugin,
-	PluginManifest,
-	TAbstractFile,
-	TFile,
-	WorkspaceLeaf,
-} from "obsidian";
+import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import {
 	clearAllActiveSuggestionsCM6,
@@ -19,12 +8,7 @@ import {
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
 } from "./suggestion-handler";
-import {
-	SuggestionMark,
-	clearAllSuggestionsEffect,
-	setSuggestionsEffect,
-	textTransformerSuggestionExtensions,
-} from "./suggestion-state";
+import { textTransformerSuggestionExtensions } from "./suggestion-state";
 import { generateTextAndApplyAsSuggestionCM6, textTransformerTextCM6 } from "./textTransformer";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
@@ -33,16 +17,11 @@ import { PromptPaletteModal } from "./prompt-palette";
 import { TextTransformerSettingsMenu } from "./settings";
 import { DEFAULT_SETTINGS, TextTransformerPrompt, TextTransformerSettings } from "./settings-data";
 import { DEFAULT_TEXT_TRANSFORMER_PROMPTS, MODEL_SPECS } from "./settings-data";
-import { getCmEditorView } from "./utils";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
 	defaultSettings = DEFAULT_SETTINGS; // Expose DEFAULT_SETTINGS in camelCase
 	settings!: TextTransformerSettings;
-
-	constructor(app: App, manifest: PluginManifest) {
-		super(app, manifest);
-	}
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();

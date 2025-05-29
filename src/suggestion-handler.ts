@@ -100,9 +100,9 @@ function isPositionVisible(cm: EditorView, pos: number): boolean {
 }
 
 export function resolveNextSuggestionCM6(
-	plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer, // Changed from _plugin
 	editor: Editor,
-	file: TFile, // Added file
+	_file: TFile, // Added file
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -272,9 +272,9 @@ function* iterateParagraphs(
 }
 
 export function resolveSuggestionsInSelectionCM6(
-	plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer, // Changed from _plugin
 	editor: Editor,
-	file: TFile, // Added file
+	_file: TFile, // Added file
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -415,8 +415,6 @@ export function resolveSuggestionsInSelectionCM6(
 	}
 	cm.dispatch(cm.state.update(transactionSpec));
 
-	const newMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
-
 	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
 	new Notice(noticeMessage, 3000);
 
@@ -427,9 +425,9 @@ export function resolveSuggestionsInSelectionCM6(
 }
 
 export function clearAllActiveSuggestionsCM6(
-	plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer, // Changed from _plugin
 	editor: Editor,
-	file: TFile, // Added file
+	_file: TFile, // Added file
 ): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -477,7 +475,5 @@ export function clearAllActiveSuggestionsCM6(
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	// After dispatch, the suggestionStateField will be empty due to clearAllSuggestionsEffect
-	const newMarksAfterClear = cm.state.field(suggestionStateField, false) || [];
-
 	new Notice("All active suggestions cleared (changes rejected).", 3000);
 }
