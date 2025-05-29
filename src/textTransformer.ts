@@ -1,7 +1,7 @@
 // src/textTransformer.ts
 import { EditorSelection } from "@codemirror/state";
 import { diffWordsWithSpace } from "diff";
-import { Editor, Notice, TFile } from "obsidian"; // Added TFile
+import { Editor, Notice, TFile } from "obsidian";
 
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
 import TextTransformer from "./main";
@@ -16,10 +16,9 @@ import {
 	setSuggestionsEffect,
 	suggestionStateField,
 } from "./suggestion-state";
-import { getCmEditorView } from "./utils"; // Import from utils
+import { getCmEditorView } from "./utils";
 
-export const NEWLINE_ADD_SYMBOL = "↵";
-export const NEWLINE_REMOVE_SYMBOL = "¶";
+export const NEWLINE_ADD_SYMBOL = "↵"; // Used by GhostTextWidget for visual representation
 const GENERATION_TARGET_CURSOR_MARKER = "<<<GENERATION_TARGET_CURSOR_POSITION>>>";
 
 export async function generateTextAndApplyAsSuggestionCM6(
@@ -33,7 +32,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		return;
 	}
 
-	const currentFile = plugin.app.workspace.getActiveFile(); // Get file for persistence
+	const currentFile = plugin.app.workspace.getActiveFile();
 	if (!currentFile) {
 		new Notice("WordSmith: No active file to generate suggestions for.", 5000);
 		return;
@@ -48,7 +47,6 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	const { app, settings } = plugin;
 	let additionalContextForAI = "";
 	const contextParts: string[] = [];
-	// const currentFile = app.workspace.getActiveFile(); // Already got it above
 	const cursorOffset = cm.state.selection.main.head;
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
@@ -160,22 +158,17 @@ ${fileContent}
 	}
 
 	const normalizedGeneratedText = generatedText.replace(/\r\n|\r/g, "\n");
-
 	const marksToApply: SuggestionMark[] = [];
-	let textToInsertInDocument = "";
 	let currentParseOffsetInGeneratedText = 0;
-	let currentInsertOffsetInDocument = 0;
 
 	while (currentParseOffsetInGeneratedText < normalizedGeneratedText.length) {
-		const markStartInDoc = cursorOffset + currentInsertOffsetInDocument;
-		let segmentLengthInGeneratedText = 0;
-		let textSegmentForDocument = "";
+		let ghostTextSegment = "";
 		let isNewlineSegment = false;
 
 		if (normalizedGeneratedText.startsWith("\n", currentParseOffsetInGeneratedText)) {
 			isNewlineSegment = true;
-			textSegmentForDocument = NEWLINE_ADD_SYMBOL;
-			segmentLengthInGeneratedText = 1;
+			ghostTextSegment = "\n";
+			currentParseOffsetInGeneratedText += 1;
 		} else {
 			let nextNewlineIndex = normalizedGeneratedText.indexOf(
 				"\n",
@@ -184,44 +177,34 @@ ${fileContent}
 			if (nextNewlineIndex === -1) {
 				nextNewlineIndex = normalizedGeneratedText.length;
 			}
-			textSegmentForDocument = normalizedGeneratedText.substring(
+			ghostTextSegment = normalizedGeneratedText.substring(
 				currentParseOffsetInGeneratedText,
 				nextNewlineIndex,
 			);
-			segmentLengthInGeneratedText = textSegmentForDocument.length;
+			currentParseOffsetInGeneratedText = nextNewlineIndex;
 		}
 
-		if (textSegmentForDocument.length > 0) {
-			textToInsertInDocument += textSegmentForDocument;
-			const commonMarkProps = {
+		if (ghostTextSegment.length > 0) {
+			marksToApply.push({
 				id: generateSuggestionId(),
-				from: markStartInDoc,
-				to: markStartInDoc + textSegmentForDocument.length,
-				type: "added" as const,
+				from: cursorOffset,
+				to: cursorOffset,
+				type: "added",
+				ghostText: ghostTextSegment,
 				isNewlineChange: isNewlineSegment,
-			};
-
-			const mark: SuggestionMark = isNewlineSegment
-				? {
-						...commonMarkProps,
-						newlineChar: "\n" as const,
-					}
-				: commonMarkProps;
-
-			marksToApply.push(mark);
-			currentInsertOffsetInDocument += textSegmentForDocument.length;
+				newlineChar: isNewlineSegment ? "\n" : undefined,
+			});
 		}
-		currentParseOffsetInGeneratedText += segmentLengthInGeneratedText;
 	}
 
 	cm.dispatch(
 		cm.state.update({
-			changes: { from: cursorOffset, to: cursorOffset, insert: textToInsertInDocument },
+			changes: { from: cursorOffset, to: cursorOffset, insert: "" }, // No direct document change
 			effects: [clearAllSuggestionsEffect.of(null), setSuggestionsEffect.of(marksToApply)],
 			selection:
 				marksToApply.length > 0
 					? EditorSelection.cursor(marksToApply[0].from)
-					: EditorSelection.cursor(cursorOffset + textToInsertInDocument.length),
+					: EditorSelection.cursor(cursorOffset),
 			scrollIntoView: true,
 		}),
 	);
@@ -240,11 +223,11 @@ ${fileContent}
 async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
 	editor: Editor,
-	originalText: string,
+	originalText: string, // Raw original text for AI
 	scope: "Selection" | "Paragraph",
 	promptInfo: TextTransformerPrompt,
 	scopeRangeCm: { from: number; to: number },
-	file: TFile, // Added file for persistence
+	file: TFile,
 ): Promise<boolean> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -267,7 +250,7 @@ async function validateAndApplyAIDrivenChanges(
 	}
 
 	const { app, settings } = plugin;
-	const fileBeforePath = file.path; // Use passed file's path
+	const fileBeforePath = file.path;
 	const longInput = originalText.length > (settings.longInputThreshold || 1500);
 	const veryLongInput = originalText.length > (settings.veryLongInputThreshold || 15000);
 	const notifDuration = longInput ? 0 : 4_000;
@@ -376,7 +359,6 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		return false;
 	}
 	if (fileBeforePath !== plugin.app.workspace.getActiveFile()?.path) {
-		// Check against current active file
 		new Notice("⚠️ Active file changed. Aborting.", notifDuration);
 		return false;
 	}
@@ -390,80 +372,83 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 		return false;
 	}
 
-	let textToInsertInEditor = "";
 	const suggestionMarksToApply: SuggestionMark[] = [];
-	let currentOffsetInEditorText = 0;
+	let currentOffsetInOriginalDocSegment = 0;
 
 	for (const part of diffResult) {
 		const partValue = part.value;
-		if (part.added || part.removed) {
+
+		if (part.added) {
 			let currentPosInPartValue = 0;
 			while (currentPosInPartValue < partValue.length) {
-				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInEditorText;
-				let segmentLengthFromDiff = 0;
-				let textSegmentForEditor = "";
+				const markAnchorPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
+				let ghostTextSegment = "";
+				let isNewlineSeg = false;
+
 				if (partValue.startsWith("\n", currentPosInPartValue)) {
-					segmentLengthFromDiff = 1;
-					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
-				} else if (partValue.startsWith("\r\n", currentPosInPartValue)) {
-					segmentLengthFromDiff = 2;
-					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
-				} else if (partValue.startsWith("\r", currentPosInPartValue)) {
-					segmentLengthFromDiff = 1;
-					textSegmentForEditor = part.added ? NEWLINE_ADD_SYMBOL : NEWLINE_REMOVE_SYMBOL;
+					ghostTextSegment = "\n";
+					isNewlineSeg = true;
+					currentPosInPartValue += 1;
+				} else {
+					const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
+					const endOfTextSegment =
+						nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
+					ghostTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+					currentPosInPartValue = endOfTextSegment;
 				}
 
-				if (
-					textSegmentForEditor === NEWLINE_ADD_SYMBOL ||
-					textSegmentForEditor === NEWLINE_REMOVE_SYMBOL
-				) {
-					textToInsertInEditor += textSegmentForEditor;
+				if (ghostTextSegment.length > 0) {
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
-						from: markStartPosInDoc,
-						to: markStartPosInDoc + textSegmentForEditor.length,
-						type: part.added ? "added" : "removed",
-						isNewlineChange: true,
-						newlineChar: "\n",
+						from: markAnchorPosInDoc,
+						to: markAnchorPosInDoc,
+						type: "added",
+						ghostText: ghostTextSegment,
+						isNewlineChange: isNewlineSeg,
+						newlineChar: isNewlineSeg ? "\n" : undefined,
 					});
-					currentOffsetInEditorText += textSegmentForEditor.length;
-					currentPosInPartValue += segmentLengthFromDiff;
+				}
+			}
+		} else if (part.removed) {
+			let currentPosInPartValue = 0;
+			while (currentPosInPartValue < partValue.length) {
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
+				let removedTextSegment = "";
+				let isNewlineSeg = false;
+
+				if (partValue.startsWith("\n", currentPosInPartValue)) {
+					removedTextSegment = "\n";
+					isNewlineSeg = true;
+					currentPosInPartValue += 1;
 				} else {
-					let nextNewlineIndexInDiffPart = Number.POSITIVE_INFINITY;
-					["\n", "\r\n", "\r"].forEach((nl) => {
-						const idx = partValue.indexOf(nl, currentPosInPartValue);
-						if (idx !== -1)
-							nextNewlineIndexInDiffPart = Math.min(nextNewlineIndexInDiffPart, idx);
-					});
-					const endOfTextSegmentInDiffPart =
-						nextNewlineIndexInDiffPart === Number.POSITIVE_INFINITY
-							? partValue.length
-							: nextNewlineIndexInDiffPart;
-					textSegmentForEditor = partValue.substring(
-						currentPosInPartValue,
-						endOfTextSegmentInDiffPart,
-					);
-					textToInsertInEditor += textSegmentForEditor;
+					const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
+					const endOfTextSegment =
+						nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
+					removedTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+					currentPosInPartValue = endOfTextSegment;
+				}
+
+				if (removedTextSegment.length > 0) {
+					const markEndPosInDoc = markStartPosInDoc + removedTextSegment.length;
 					suggestionMarksToApply.push({
 						id: generateSuggestionId(),
 						from: markStartPosInDoc,
-						to: markStartPosInDoc + textSegmentForEditor.length,
-						type: part.added ? "added" : "removed",
+						to: markEndPosInDoc,
+						type: "removed",
+						isNewlineChange: isNewlineSeg,
+						newlineChar: isNewlineSeg ? "\n" : undefined,
 					});
-					currentOffsetInEditorText += textSegmentForEditor.length;
-					currentPosInPartValue = endOfTextSegmentInDiffPart;
+					currentOffsetInOriginalDocSegment += removedTextSegment.length;
 				}
 			}
 		} else {
-			const normalizedUnchangedValue = partValue.replace(/\r\n|\r/g, "\n");
-			textToInsertInEditor += normalizedUnchangedValue;
-			currentOffsetInEditorText += normalizedUnchangedValue.length;
+			currentOffsetInOriginalDocSegment += partValue.length;
 		}
 	}
 
 	cm.dispatch(
 		cm.state.update({
-			changes: { from: scopeRangeCm.from, to: scopeRangeCm.to, insert: textToInsertInEditor },
+			changes: { from: scopeRangeCm.from, to: scopeRangeCm.from, insert: "" },
 			effects: [
 				clearAllSuggestionsEffect.of(null),
 				setSuggestionsEffect.of(suggestionMarksToApply),
@@ -471,7 +456,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 			selection:
 				suggestionMarksToApply.length > 0
 					? EditorSelection.cursor(suggestionMarksToApply[0].from)
-					: EditorSelection.cursor(scopeRangeCm.from + textToInsertInEditor.length),
+					: EditorSelection.cursor(scopeRangeCm.from),
 			scrollIntoView: true,
 		}),
 	);
@@ -490,7 +475,7 @@ export async function textTransformerTextCM6(
 	plugin: TextTransformer,
 	editor: Editor,
 	prompt: TextTransformerPrompt,
-	file: TFile, // Added file for persistence context
+	file: TFile,
 ): Promise<void> {
 	const cm = getCmEditorView(editor);
 	if (!cm) {

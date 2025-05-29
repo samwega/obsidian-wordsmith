@@ -1,6 +1,6 @@
 import { EditorSelection, StateEffect, Text, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { Editor, Notice, TFile } from "obsidian"; // Added TFile
+import { Editor, Notice, TFile } from "obsidian";
 
 import TextTransformer from "./main";
 import {
@@ -9,9 +9,8 @@ import {
 	resolveSuggestionEffect,
 	suggestionStateField,
 } from "./suggestion-state";
-import { getCmEditorView } from "./utils"; // Import from utils
+import { getCmEditorView } from "./utils";
 
-// Helper for Feature 2: Find next suggestion mark for focusing
 function findNextFocusTarget(
 	marks: SuggestionMark[],
 	currentSelectionHead: number,
@@ -24,7 +23,6 @@ function findNextFocusTarget(
 	return sortedMarks[0];
 }
 
-// Helper for Feature 2: Find previous suggestion mark for focusing
 function findPreviousFocusTarget(
 	marks: SuggestionMark[],
 	currentSelectionHead: number,
@@ -100,9 +98,9 @@ function isPositionVisible(cm: EditorView, pos: number): boolean {
 }
 
 export function resolveNextSuggestionCM6(
-	_plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer,
 	editor: Editor,
-	_file: TFile, // Added file
+	_file: TFile,
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -150,38 +148,33 @@ export function resolveNextSuggestionCM6(
 
 	if (action === "accept") {
 		if (targetMark.type === "added") {
-			if (targetMark.isNewlineChange && targetMark.newlineChar) {
-				textChangeSpec = {
-					from: targetMark.from,
-					to: targetMark.to,
-					insert: targetMark.newlineChar,
-				};
-				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
-			} else {
-				newCursorPosAfterResolve = targetMark.to;
-			}
+			const textToInsert =
+				targetMark.isNewlineChange && targetMark.newlineChar
+					? targetMark.newlineChar // Should be '\n'
+					: (targetMark.ghostText ?? "");
+			textChangeSpec = {
+				from: targetMark.from,
+				to: targetMark.from,
+				insert: textToInsert,
+			};
+			newCursorPosAfterResolve = targetMark.from + textToInsert.length;
 		} else if (targetMark.type === "removed") {
 			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
+			newCursorPosAfterResolve = targetMark.from;
 		}
 	} else if (action === "reject") {
 		if (targetMark.type === "added") {
-			textChangeSpec = { from: targetMark.from, to: targetMark.to, insert: "" };
+			// No document change, ghost text just disappears
+			newCursorPosAfterResolve = targetMark.from;
 		} else if (targetMark.type === "removed") {
-			if (targetMark.isNewlineChange && targetMark.newlineChar) {
-				textChangeSpec = {
-					from: targetMark.from,
-					to: targetMark.to,
-					insert: targetMark.newlineChar,
-				};
-				newCursorPosAfterResolve = targetMark.from + targetMark.newlineChar.length;
-			} else {
-				newCursorPosAfterResolve = targetMark.to;
-			}
+			// No document change, marked text remains
+			newCursorPosAfterResolve = targetMark.from; // Stay at the start of the "kept" text
 		}
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: This is required for StateEffect generic
-	const currentEffects: StateEffect<any>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
+	const currentEffects: StateEffect<unknown>[] = [
+		resolveSuggestionEffect.of({ id: targetMark.id }),
+	];
 
 	if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)) {
 		currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "center" }));
@@ -204,7 +197,6 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Last suggestion ${action}ed. All suggestions resolved!`, 3000);
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
-		// Always jump to the next suggestion after resolving
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
 		if (
 			nextSuggestionToFocus &&
@@ -245,36 +237,45 @@ function* iterateParagraphs(
 	startPosition = 0,
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
-	if (currentPos >= doc.length && doc.length > 0) return;
+	if (currentPos >= doc.length && doc.length > 0) return; // Handle empty or fully iterated doc
+
 	while (currentPos < doc.length) {
-		const line = doc.lineAt(currentPos);
+		const firstLineAtCurrentPos = doc.lineAt(currentPos);
 		let paragraphBeginLineNum = -1;
-		for (let n = line.number; n <= doc.lines; n++) {
-			const l = doc.line(n);
-			if (currentPos > l.to && n > line.number) continue;
-			if (l.text.trim() !== "") {
+
+		// Find the start of the next non-empty paragraph block
+		for (let n = firstLineAtCurrentPos.number; n <= doc.lines; n++) {
+			const line = doc.line(n);
+			// Ensure we don't re-process lines already passed by currentPos if currentPos is not at line.from
+			if (currentPos > line.to && n > firstLineAtCurrentPos.number) continue;
+			if (line.text.trim() !== "") {
 				paragraphBeginLineNum = n;
 				break;
 			}
 		}
-		if (paragraphBeginLineNum === -1) return;
+
+		if (paragraphBeginLineNum === -1) return; // No more non-empty lines
+
 		const paragraphStartLine = doc.line(paragraphBeginLineNum);
 		let paragraphEndLine = paragraphStartLine;
+
+		// Find the end of this paragraph block
 		while (paragraphEndLine.number < doc.lines) {
 			const nextLine = doc.line(paragraphEndLine.number + 1);
 			if (nextLine.text.trim() === "") break;
 			paragraphEndLine = nextLine;
 		}
+
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-		currentPos = paragraphEndLine.to + 1;
-		if (currentPos >= doc.length) return;
+		currentPos = paragraphEndLine.to + 1; // Move to the start of the character after this paragraph
+		if (currentPos >= doc.length) return; // Re-check if we've reached the end
 	}
 }
 
 export function resolveSuggestionsInSelectionCM6(
-	_plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer,
 	editor: Editor,
-	_file: TFile, // Added file
+	_file: TFile,
 	action: "accept" | "reject",
 ): void {
 	const cm = getCmEditorView(editor);
@@ -301,26 +302,37 @@ export function resolveSuggestionsInSelectionCM6(
 		isOperatingOnIdentifiedParagraph = true;
 		const paragraphAtCursor = getParagraphBoundaries(doc, cursorOriginalPos);
 		let pToProcess: { from: number; to: number } | null = null;
-		let iterator = iterateParagraphs(doc, paragraphAtCursor.from);
-		for (const p of iterator) {
-			const marksInP = allMarks.filter((mark) => mark.from < p.to && mark.to > p.from);
-			if (marksInP.length > 0) {
-				pToProcess = p;
-				break;
-			}
-		}
-		if (!pToProcess && paragraphAtCursor.from > 0) {
-			iterator = iterateParagraphs(doc, 0);
+
+		const marksInCurrentP = allMarks.filter(
+			(mark) =>
+				mark.from < paragraphAtCursor.to &&
+				(mark.type === "added"
+					? mark.from >= paragraphAtCursor.from
+					: mark.to > paragraphAtCursor.from),
+		);
+
+		if (marksInCurrentP.length > 0) {
+			pToProcess = paragraphAtCursor;
+		} else {
+			const iterator = iterateParagraphs(doc, 0);
 			for (const p of iterator) {
-				if (p.from >= paragraphAtCursor.from) break;
-				const marksInP = allMarks.filter((mark) => mark.from < p.to && mark.to > p.from);
+				// Skip if this paragraph is the one at cursor and we already know it has no marks
+				if (p.from === paragraphAtCursor.from && p.to === paragraphAtCursor.to) continue;
+
+				const marksInP = allMarks.filter(
+					(mark) =>
+						mark.from < p.to &&
+						(mark.type === "added" ? mark.from >= p.from : mark.to > p.from),
+				);
 				if (marksInP.length > 0) {
 					pToProcess = p;
 					break;
 				}
 			}
 		}
+
 		paragraphToOperateOn = pToProcess;
+
 		if (paragraphToOperateOn) {
 			if (
 				paragraphToOperateOn.from === paragraphAtCursor.from &&
@@ -331,20 +343,10 @@ export function resolveSuggestionsInSelectionCM6(
 				finalCursorPos = paragraphToOperateOn.from;
 			}
 		} else {
-			const initialParagraphContent = doc
-				.sliceString(paragraphAtCursor.from, paragraphAtCursor.to)
-				.trim();
-			if (initialParagraphContent === "") {
-				new Notice(
-					"Cursor is in an empty paragraph. No suggestions found elsewhere in the document.",
-					4000,
-				);
-			} else {
-				new Notice(
-					"No suggestions found in the current paragraph or elsewhere in the document.",
-					4000,
-				);
-			}
+			new Notice(
+				"No suggestions found in the current paragraph or elsewhere in the document.",
+				4000,
+			);
 			return;
 		}
 	} else {
@@ -353,17 +355,22 @@ export function resolveSuggestionsInSelectionCM6(
 	}
 
 	if (!paragraphToOperateOn) {
+		// Should be caught above
 		new Notice("Could not determine a paragraph or selection to process.", 3000);
 		return;
 	}
 
 	const marksInScope = allMarks.filter(
-		(mark) => mark.from < paragraphToOperateOn?.to && mark.to > paragraphToOperateOn?.from,
+		(mark) =>
+			mark.from < paragraphToOperateOn?.to &&
+			(mark.type === "added"
+				? mark.from >= paragraphToOperateOn?.from
+				: mark.to > paragraphToOperateOn?.from),
 	);
 
 	if (marksInScope.length === 0) {
 		const message = isOperatingOnIdentifiedParagraph
-			? "Error: Target paragraph has no suggestions after selection."
+			? "Target paragraph has no suggestions."
 			: "No suggestions found in the current selection.";
 		new Notice(message, 3000);
 		return;
@@ -371,48 +378,49 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
 	const effectsArray: StateEffect<{ id: string }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); // Process from end to start for changes
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
 		let textChange: { from: number; to: number; insert: string } | undefined;
 		if (action === "accept") {
 			if (mark.type === "added") {
-				if (mark.isNewlineChange && mark.newlineChar) {
-					textChange = { from: mark.from, to: mark.to, insert: mark.newlineChar };
-				}
+				const textToInsert =
+					mark.isNewlineChange && mark.newlineChar ? mark.newlineChar : (mark.ghostText ?? "");
+				textChange = { from: mark.from, to: mark.from, insert: textToInsert };
 			} else if (mark.type === "removed") {
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
-		} else if (action === "reject") {
-			if (mark.type === "added") {
-				textChange = { from: mark.from, to: mark.to, insert: "" };
-			} else if (mark.type === "removed" && mark.isNewlineChange && mark.newlineChar) {
-				textChange = { from: mark.from, to: mark.to, insert: mark.newlineChar };
-			}
 		}
+		// No document changes for "reject"
 		if (textChange) changesArray.push(textChange);
 	}
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos),
+		selection: EditorSelection.cursor(finalCursorPos), // Initial cursor position for adjustment
 	};
+
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
-		let finalEffectiveCursorPos = finalCursorPos;
-		const sortedChangesArrayForCursor = [...changesArray].sort((a, b) => a.from - b.from);
-		for (const change of sortedChangesArrayForCursor) {
-			if (finalEffectiveCursorPos > change.from) {
-				if (finalEffectiveCursorPos <= change.to) {
-					finalEffectiveCursorPos = change.from + change.insert.length;
+		// Calculate final cursor position after all changes
+		let adjustedCursorPos = finalCursorPos;
+		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from); // Sort start to end for calculation
+		for (const change of sortedChangesForCursor) {
+			if (adjustedCursorPos > change.from) {
+				if (adjustedCursorPos <= change.to) {
+					adjustedCursorPos = change.from + change.insert.length;
 				} else {
-					finalEffectiveCursorPos += change.insert.length - (change.to - change.from);
+					adjustedCursorPos += change.insert.length - (change.to - change.from);
 				}
+			} else if (adjustedCursorPos === change.from && change.to === change.from) {
+				// Insertion at cursor
+				adjustedCursorPos += change.insert.length;
 			}
 		}
-		transactionSpec.selection = EditorSelection.cursor(finalEffectiveCursorPos);
+		transactionSpec.selection = EditorSelection.cursor(adjustedCursorPos);
 	}
+
 	cm.dispatch(cm.state.update(transactionSpec));
 
 	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
@@ -425,9 +433,9 @@ export function resolveSuggestionsInSelectionCM6(
 }
 
 export function clearAllActiveSuggestionsCM6(
-	_plugin: TextTransformer, // Changed from _plugin
+	_plugin: TextTransformer,
 	editor: Editor,
-	_file: TFile, // Added file
+	_file: TFile,
 ): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -441,39 +449,11 @@ export function clearAllActiveSuggestionsCM6(
 		return;
 	}
 
-	const changesArray: { from: number; to: number; insert: string }[] = [];
-	const sortedMarks = [...marks].sort((a, b) => b.from - a.from);
-
-	for (const mark of sortedMarks) {
-		if (mark.type === "added") {
-			changesArray.push({ from: mark.from, to: mark.to, insert: "" });
-		} else if (mark.type === "removed" && mark.isNewlineChange && mark.newlineChar) {
-			changesArray.push({ from: mark.from, to: mark.to, insert: mark.newlineChar });
-		}
-	}
-
 	const transactionSpec: TransactionSpec = {
-		effects: clearAllSuggestionsEffect.of(null), // This will clear the state field
+		effects: clearAllSuggestionsEffect.of(null),
+		selection: cm.state.selection,
 	};
-	if (changesArray.length > 0) {
-		let finalCursorPos = cm.state.selection.main.head;
-		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
-		for (const change of sortedChangesForCursor) {
-			if (finalCursorPos > change.from) {
-				if (finalCursorPos <= change.to) {
-					finalCursorPos = change.from + change.insert.length;
-				} else {
-					finalCursorPos += change.insert.length - (change.to - change.from);
-				}
-			}
-		}
-		transactionSpec.selection = EditorSelection.cursor(finalCursorPos);
-		transactionSpec.changes = changesArray;
-	} else {
-		transactionSpec.selection = cm.state.selection;
-	}
-	cm.dispatch(cm.state.update(transactionSpec));
 
-	// After dispatch, the suggestionStateField will be empty due to clearAllSuggestionsEffect
+	cm.dispatch(cm.state.update(transactionSpec));
 	new Notice("All active suggestions cleared (changes rejected).", 3000);
 }
