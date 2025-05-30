@@ -230,7 +230,6 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 		// The crucial part is how this range is used to filter suggestions later.
 	}
 
-
 	while (lineFrom.number > 1) {
 		const prevLine = doc.line(lineFrom.number - 1);
 		if (prevLine.text.trim() === "") break;
@@ -364,7 +363,6 @@ export function resolveSuggestionsInSelectionCM6(
 		finalCursorPos = currentSelection.from; // Move cursor to start of selection after operation
 	}
 
-
 	const marksInScope = allMarks.filter((mark) => {
 		const pFrom = operationRange.from;
 		const pTo = operationRange.to;
@@ -376,7 +374,6 @@ export function resolveSuggestionsInSelectionCM6(
 		// 'removed' mark spans a range. It's in scope if it overlaps.
 		return mark.from < pTo && mark.to > pFrom;
 	});
-
 
 	if (marksInScope.length === 0) {
 		const message = isOperatingOnIdentifiedParagraph

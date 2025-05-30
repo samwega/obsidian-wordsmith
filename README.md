@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.9.0
+**Current Version:** v1.9.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -48,6 +48,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
   * [✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨](#-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-)
+    * [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
   * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
     * [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
   * [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
@@ -178,6 +179,10 @@ This significant architectural update refines how WordSmith presents and manages
 **Why this matters:**
 
 Version 1.9.0 marks a significant step forward in WordSmith's technical foundation. By adopting a more native CodeMirror 6 approach for "added" suggestions, the plugin becomes more robust, performant, and easier to maintain, all while keeping the user interface and core functionality consistent. The removal of file-based suggestion persistence simplifies the plugin's architecture and focuses on a stable, in-session suggestion experience.
+
+#### Minor Versions of v.1.9.x
+
+* **v1.9.1**—Critical Bug fix: improve suggestion handling for empty paragraphs and refine mark mapping logic (introduced in version 1.9.0 from the refactoring for "ghost text" suggestions).
 
 ### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
 

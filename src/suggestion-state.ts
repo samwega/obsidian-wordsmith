@@ -41,7 +41,7 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 					const fromAssoc = mark.type === "added" ? 1 : -1;
 					const from = tr.changes.mapPos(mark.from, fromAssoc, MapMode.TrackDel);
 
-					let to = mark.to; 
+					let to = mark.to;
 
 					if (mark.type === "removed") {
 						// For 'removed' marks, 'to' is the end of a span.
