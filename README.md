@@ -183,7 +183,7 @@ Version 1.9.0 marks a significant step forward in WordSmith's technical foundati
 #### Minor Versions of v.1.9.x
 
 * **1.9.1**—Critical Bug fix: improve suggestion handling for empty paragraphs and refine mark mapping logic (introduced in version 1.9.0 from the refactoring for "ghost text" suggestions).
-* **1.9.2**—The CM6 implementation of suggestions (ghost text) caused a lot more bugs and issues than expected. I'm finally satisfied with the results. Finally a release that should be bug free.
+* **1.9.2**—The CM6 implementation of suggestions (ghost text) caused a lot more issues than expected. In particular: fixed aggressive view centering & the corect highlighting of the first of multi-line suggestions.  I'm finally satisfied with the results. Finally a release that should be bug free!
 
 ### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
 
