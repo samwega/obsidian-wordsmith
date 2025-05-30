@@ -34,29 +34,36 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 		if (tr.changes.length > 0) {
 			newMarks = newMarks
 				.map((mark) => {
-					const from = tr.changes.mapPos(mark.from, -1, MapMode.TrackDel);
-					let to = mark.to; // Default 'to' to original for 'added' type
+					// Determine association for mapping 'from' position.
+					// For 'added' marks, if an insertion occurs at their 'from' point (e.g., another 'added' mark is accepted),
+					// their 'from' should move to *after* the inserted text. So, assoc = 1.
+					// For 'removed' marks, 'from' is the start of a span. assoc = -1 keeps it at the start.
+					const fromAssoc = mark.type === "added" ? 1 : -1;
+					const from = tr.changes.mapPos(mark.from, fromAssoc, MapMode.TrackDel);
+
+					let to = mark.to; 
 
 					if (mark.type === "removed") {
-						const mappedTo = tr.changes.mapPos(mark.to, 1, MapMode.TrackDel);
-						if (mappedTo === null) return null;
+						// For 'removed' marks, 'to' is the end of a span.
+						// If an insertion occurs at 'to', 'to' should move to *after* the insertion. So, assoc = 1.
+						const toAssoc = 1;
+						const mappedTo = tr.changes.mapPos(mark.to, toAssoc, MapMode.TrackDel);
+						if (mappedTo === null) return null; // Entire range including 'to' was deleted in a way that it can't be mapped.
 						to = mappedTo;
 					} else if (mark.type === "added") {
 						// For 'added' marks, 'to' is the same as 'from'.
-						// If 'from' is valid (not null), 'to' should also be valid and same as 'from'.
 						if (from !== null) {
 							to = from;
 						} else {
-							// If 'from' became null (e.g., deletion), 'to' should also reflect this state.
-							// This effectively means the mark should be removed.
+							// If 'from' became null (e.g., deletion across the mark's point), remove the mark.
 							return null;
 						}
 					}
 
 					if (from === null) {
-						return null; // Mark's anchor point or entire range was deleted
+						return null; // Mark's anchor point 'from' was deleted.
 					}
-					// For "removed" marks, ensure from < to after mapping
+					// For "removed" marks, ensure from < to after mapping. If not, mark is invalid.
 					if (mark.type === "removed" && from >= to) {
 						return null;
 					}
@@ -205,7 +212,7 @@ class SuggestionViewPluginClass {
 					const widgetDecoration = Decoration.widget({
 						widget: new GhostTextWidget(displayText, effectiveClassName),
 						side: 1, // Positive side for insertions
-						block: !!mark.isNewlineChange, // Always boolean
+						block: false, // Ensure all "added" suggestions are inline
 					}).range(mark.from);
 					activeDecorations.push(widgetDecoration);
 				} catch (e) {

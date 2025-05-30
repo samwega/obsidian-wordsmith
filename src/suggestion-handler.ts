@@ -219,6 +219,18 @@ export function resolveNextSuggestionCM6(
 function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: number } {
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
+
+	// If the line at pos is empty, and it's not the first line,
+	// and the previous line is also empty, this is likely an empty paragraph
+	// between two other paragraphs. In this case, the paragraph is just this line.
+	if (lineFrom.text.trim() === "") {
+		// If it's an empty line, the paragraph is just this line itself.
+		// However, if we are looking for suggestions, they might be AT this position.
+		// The original logic expanded outwards. Let's keep that for finding content blocks.
+		// The crucial part is how this range is used to filter suggestions later.
+	}
+
+
 	while (lineFrom.number > 1) {
 		const prevLine = doc.line(lineFrom.number - 1);
 		if (prevLine.text.trim() === "") break;
@@ -294,79 +306,77 @@ export function resolveSuggestionsInSelectionCM6(
 	const currentSelection = cm.state.selection.main;
 	const cursorOriginalPos = currentSelection.head;
 
-	let paragraphToOperateOn: { from: number; to: number } | null = null;
+	let operationRange: { from: number; to: number };
 	let finalCursorPos = cursorOriginalPos;
 	let isOperatingOnIdentifiedParagraph = false;
 
 	if (currentSelection.empty) {
 		isOperatingOnIdentifiedParagraph = true;
-		const paragraphAtCursor = getParagraphBoundaries(doc, cursorOriginalPos);
-		let pToProcess: { from: number; to: number } | null = null;
+		// For an empty selection, the operation range is the paragraph at the cursor.
+		// This includes the case of an empty line where suggestions might have been generated.
+		operationRange = getParagraphBoundaries(doc, cursorOriginalPos);
+		finalCursorPos = cursorOriginalPos; // Keep cursor where it was if in paragraph mode
 
-		const marksInCurrentP = allMarks.filter(
-			(mark) =>
-				mark.from < paragraphAtCursor.to &&
-				(mark.type === "added"
-					? mark.from >= paragraphAtCursor.from
-					: mark.to > paragraphAtCursor.from),
-		);
+		// Check if any suggestions exist within this identified paragraph.
+		// If not, and we are in "paragraph mode", try to find the *next* paragraph with suggestions.
+		const initialMarksInParagraph = allMarks.filter((mark) => {
+			const pFrom = operationRange.from;
+			const pTo = operationRange.to;
+			if (mark.type === "added") {
+				return mark.from >= pFrom && mark.from <= pTo;
+			}
+			return mark.from < pTo && mark.to > pFrom;
+		});
 
-		if (marksInCurrentP.length > 0) {
-			pToProcess = paragraphAtCursor;
-		} else {
-			const iterator = iterateParagraphs(doc, 0);
-			for (const p of iterator) {
-				// Skip if this paragraph is the one at cursor and we already know it has no marks
-				if (p.from === paragraphAtCursor.from && p.to === paragraphAtCursor.to) continue;
+		if (initialMarksInParagraph.length === 0) {
+			// Current paragraph has no suggestions, try to find the next one.
+			let foundNextParagraphWithSuggestions = false;
+			const paragraphIterator = iterateParagraphs(doc, 0); // Start from beginning
+			for (const p of paragraphIterator) {
+				// Skip if this paragraph is the one at cursor (already checked)
+				if (p.from === operationRange.from && p.to === operationRange.to) continue;
 
-				const marksInP = allMarks.filter(
-					(mark) =>
-						mark.from < p.to &&
-						(mark.type === "added" ? mark.from >= p.from : mark.to > p.from),
-				);
-				if (marksInP.length > 0) {
-					pToProcess = p;
+				const marksInThisP = allMarks.filter((mark) => {
+					if (mark.type === "added") {
+						return mark.from >= p.from && mark.from <= p.to;
+					}
+					return mark.from < p.to && mark.to > p.from;
+				});
+
+				if (marksInThisP.length > 0) {
+					operationRange = p;
+					finalCursorPos = p.from; // Move cursor to start of this new paragraph
+					foundNextParagraphWithSuggestions = true;
 					break;
 				}
 			}
-		}
-
-		paragraphToOperateOn = pToProcess;
-
-		if (paragraphToOperateOn) {
-			if (
-				paragraphToOperateOn.from === paragraphAtCursor.from &&
-				paragraphToOperateOn.to === paragraphAtCursor.to
-			) {
-				finalCursorPos = cursorOriginalPos;
-			} else {
-				finalCursorPos = paragraphToOperateOn.from;
+			if (!foundNextParagraphWithSuggestions && initialMarksInParagraph.length === 0) {
+				new Notice(
+					"No suggestions found in the current paragraph or elsewhere in the document.",
+					4000,
+				);
+				return;
 			}
-		} else {
-			new Notice(
-				"No suggestions found in the current paragraph or elsewhere in the document.",
-				4000,
-			);
-			return;
 		}
 	} else {
-		paragraphToOperateOn = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from;
+		// Selection is not empty, operate on the selection range.
+		operationRange = { from: currentSelection.from, to: currentSelection.to };
+		finalCursorPos = currentSelection.from; // Move cursor to start of selection after operation
 	}
 
-	if (!paragraphToOperateOn) {
-		// Should be caught above
-		new Notice("Could not determine a paragraph or selection to process.", 3000);
-		return;
-	}
 
-	const marksInScope = allMarks.filter(
-		(mark) =>
-			mark.from < paragraphToOperateOn?.to &&
-			(mark.type === "added"
-				? mark.from >= paragraphToOperateOn?.from
-				: mark.to > paragraphToOperateOn?.from),
-	);
+	const marksInScope = allMarks.filter((mark) => {
+		const pFrom = operationRange.from;
+		const pTo = operationRange.to;
+		if (mark.type === "added") {
+			// 'added' mark is a point. It's in scope if its point is within or at boundaries.
+			// This handles cases where pFrom === pTo (e.g., empty line).
+			return mark.from >= pFrom && mark.from <= pTo;
+		}
+		// 'removed' mark spans a range. It's in scope if it overlaps.
+		return mark.from < pTo && mark.to > pFrom;
+	});
+
 
 	if (marksInScope.length === 0) {
 		const message = isOperatingOnIdentifiedParagraph
@@ -409,12 +419,14 @@ export function resolveSuggestionsInSelectionCM6(
 		for (const change of sortedChangesForCursor) {
 			if (adjustedCursorPos > change.from) {
 				if (adjustedCursorPos <= change.to) {
+					// Cursor was inside the deleted/modified part
 					adjustedCursorPos = change.from + change.insert.length;
 				} else {
+					// Cursor was after the change
 					adjustedCursorPos += change.insert.length - (change.to - change.from);
 				}
 			} else if (adjustedCursorPos === change.from && change.to === change.from) {
-				// Insertion at cursor
+				// Insertion at cursor (e.g. "added" mark)
 				adjustedCursorPos += change.insert.length;
 			}
 		}
