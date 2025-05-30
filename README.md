@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.9.1
+**Current Version:** v1.9.2
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -182,7 +182,8 @@ Version 1.9.0 marks a significant step forward in WordSmith's technical foundati
 
 #### Minor Versions of v.1.9.x
 
-* **v1.9.1**—Critical Bug fix: improve suggestion handling for empty paragraphs and refine mark mapping logic (introduced in version 1.9.0 from the refactoring for "ghost text" suggestions).
+* **1.9.1**—Critical Bug fix: improve suggestion handling for empty paragraphs and refine mark mapping logic (introduced in version 1.9.0 from the refactoring for "ghost text" suggestions).
+* **1.9.2**—The CM6 implementation of suggestions (ghost text) caused a lot more bugs and issues than expected. I'm finally satisfied with the results. Finally a release that should be bug free.
 
 ### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
 
@@ -197,8 +198,8 @@ This release brings two major improvements to make your AI writing experience mo
 
 #### Minor Versions of v.1.8.x
 
-* **v1.8.1**—Improved built in prompts for improved context use. Created [wiki](https://github.com/samwega/obsidian-wordsmith/wiki) and moved some of the README.md into it. Wiki contains other cool stuff!
-* **v1.8.2**—Feature: Now you can automatically save your ad-hoc prompts (Generation at Cursor) to your clipboard if you prefer, so they are not lost if you need to use them again. Works best with a clipboard manager, so your existing clipboard content doesn't get overwritten, but simply added to.
+* **1.8.1**—Improved built in prompts for improved context use. Created [wiki](https://github.com/samwega/obsidian-wordsmith/wiki) and moved some of the README.md into it. Wiki contains other cool stuff!
+* **1.8.2**—Feature: Now you can automatically save your ad-hoc prompts (Generation at Cursor) to your clipboard if you prefer, so they are not lost if you need to use them again. Works best with a clipboard manager, so your existing clipboard content doesn't get overwritten, but simply added to.
 
 **Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
