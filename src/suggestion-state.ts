@@ -34,24 +34,33 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 		if (tr.changes.length > 0) {
 			newMarks = newMarks
 				.map((mark) => {
-					// Determine association for mapping 'from' position.
-					// For 'added' marks, if an insertion occurs at their 'from' point (e.g., another 'added' mark is accepted),
-					// their 'from' should move to *after* the inserted text. So, assoc = 1.
-					// For 'removed' marks, 'from' is the start of a span. assoc = -1 keeps it at the start.
-					const fromAssoc = mark.type === "added" ? 1 : -1;
-					const from = tr.changes.mapPos(mark.from, fromAssoc, MapMode.TrackDel);
+					// Map 'from' position
+					// 'from' is the start of a mark. If an insertion occurs exactly at 'from',
+					// the mark's start should move to be *after* the inserted text.
+					// assoc = 1 achieves this by associating 'from' with the mark's own content
+					// (or the character that was originally at 'from'), causing it to move
+					// with that content past any new text inserted immediately before it at 'from'.
+					const from = tr.changes.mapPos(mark.from, 1, MapMode.TrackDel);
 
 					let to = mark.to;
 
 					if (mark.type === "removed") {
-						// For 'removed' marks, 'to' is the end of a span.
-						// If an insertion occurs at 'to', 'to' should move to *after* the insertion. So, assoc = 1.
-						const toAssoc = 1;
+						// Map 'to' position for "removed" marks.
+						// 'to' is the end of a "removed" span.
+						// If an insertion occurs exactly at 'to', the mark should NOT expand to include it;
+						// the new text should appear *after* the mark. assoc = -1 achieves this for 'to',
+						// by associating 'to' with the content *inside* the mark, just before the original 'to'.
+						// If an insertion occurs *inside* the mark (between 'from' and 'to'),
+						// 'to' (mapped with assoc = -1 when 'from' is mapped with assoc = 1)
+						// will shift to include this new text, effectively expanding the mark,
+						// which is typically desired for "removed" spans.
+						const toAssoc = -1;
 						const mappedTo = tr.changes.mapPos(mark.to, toAssoc, MapMode.TrackDel);
 						if (mappedTo === null) return null; // Entire range including 'to' was deleted in a way that it can't be mapped.
 						to = mappedTo;
 					} else if (mark.type === "added") {
-						// For 'added' marks, 'to' is the same as 'from'.
+						// For 'added' marks, 'to' is always the same as 'from'.
+						// 'from' (and thus 'to') is already mapped above.
 						if (from !== null) {
 							to = from;
 						} else {
@@ -180,13 +189,44 @@ class SuggestionViewPluginClass {
 		}
 
 		const activeDecorations: Range<Decoration>[] = [];
+
+		let isInsideConsecutiveAddedBlockAtCursor = false;
+		let consecutiveAddedBlockFromPos = -1;
+
 		for (const mark of marks) {
 			let baseClassName = "";
 			let isActive = false;
 
 			if (mark.type === "added") {
 				baseClassName = "text-transformer-added";
-				isActive = isSelectionEmpty && cursorPos === mark.from;
+				const isCursorCurrentlyAtThisMarkFrom = isSelectionEmpty && cursorPos === mark.from;
+
+				if (isCursorCurrentlyAtThisMarkFrom) {
+					if (
+						isInsideConsecutiveAddedBlockAtCursor &&
+						mark.from === consecutiveAddedBlockFromPos
+					) {
+						// Cursor is at this 'from' position, but it's not the first 'added' mark
+						// in the sequence at this 'from' position. So, it's not 'active'.
+						isActive = false;
+					} else {
+						// Cursor is at this 'from' position, and it's either:
+						// 1. The first 'added' mark encountered at this 'from' position.
+						// 2. The 'from' position is different from the last sequence.
+						isActive = true;
+						isInsideConsecutiveAddedBlockAtCursor = true; // Start/continue a block at cursor
+						consecutiveAddedBlockFromPos = mark.from;
+					}
+				} else {
+					// Cursor is not at this mark's 'from' position.
+					isActive = false;
+					// If this mark's 'from' position is different from the ongoing block,
+					// or if there was no block, reset the tracking.
+					if (mark.from !== consecutiveAddedBlockFromPos || !isInsideConsecutiveAddedBlockAtCursor) {
+						isInsideConsecutiveAddedBlockAtCursor = false;
+						consecutiveAddedBlockFromPos = -1;
+					}
+				}
 
 				if (mark.from < 0 || mark.from > view.state.doc.length) {
 					console.warn(
@@ -225,6 +265,10 @@ class SuggestionViewPluginClass {
 				baseClassName = "text-transformer-removed";
 				isActive = isSelectionEmpty && cursorPos === mark.from;
 
+				// Reset tracking for consecutive 'added' blocks if we encounter a 'removed' mark
+				isInsideConsecutiveAddedBlockAtCursor = false;
+				consecutiveAddedBlockFromPos = -1;
+
 				if (mark.from >= mark.to) {
 					console.warn(
 						"WordSmith ViewPlugin: 'removed' Mark invalid range (from >= to), skipping:",
@@ -260,6 +304,9 @@ class SuggestionViewPluginClass {
 				}
 			} else {
 				console.warn("WordSmith ViewPlugin: Mark with unknown type skipped:", mark);
+				// Reset tracking for consecutive 'added' blocks for unknown types as well
+				isInsideConsecutiveAddedBlockAtCursor = false;
+				consecutiveAddedBlockFromPos = -1;
 			}
 		}
 
