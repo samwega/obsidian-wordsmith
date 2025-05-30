@@ -240,7 +240,7 @@ function* iterateParagraphs(
 	startPosition = 0,
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
-	if (currentPos >= doc.length && doc.length > 0) return; 
+	if (currentPos >= doc.length && doc.length > 0) return;
 
 	while (currentPos < doc.length) {
 		const firstLineAtCurrentPos = doc.lineAt(currentPos);
@@ -267,7 +267,7 @@ function* iterateParagraphs(
 		}
 
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-		currentPos = paragraphEndLine.to + 1; 
+		currentPos = paragraphEndLine.to + 1;
 		if (currentPos >= doc.length) return;
 	}
 }
@@ -314,7 +314,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 		if (initialMarksInParagraph.length === 0) {
 			let foundNextParagraphWithSuggestions = false;
-			const paragraphIterator = iterateParagraphs(doc, 0); 
+			const paragraphIterator = iterateParagraphs(doc, 0);
 			for (const p of paragraphIterator) {
 				if (p.from === operationRange.from && p.to === operationRange.to) continue;
 
@@ -327,7 +327,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 				if (marksInThisP.length > 0) {
 					operationRange = p;
-					finalCursorPos = p.from; 
+					finalCursorPos = p.from;
 					foundNextParagraphWithSuggestions = true;
 					break;
 				}
@@ -342,7 +342,7 @@ export function resolveSuggestionsInSelectionCM6(
 		}
 	} else {
 		operationRange = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from; 
+		finalCursorPos = currentSelection.from;
 	}
 
 	const marksInScope = allMarks.filter((mark) => {
@@ -364,7 +364,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
 	const effectsArray: StateEffect<{ id: string }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); 
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
@@ -383,13 +383,13 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos), 
+		selection: EditorSelection.cursor(finalCursorPos),
 	};
 
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
 		let adjustedCursorPos = finalCursorPos;
-		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from); 
+		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
 		for (const change of sortedChangesForCursor) {
 			if (adjustedCursorPos > change.from) {
 				if (adjustedCursorPos <= change.to) {
@@ -403,19 +403,19 @@ export function resolveSuggestionsInSelectionCM6(
 		}
 		transactionSpec.selection = EditorSelection.cursor(adjustedCursorPos);
 	}
-    // Add a scroll effect to ensure the final cursor position is comfortably visible.
-    // This is especially useful after bulk operations.
-    const scrollEffect = EditorView.scrollIntoView(
-        'main' in (transactionSpec.selection || {}) 
-            ? (transactionSpec.selection as EditorSelection).main.head 
-            : finalCursorPos, 
-        {y: "nearest"}
-    );
-    
-    // Handle effects array properly
-    const currentEffects = transactionSpec.effects || [];
-    const effectsList = Array.isArray(currentEffects) ? currentEffects : [currentEffects];
-    transactionSpec.effects = [...effectsList, scrollEffect];
+	// Add a scroll effect to ensure the final cursor position is comfortably visible.
+	// This is especially useful after bulk operations.
+	const scrollEffect = EditorView.scrollIntoView(
+		"main" in (transactionSpec.selection || {})
+			? (transactionSpec.selection as EditorSelection).main.head
+			: finalCursorPos,
+		{ y: "nearest" },
+	);
+
+	// Handle effects array properly
+	const currentEffects = transactionSpec.effects || [];
+	const effectsList = Array.isArray(currentEffects) ? currentEffects : [currentEffects];
+	transactionSpec.effects = [...effectsList, scrollEffect];
 
 	cm.dispatch(cm.state.update(transactionSpec));
 
