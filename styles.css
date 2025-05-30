@@ -7,10 +7,11 @@
 	color: azure; /* Font color (good for dark themes) */
 
 	/* Theme aware green underline */
-	border-bottom: 1px solid var(--color-green, #42ecb6f6); /* Your chosen underline color */
+	/* border-bottom: 1px solid var(--color-green, #42ecb6f6); /* Your chosen underline color */
 
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
+	border-bottom: 1px solid transparent;
 }
 
 .text-transformer-removed {
@@ -33,7 +34,8 @@
 body.theme-light .text-transformer-added {
 	background-color: rgba(144, 238, 144, 0.45); /* A slightly more opaque, standard light green */
 	color: #185018; /* Dark green text for high contrast on light backgrounds */
-	border-bottom: 1px solid var(--color-green, #28a745); /* A solid, visible green for underline */
+	/* border-bottom: 1px solid var(--color-green, #28a745); /* A solid, visible green for underline */
+	border-bottom: 1px solid transparent;
 }
 
 body.theme-light .text-transformer-removed {
@@ -48,21 +50,29 @@ body.theme-light .text-transformer-removed {
 
 /* Dark Theme Active "Added" Suggestion - Enhanced Contrast */
 .text-transformer-added-active {
-	background-color: #60f070a0; /* Brighter and more opaque green */
+	background-color: #55f067a0; /* Brighter and more opaque green */
 	/* The existing 1px border-bottom from .text-transformer-added remains */
-	outline: 1px solid #78ff85; /* Prominent, luminous green outline */
+	outline: 1px solid #93fe78; /* Prominent, luminous green outline */
 	outline-offset: -1px; /* Pulls outline inward to align with content edges better */
 	/* Optional: subtle glow for even more pop if desired, uncomment to try */
-	box-shadow: 0 0 6px rgba(144, 255, 218, 0.6);
+	box-shadow: 0 0 6px rgba(171, 255, 132, 0.676);
+	border-bottom: 2px solid #93fe78;
+	/* border-bottom-right-radius: 10px; */
+	border-top-right-radius: 10px;
+	border-left: 2px solid #93fe78;
 }
 
 /* Dark Theme Active "Removed" Suggestion (As per previous preference) */
 .text-transformer-removed-active {
-	background-color: rgba(250, 100, 100, 0.55); /* More opaque/intense red */
-	border-bottom-color: #ff9090; /* Brighter red border, uses existing 1px thickness */
-	outline: 1px solid #fe9191; /* Prominent, luminous teal/green outline */
+	background-color: rgba(248, 83, 83, 0.584); /* More opaque/intense red */
+	/* border-bottom-color: #ff9090; /* Brighter red border, uses existing 1px thickness */
+	outline: 1px solid #fca698; /* Prominent, luminous teal/green outline */
 	outline-offset: -1px; /* Pulls outline inward to align with content edges better */
-	box-shadow: 0 0 6px rgba(250, 143, 143, 0.6);
+	box-shadow: 0 0 6px rgba(255, 141, 128, 0.703);
+	border-bottom: 2px solid #fca698;
+	/* border-top-right-radius: 10px; */
+	border-top-right-radius: 10px;
+	border-left: 2px solid #fca698;
 }
 
 /* Light Theme Active "Added" Suggestion Overrides - Enhanced Contrast */
@@ -72,16 +82,21 @@ body.theme-light .text-transformer-added-active {
 	outline: 1px solid #107018; /* Strong, defined darker green outline for contrast */
 	outline-offset: -1px;
 	/* Optional: subtle glow */
-	box-shadow: 0 0 6px rgba(29, 147, 39, 0.75);
+	box-shadow: 0 0 6px rgba(29, 147, 39, 0.8);
+	border-bottom: 2px solid #107018;
+	border-top-right-radius: 10px;
+	border-left: 2px solid #107018;
 }
 
 /* Light Theme Active "Removed" Suggestion Overrides (As per previous preference) */
 body.theme-light .text-transformer-removed-active {
 	background-color: rgba(255, 160, 170, 0.7); /* More opaque/intense light red/pink */
-	border-bottom-color: #ff6e6e; /* Stronger/darker red border for contrast, uses existing 1px thickness */
-	outline: 1px solid #dc3545; /* Strong, defined darker red outline for contrast */
+	outline: 1px solid #f53346; /* Strong, defined darker red outline for contrast */
 	outline-offset: -1px;
-	box-shadow: 0 0 6px rgba(226, 60, 74, 0.75);
+	box-shadow: 0 0 6px rgba(226, 60, 74, 0.8);
+	border-bottom: 2px solid #e23c4a;
+	border-top-right-radius: 10px;
+	border-left: 2px solid #e23c4a;
 }
 
 /* Styles for CustomPromptModal */
