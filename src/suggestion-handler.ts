@@ -12,6 +12,8 @@ import {
 } from "./suggestion-state";
 import { getCmEditorView } from "./utils";
 
+const SCROLL_COMFORT_ZONE_PX = 200; // Pixels for yMargin
+
 function findNextFocusTarget(
 	marks: SuggestionMark[],
 	currentSelectionHead: number,
@@ -57,7 +59,10 @@ export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor)
 	if (targetMark) {
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
+			effects: EditorView.scrollIntoView(targetMark.from, {
+				y: "nearest",
+				yMargin: SCROLL_COMFORT_ZONE_PX,
+			}),
 		});
 	}
 }
@@ -78,7 +83,10 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
 	if (targetMark) {
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
+			effects: EditorView.scrollIntoView(targetMark.from, {
+				y: "nearest",
+				yMargin: SCROLL_COMFORT_ZONE_PX,
+			}),
 		});
 	}
 }
@@ -131,12 +139,12 @@ export function resolveNextSuggestionCM6(
 	const currentSelection = cm.state.selection.main;
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
-	// If not forcing resolve and cursor is not effectively on the target mark,
-	// scroll to it and notify the user to press again.
-	// `y: "nearest"` will handle not scrolling if already well-positioned.
 	if (!shouldForceResolve && !effectivelyOnTarget) {
 		cm.dispatch({
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
+			effects: EditorView.scrollIntoView(targetMark.from, {
+				y: "nearest",
+				yMargin: SCROLL_COMFORT_ZONE_PX,
+			}),
 			selection: EditorSelection.cursor(targetMark.from),
 		});
 		new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
@@ -150,7 +158,7 @@ export function resolveNextSuggestionCM6(
 		if (targetMark.type === "added") {
 			const textToInsert =
 				targetMark.isNewlineChange && targetMark.newlineChar
-					? targetMark.newlineChar // Should be '\n'
+					? targetMark.newlineChar
 					: (targetMark.ghostText ?? "");
 			textChangeSpec = {
 				from: targetMark.from,
@@ -163,6 +171,7 @@ export function resolveNextSuggestionCM6(
 			newCursorPosAfterResolve = targetMark.from;
 		}
 	} else if (action === "reject") {
+		// Cursor position logic for reject remains the same
 		if (targetMark.type === "added") {
 			newCursorPosAfterResolve = targetMark.from;
 		} else if (targetMark.type === "removed") {
@@ -174,11 +183,13 @@ export function resolveNextSuggestionCM6(
 		resolveSuggestionEffect.of({ id: targetMark.id }),
 	];
 
-	// If forcing resolve (e.g. last suggestion), ensure the new cursor position is visible.
 	if (shouldForceResolve) {
-		// This check is a bit heuristic; `y: "nearest"` will do its best.
-		// We add it to ensure an explicit scroll attempt if it was the last item.
-		currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "nearest" }));
+		currentEffects.push(
+			EditorView.scrollIntoView(newCursorPosAfterResolve, {
+				y: "nearest",
+				yMargin: SCROLL_COMFORT_ZONE_PX,
+			}),
+		);
 	}
 
 	const transactionSpec: TransactionSpec = {
@@ -200,16 +211,14 @@ export function resolveNextSuggestionCM6(
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
 
-		if (nextSuggestionToFocus) {
-			// If the cursor is not already at the next suggestion, or to ensure it's well-positioned.
-			if (cm.state.selection.main.head !== nextSuggestionToFocus.from) {
-				cm.dispatch({
-					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-						y: "nearest",
-					}),
-					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-				});
-			}
+		if (nextSuggestionToFocus && cm.state.selection.main.head !== nextSuggestionToFocus.from) {
+			cm.dispatch({
+				effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+					y: "nearest",
+					yMargin: SCROLL_COMFORT_ZONE_PX,
+				}),
+				selection: EditorSelection.cursor(nextSuggestionToFocus.from),
+			});
 		}
 	}
 }
@@ -218,8 +227,14 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
 
+	// Simplified: if on an empty line, it's its own paragraph.
+	// Otherwise, expand to nearest empty lines or document boundaries.
 	if (lineFrom.text.trim() === "") {
-		// Empty line paragraph logic can remain as is
+		// For an empty line, the paragraph is just this line.
+		// However, the original logic of finding the *next* paragraph with suggestions
+		// when the current is empty of suggestions will handle this.
+		// The key is that getParagraphBoundaries is used to define the *scope*
+		// if the cursor is in an empty line, this still correctly gives the bounds of that empty line.
 	}
 
 	while (lineFrom.number > 1) {
@@ -240,26 +255,50 @@ function* iterateParagraphs(
 	startPosition = 0,
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
-	if (currentPos >= doc.length && doc.length > 0) return;
+	if (currentPos >= doc.length && doc.length > 0) return; // Handle empty doc or start past end
 
 	while (currentPos < doc.length) {
-		const firstLineAtCurrentPos = doc.lineAt(currentPos);
+		// Find the start of the next non-empty line block
 		let paragraphBeginLineNum = -1;
+		let firstLineAtCurrentSearch = doc.lineAt(currentPos);
 
-		for (let n = firstLineAtCurrentPos.number; n <= doc.lines; n++) {
+		// Skip initial empty lines at currentPos to find the actual start of a paragraph
+		for (let n = firstLineAtCurrentSearch.number; n <= doc.lines; n++) {
 			const line = doc.line(n);
-			if (currentPos > line.to && n > firstLineAtCurrentPos.number) continue;
+			if (currentPos > line.from && currentPos <= line.to && line.text.trim() === "") {
+				// currentPos is within an empty line, advance to next line
+				if (n < doc.lines) {
+					currentPos = doc.line(n + 1).from;
+					firstLineAtCurrentSearch = doc.lineAt(currentPos); // Re-evaluate starting line
+					continue;
+				}
+				return; // End of document consisting of empty lines
+			}
+			if (currentPos > line.to) {
+				// currentPos is beyond this line
+				continue;
+			}
+
 			if (line.text.trim() !== "") {
 				paragraphBeginLineNum = n;
 				break;
 			}
+			// If it's an empty line and we are looking for start of paragraph,
+			// update currentPos to start of next line to continue search for non-empty.
+			if (n < doc.lines) {
+				currentPos = doc.line(n + 1).from;
+			} else {
+				// Reached end of document with empty lines
+				return;
+			}
 		}
 
-		if (paragraphBeginLineNum === -1) return;
+		if (paragraphBeginLineNum === -1) return; // No more non-empty paragraphs
 
 		const paragraphStartLine = doc.line(paragraphBeginLineNum);
 		let paragraphEndLine = paragraphStartLine;
 
+		// Find the end of this block of non-empty lines
 		while (paragraphEndLine.number < doc.lines) {
 			const nextLine = doc.line(paragraphEndLine.number + 1);
 			if (nextLine.text.trim() === "") break;
@@ -267,8 +306,8 @@ function* iterateParagraphs(
 		}
 
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-		currentPos = paragraphEndLine.to + 1;
-		if (currentPos >= doc.length) return;
+		currentPos = paragraphEndLine.to + 1; // Move to the position after the yielded paragraph
+		if (currentPos >= doc.length && paragraphEndLine.number === doc.lines) return; // End of doc
 	}
 }
 
@@ -297,11 +336,12 @@ export function resolveSuggestionsInSelectionCM6(
 	let operationRange: { from: number; to: number };
 	let finalCursorPos = cursorOriginalPos;
 	let isOperatingOnIdentifiedParagraph = false;
+	let targetParagraphForFocusAfterOp: { from: number; to: number } | null = null;
 
 	if (currentSelection.empty) {
 		isOperatingOnIdentifiedParagraph = true;
 		operationRange = getParagraphBoundaries(doc, cursorOriginalPos);
-		finalCursorPos = cursorOriginalPos;
+		targetParagraphForFocusAfterOp = operationRange; // Initially assume current paragraph
 
 		const initialMarksInParagraph = allMarks.filter((mark) => {
 			const pFrom = operationRange.from;
@@ -314,10 +354,12 @@ export function resolveSuggestionsInSelectionCM6(
 
 		if (initialMarksInParagraph.length === 0) {
 			let foundNextParagraphWithSuggestions = false;
-			const paragraphIterator = iterateParagraphs(doc, 0);
-			for (const p of paragraphIterator) {
-				if (p.from === operationRange.from && p.to === operationRange.to) continue;
+			// Start iterating from the beginning of the document to find the *next* paragraph with suggestions
+			// relative to the current paragraph's *end*.
+			const searchStartOffset = operationRange.to + 1;
+			const paragraphIterator = iterateParagraphs(doc, searchStartOffset);
 
+			for (const p of paragraphIterator) {
 				const marksInThisP = allMarks.filter((mark) => {
 					if (mark.type === "added") {
 						return mark.from >= p.from && mark.from <= p.to;
@@ -327,22 +369,75 @@ export function resolveSuggestionsInSelectionCM6(
 
 				if (marksInThisP.length > 0) {
 					operationRange = p;
+					targetParagraphForFocusAfterOp = p;
+					// finalCursorPos should be start of this new paragraph for focus
 					finalCursorPos = p.from;
 					foundNextParagraphWithSuggestions = true;
-					break;
+					new Notice(
+						`No suggestions in current paragraph. Moved to next paragraph with suggestions. Press again to ${action} all in this paragraph.`,
+						4000,
+					);
+					// Dispatch scroll and selection change immediately to show the user the new target
+					cm.dispatch({
+						selection: EditorSelection.cursor(finalCursorPos),
+						effects: EditorView.scrollIntoView(finalCursorPos, {
+							y: "nearest",
+							yMargin: SCROLL_COMFORT_ZONE_PX,
+						}),
+					});
+					return; // User needs to press again
 				}
 			}
-			if (!foundNextParagraphWithSuggestions && initialMarksInParagraph.length === 0) {
+			// If still no suggestions found after checking subsequent paragraphs
+			if (!foundNextParagraphWithSuggestions) {
+				// As a fallback, check paragraphs *before* the current one if no suggestions were found after.
+				const preParagraphIterator = iterateParagraphs(doc, 0);
+				let lastParagraphWithSuggestionsBeforeCurrent: { from: number; to: number } | null =
+					null;
+				for (const p of preParagraphIterator) {
+					if (p.from >= operationRange.from) break; // Stop if we've reached or passed the original paragraph
+
+					const marksInThisP = allMarks.filter((mark) => {
+						if (mark.type === "added") return mark.from >= p.from && mark.from <= p.to;
+						return mark.from < p.to && mark.to > p.from;
+					});
+					if (marksInThisP.length > 0) {
+						lastParagraphWithSuggestionsBeforeCurrent = p;
+					}
+				}
+				if (lastParagraphWithSuggestionsBeforeCurrent) {
+					operationRange = lastParagraphWithSuggestionsBeforeCurrent;
+					targetParagraphForFocusAfterOp = lastParagraphWithSuggestionsBeforeCurrent;
+					finalCursorPos = lastParagraphWithSuggestionsBeforeCurrent.from;
+					foundNextParagraphWithSuggestions = true;
+					new Notice(
+						`No suggestions in current paragraph or following. Moved to a previous paragraph with suggestions. Press again to ${action} all in this paragraph.`,
+						4000,
+					);
+					cm.dispatch({
+						selection: EditorSelection.cursor(finalCursorPos),
+						effects: EditorView.scrollIntoView(finalCursorPos, {
+							y: "nearest",
+							yMargin: SCROLL_COMFORT_ZONE_PX,
+						}),
+					});
+					return; // User needs to press again
+				}
+			}
+
+			if (!foundNextParagraphWithSuggestions) {
 				new Notice(
-					"No suggestions found in the current paragraph or elsewhere in the document.",
+					"No suggestions found in the current paragraph or any other paragraph.",
 					4000,
 				);
 				return;
 			}
 		}
 	} else {
+		// Selection is not empty
 		operationRange = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from;
+		finalCursorPos = currentSelection.from; // Default to start of selection
+		targetParagraphForFocusAfterOp = operationRange; // The selection itself is the target
 	}
 
 	const marksInScope = allMarks.filter((mark) => {
@@ -351,12 +446,15 @@ export function resolveSuggestionsInSelectionCM6(
 		if (mark.type === "added") {
 			return mark.from >= pFrom && mark.from <= pTo;
 		}
+		// For removed, ensure the mark overlaps with the paragraph
 		return mark.from < pTo && mark.to > pFrom;
 	});
 
 	if (marksInScope.length === 0) {
+		// This check might be redundant if the logic above (finding next/prev paragraph) correctly informs the user and returns.
+		// However, keeping it as a safeguard.
 		const message = isOperatingOnIdentifiedParagraph
-			? "Target paragraph has no suggestions."
+			? "Target paragraph has no suggestions. Cursor moved if another paragraph with suggestions was found."
 			: "No suggestions found in the current selection.";
 		new Notice(message, 3000);
 		return;
@@ -364,7 +462,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
 	const effectsArray: StateEffect<{ id: string }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); // Process from end to start
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
@@ -378,44 +476,55 @@ export function resolveSuggestionsInSelectionCM6(
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
 		}
+		// For 'reject', no text change is made, the mark is just removed from state.
 		if (textChange) changesArray.push(textChange);
 	}
 
+	// Determine the cursor position *after* changes are applied.
+	// If operating on an identified paragraph, place cursor at its start.
+	// If operating on a text selection, place cursor at its original start.
+	// This simplifies cursor logic compared to complex adjustment calculations.
+	let newCursorPos = finalCursorPos; // Default to original logic (start of selection or start of found paragraph)
+
+	if (isOperatingOnIdentifiedParagraph && targetParagraphForFocusAfterOp) {
+		newCursorPos = targetParagraphForFocusAfterOp.from;
+	} else if (!isOperatingOnIdentifiedParagraph) {
+		// Explicit text selection
+		newCursorPos = currentSelection.from;
+	}
+	// If changes occurred, and we're accepting, the cursor might need to shift *if* it was within a modified part.
+	// However, for bulk operations, placing it at the start of the operation range is often more predictable.
+	// The previously complex cursor adjustment logic is simplified for bulk ops.
+
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos),
+		selection: EditorSelection.cursor(newCursorPos),
 	};
 
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
-		let adjustedCursorPos = finalCursorPos;
-		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
-		for (const change of sortedChangesForCursor) {
-			if (adjustedCursorPos > change.from) {
-				if (adjustedCursorPos <= change.to) {
-					adjustedCursorPos = change.from + change.insert.length;
-				} else {
-					adjustedCursorPos += change.insert.length - (change.to - change.from);
-				}
-			} else if (adjustedCursorPos === change.from && change.to === change.from) {
-				adjustedCursorPos += change.insert.length;
-			}
-		}
-		transactionSpec.selection = EditorSelection.cursor(adjustedCursorPos);
 	}
-	// Add a scroll effect to ensure the final cursor position is comfortably visible.
-	// This is especially useful after bulk operations.
-	const scrollEffect = EditorView.scrollIntoView(
+
+	const scrollTargetPos =
 		"main" in (transactionSpec.selection || {})
 			? (transactionSpec.selection as EditorSelection).main.head
-			: finalCursorPos,
-		{ y: "nearest" },
-	);
+			: newCursorPos;
 
-	// Handle effects array properly
-	const currentEffects = transactionSpec.effects || [];
-	const effectsList = Array.isArray(currentEffects) ? currentEffects : [currentEffects];
-	transactionSpec.effects = [...effectsList, scrollEffect];
+	const scrollEffect = EditorView.scrollIntoView(scrollTargetPos, {
+		y: "nearest",
+		yMargin: SCROLL_COMFORT_ZONE_PX,
+	});
+
+	let allEffects: StateEffect<unknown>[];
+	if (Array.isArray(transactionSpec.effects)) {
+		allEffects = transactionSpec.effects as StateEffect<unknown>[];
+	} else if (transactionSpec.effects) {
+		allEffects = [transactionSpec.effects as StateEffect<unknown>];
+	} else {
+		allEffects = [];
+	}
+	allEffects.push(scrollEffect);
+	transactionSpec.effects = allEffects;
 
 	cm.dispatch(cm.state.update(transactionSpec));
 

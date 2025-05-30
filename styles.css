@@ -371,27 +371,22 @@ body.theme-light .text-transformer-removed-active {
 
 /* --- Scroll Comfort Zone --- */
 /*
- * Apply scroll-padding to the CodeMirror scroller element.
- * This creates a "comfort zone" when scrolling with "nearest" behavior.
- * `20vh` means a 20% viewport height padding at the top/bottom that
- * `scrollIntoView({y: "nearest"})` should respect.
- * Using `!important` to increase likelihood of overriding theme styles.
+ * The scroll-padding CSS property on .cm-scroller was found to be ineffective
+ * for adjusting the scroll target of CodeMirror's programmatic scrollIntoView
+ * with the {y: "nearest"} option.
+ * The "comfort zone" is now handled programmatically by using the `yMargin`
+ * option in the `EditorView.scrollIntoView` effect within suggestion-handler.ts.
+ *
+ * `scroll-behavior: smooth !important;` is kept for general smooth scrolling.
  */
 .markdown-source-view.mod-cm6 .cm-scroller {
-	scroll-padding-top: 20vh !important;
-	scroll-padding-bottom: 20vh !important;
-	scroll-behavior: smooth !important; /* Also make smooth important if desired */
+	/* scroll-padding-top: 200px !important; /* Removed; handled by yMargin in JS */
+	/* scroll-padding-bottom: 200px !important; /* Removed; handled by yMargin in JS */
+	scroll-behavior: smooth !important;
 }
 
-/*
- * If consistent behavior is needed in Reading Mode (though suggestions are editor-only),
- * you might target its scroller too. The primary scroller in reading mode is often
- * the .markdown-preview-view itself or a child.
- * This rule is less critical for the suggestion feature.
- */
 .markdown-preview-view {
-	/* Or a more specific child scroller if known e.g. .markdown-preview-sizer */
-	scroll-padding-top: 20vh !important;
-	scroll-padding-bottom: 20vh !important;
+	/* scroll-padding-top: 200px !important; /* Removed; handled by yMargin in JS (if applicable to preview) */
+	/* scroll-padding-bottom: 200px !important; /* Removed; handled by yMargin in JS (if applicable to preview) */
 	scroll-behavior: smooth !important;
 }
