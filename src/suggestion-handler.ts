@@ -1,3 +1,4 @@
+// src/suggestion-handler.ts
 import { EditorSelection, StateEffect, Text, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Editor, Notice, TFile } from "obsidian";
@@ -40,40 +41,6 @@ function findPreviousFocusTarget(
 	return (foundMark || sortedMarks.at(-1)) ?? null;
 }
 
-// NEW helper function
-function isPositionComfortablyVisible(cm: EditorView, pos: number): boolean {
-	try {
-		const coords = cm.coordsAtPos(pos); // Returns null if pos is not in the rendered part of the doc
-		if (!coords) {
-			return false;
-		}
-
-		// coords.top is the top of the character, in document pixels (relative to document top)
-		const charTopInDocument = coords.top;
-
-		const scrollTop = cm.scrollDOM.scrollTop; // Current scroll position of the editor
-		const viewportHeight = cm.scrollDOM.clientHeight; // Visible height of the editor's scrollable content
-
-		const comfortMarginRatio = 0.2;
-		// Comfort zone boundaries, in document pixels
-		const comfortZoneTopInDocument = scrollTop + viewportHeight * comfortMarginRatio;
-		const comfortZoneBottomInDocument = scrollTop + viewportHeight * (1 - comfortMarginRatio);
-
-		// Check if the character's top position falls within the comfort zone of the current viewport
-		return (
-			charTopInDocument >= comfortZoneTopInDocument &&
-			charTopInDocument <= comfortZoneBottomInDocument
-		);
-	} catch (e) {
-		// Fallback if coordsAtPos fails for any reason (e.g., view not fully initialized, unusual state)
-		console.warn(
-			"WordSmith: Error in isPositionComfortablyVisible, assuming not comfortably visible.",
-			e,
-		);
-		return false;
-	}
-}
-
 export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -88,13 +55,9 @@ export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor)
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findNextFocusTarget(allMarks, currentPos);
 	if (targetMark) {
-		const effects: StateEffect<unknown>[] = [];
-		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
-			effects.push(EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }));
-		}
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: effects,
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
 		});
 	}
 }
@@ -113,13 +76,9 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findPreviousFocusTarget(allMarks, currentPos);
 	if (targetMark) {
-		const effects: StateEffect<unknown>[] = [];
-		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
-			effects.push(EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }));
-		}
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: effects,
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
 		});
 	}
 }
@@ -172,21 +131,15 @@ export function resolveNextSuggestionCM6(
 	const currentSelection = cm.state.selection.main;
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
-	if (
-		!shouldForceResolve &&
-		(!effectivelyOnTarget || !isPositionComfortablyVisible(cm, targetMark.from))
-	) {
-		const effectsToDispatch: StateEffect<unknown>[] = [];
-		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
-			effectsToDispatch.push(
-				EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
-			);
-		}
+	// If not forcing resolve and cursor is not effectively on the target mark,
+	// scroll to it and notify the user to press again.
+	// `y: "nearest"` will handle not scrolling if already well-positioned.
+	if (!shouldForceResolve && !effectivelyOnTarget) {
 		cm.dispatch({
-			effects: effectsToDispatch,
+			effects: EditorView.scrollIntoView(targetMark.from, { y: "nearest" }),
 			selection: EditorSelection.cursor(targetMark.from),
 		});
-		new Notice(`Next suggestion is active. Press again to ${action}.`, 3000);
+		new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
 		return;
 	}
 
@@ -197,7 +150,7 @@ export function resolveNextSuggestionCM6(
 		if (targetMark.type === "added") {
 			const textToInsert =
 				targetMark.isNewlineChange && targetMark.newlineChar
-					? targetMark.newlineChar
+					? targetMark.newlineChar // Should be '\n'
 					: (targetMark.ghostText ?? "");
 			textChangeSpec = {
 				from: targetMark.from,
@@ -221,10 +174,11 @@ export function resolveNextSuggestionCM6(
 		resolveSuggestionEffect.of({ id: targetMark.id }),
 	];
 
-	if (shouldForceResolve && !isPositionComfortablyVisible(cm, newCursorPosAfterResolve)) {
-		currentEffects.push(
-			EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "center", yMargin: 50 }),
-		);
+	// If forcing resolve (e.g. last suggestion), ensure the new cursor position is visible.
+	if (shouldForceResolve) {
+		// This check is a bit heuristic; `y: "nearest"` will do its best.
+		// We add it to ensure an explicit scroll attempt if it was the last item.
+		currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "nearest" }));
 	}
 
 	const transactionSpec: TransactionSpec = {
@@ -245,29 +199,15 @@ export function resolveNextSuggestionCM6(
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
+
 		if (nextSuggestionToFocus) {
-			const nextTargetPos = nextSuggestionToFocus.from;
-			const isCursorAlreadyAtNextTarget =
-				cm.state.selection.main.head === nextTargetPos && cm.state.selection.main.empty;
-
-			const effectsToDispatch: StateEffect<unknown>[] = [];
-			let needsDispatch = false;
-
-			if (!isCursorAlreadyAtNextTarget) {
-				needsDispatch = true;
-			}
-
-			if (!isPositionComfortablyVisible(cm, nextTargetPos)) {
-				effectsToDispatch.push(
-					EditorView.scrollIntoView(nextTargetPos, { y: "center", yMargin: 50 }),
-				);
-				needsDispatch = true;
-			}
-
-			if (needsDispatch) {
+			// If the cursor is not already at the next suggestion, or to ensure it's well-positioned.
+			if (cm.state.selection.main.head !== nextSuggestionToFocus.from) {
 				cm.dispatch({
-					effects: effectsToDispatch,
-					selection: EditorSelection.cursor(nextTargetPos),
+					effects: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
+						y: "nearest",
+					}),
+					selection: EditorSelection.cursor(nextSuggestionToFocus.from),
 				});
 			}
 		}
@@ -279,7 +219,7 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	let lineTo = doc.lineAt(pos);
 
 	if (lineFrom.text.trim() === "") {
-		// Empty line logic remains
+		// Empty line paragraph logic can remain as is
 	}
 
 	while (lineFrom.number > 1) {
@@ -300,7 +240,7 @@ function* iterateParagraphs(
 	startPosition = 0,
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
-	if (currentPos >= doc.length && doc.length > 0) return;
+	if (currentPos >= doc.length && doc.length > 0) return; 
 
 	while (currentPos < doc.length) {
 		const firstLineAtCurrentPos = doc.lineAt(currentPos);
@@ -327,7 +267,7 @@ function* iterateParagraphs(
 		}
 
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-		currentPos = paragraphEndLine.to + 1;
+		currentPos = paragraphEndLine.to + 1; 
 		if (currentPos >= doc.length) return;
 	}
 }
@@ -374,7 +314,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 		if (initialMarksInParagraph.length === 0) {
 			let foundNextParagraphWithSuggestions = false;
-			const paragraphIterator = iterateParagraphs(doc, 0);
+			const paragraphIterator = iterateParagraphs(doc, 0); 
 			for (const p of paragraphIterator) {
 				if (p.from === operationRange.from && p.to === operationRange.to) continue;
 
@@ -387,7 +327,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 				if (marksInThisP.length > 0) {
 					operationRange = p;
-					finalCursorPos = p.from;
+					finalCursorPos = p.from; 
 					foundNextParagraphWithSuggestions = true;
 					break;
 				}
@@ -402,7 +342,7 @@ export function resolveSuggestionsInSelectionCM6(
 		}
 	} else {
 		operationRange = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from;
+		finalCursorPos = currentSelection.from; 
 	}
 
 	const marksInScope = allMarks.filter((mark) => {
@@ -424,7 +364,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
 	const effectsArray: StateEffect<{ id: string }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); 
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
@@ -443,13 +383,13 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos),
+		selection: EditorSelection.cursor(finalCursorPos), 
 	};
 
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
 		let adjustedCursorPos = finalCursorPos;
-		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
+		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from); 
 		for (const change of sortedChangesForCursor) {
 			if (adjustedCursorPos > change.from) {
 				if (adjustedCursorPos <= change.to) {
@@ -463,6 +403,19 @@ export function resolveSuggestionsInSelectionCM6(
 		}
 		transactionSpec.selection = EditorSelection.cursor(adjustedCursorPos);
 	}
+    // Add a scroll effect to ensure the final cursor position is comfortably visible.
+    // This is especially useful after bulk operations.
+    const scrollEffect = EditorView.scrollIntoView(
+        'main' in (transactionSpec.selection || {}) 
+            ? (transactionSpec.selection as EditorSelection).main.head 
+            : finalCursorPos, 
+        {y: "nearest"}
+    );
+    
+    // Handle effects array properly
+    const currentEffects = transactionSpec.effects || [];
+    const effectsList = Array.isArray(currentEffects) ? currentEffects : [currentEffects];
+    transactionSpec.effects = [...effectsList, scrollEffect];
 
 	cm.dispatch(cm.state.update(transactionSpec));
 
@@ -494,7 +447,7 @@ export function clearAllActiveSuggestionsCM6(
 
 	const transactionSpec: TransactionSpec = {
 		effects: clearAllSuggestionsEffect.of(null),
-		selection: cm.state.selection,
+		selection: cm.state.selection, // Retain current selection
 	};
 
 	cm.dispatch(cm.state.update(transactionSpec));

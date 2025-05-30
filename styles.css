@@ -368,3 +368,30 @@ body.theme-light .text-transformer-removed-active {
 	min-height: 80px;
 	resize: vertical;
 }
+
+/* --- Scroll Comfort Zone --- */
+/*
+ * Apply scroll-padding to the CodeMirror scroller element.
+ * This creates a "comfort zone" when scrolling with "nearest" behavior.
+ * `20vh` means a 20% viewport height padding at the top/bottom that
+ * `scrollIntoView({y: "nearest"})` should respect.
+ * Using `!important` to increase likelihood of overriding theme styles.
+ */
+.markdown-source-view.mod-cm6 .cm-scroller {
+	scroll-padding-top: 20vh !important;
+	scroll-padding-bottom: 20vh !important;
+	scroll-behavior: smooth !important; /* Also make smooth important if desired */
+}
+
+/*
+ * If consistent behavior is needed in Reading Mode (though suggestions are editor-only),
+ * you might target its scroller too. The primary scroller in reading mode is often
+ * the .markdown-preview-view itself or a child.
+ * This rule is less critical for the suggestion feature.
+ */
+.markdown-preview-view {
+	/* Or a more specific child scroller if known e.g. .markdown-preview-sizer */
+	scroll-padding-top: 20vh !important;
+	scroll-padding-bottom: 20vh !important;
+	scroll-behavior: smooth !important;
+}
