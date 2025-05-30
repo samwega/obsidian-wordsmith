@@ -222,7 +222,10 @@ class SuggestionViewPluginClass {
 					isActive = false;
 					// If this mark's 'from' position is different from the ongoing block,
 					// or if there was no block, reset the tracking.
-					if (mark.from !== consecutiveAddedBlockFromPos || !isInsideConsecutiveAddedBlockAtCursor) {
+					if (
+						mark.from !== consecutiveAddedBlockFromPos ||
+						!isInsideConsecutiveAddedBlockAtCursor
+					) {
 						isInsideConsecutiveAddedBlockAtCursor = false;
 						consecutiveAddedBlockFromPos = -1;
 					}

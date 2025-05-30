@@ -40,6 +40,40 @@ function findPreviousFocusTarget(
 	return (foundMark || sortedMarks.at(-1)) ?? null;
 }
 
+// NEW helper function
+function isPositionComfortablyVisible(cm: EditorView, pos: number): boolean {
+	try {
+		const coords = cm.coordsAtPos(pos); // Returns null if pos is not in the rendered part of the doc
+		if (!coords) {
+			return false;
+		}
+
+		// coords.top is the top of the character, in document pixels (relative to document top)
+		const charTopInDocument = coords.top;
+
+		const scrollTop = cm.scrollDOM.scrollTop; // Current scroll position of the editor
+		const viewportHeight = cm.scrollDOM.clientHeight; // Visible height of the editor's scrollable content
+
+		const comfortMarginRatio = 0.2;
+		// Comfort zone boundaries, in document pixels
+		const comfortZoneTopInDocument = scrollTop + viewportHeight * comfortMarginRatio;
+		const comfortZoneBottomInDocument = scrollTop + viewportHeight * (1 - comfortMarginRatio);
+
+		// Check if the character's top position falls within the comfort zone of the current viewport
+		return (
+			charTopInDocument >= comfortZoneTopInDocument &&
+			charTopInDocument <= comfortZoneBottomInDocument
+		);
+	} catch (e) {
+		// Fallback if coordsAtPos fails for any reason (e.g., view not fully initialized, unusual state)
+		console.warn(
+			"WordSmith: Error in isPositionComfortablyVisible, assuming not comfortably visible.",
+			e,
+		);
+		return false;
+	}
+}
+
 export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -54,9 +88,13 @@ export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor)
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findNextFocusTarget(allMarks, currentPos);
 	if (targetMark) {
+		const effects: StateEffect<unknown>[] = [];
+		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
+			effects.push(EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }));
+		}
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
+			effects: effects,
 		});
 	}
 }
@@ -75,9 +113,13 @@ export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Edi
 	const currentPos = cm.state.selection.main.head;
 	const targetMark = findPreviousFocusTarget(allMarks, currentPos);
 	if (targetMark) {
+		const effects: StateEffect<unknown>[] = [];
+		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
+			effects.push(EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }));
+		}
 		cm.dispatch({
 			selection: EditorSelection.cursor(targetMark.from),
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
+			effects: effects,
 		});
 	}
 }
@@ -91,10 +133,6 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 		if (mark.from >= searchStartPos) return mark;
 	}
 	return sortedMarks.length > 0 ? sortedMarks[0] : null;
-}
-
-function isPositionVisible(cm: EditorView, pos: number): boolean {
-	return pos >= cm.viewport.from && pos <= cm.viewport.to;
 }
 
 export function resolveNextSuggestionCM6(
@@ -134,12 +172,21 @@ export function resolveNextSuggestionCM6(
 	const currentSelection = cm.state.selection.main;
 	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
-	if (!shouldForceResolve && (!effectivelyOnTarget || !isPositionVisible(cm, targetMark.from))) {
+	if (
+		!shouldForceResolve &&
+		(!effectivelyOnTarget || !isPositionComfortablyVisible(cm, targetMark.from))
+	) {
+		const effectsToDispatch: StateEffect<unknown>[] = [];
+		if (!isPositionComfortablyVisible(cm, targetMark.from)) {
+			effectsToDispatch.push(
+				EditorView.scrollIntoView(targetMark.from, { y: "center", yMargin: 50 }),
+			);
+		}
 		cm.dispatch({
-			effects: EditorView.scrollIntoView(targetMark.from, { y: "center" }),
+			effects: effectsToDispatch,
 			selection: EditorSelection.cursor(targetMark.from),
 		});
-		new Notice(`Scrolled to the next suggestion. Press again to ${action}.`, 3000);
+		new Notice(`Next suggestion is active. Press again to ${action}.`, 3000);
 		return;
 	}
 
@@ -150,7 +197,7 @@ export function resolveNextSuggestionCM6(
 		if (targetMark.type === "added") {
 			const textToInsert =
 				targetMark.isNewlineChange && targetMark.newlineChar
-					? targetMark.newlineChar // Should be '\n'
+					? targetMark.newlineChar
 					: (targetMark.ghostText ?? "");
 			textChangeSpec = {
 				from: targetMark.from,
@@ -164,11 +211,9 @@ export function resolveNextSuggestionCM6(
 		}
 	} else if (action === "reject") {
 		if (targetMark.type === "added") {
-			// No document change, ghost text just disappears
 			newCursorPosAfterResolve = targetMark.from;
 		} else if (targetMark.type === "removed") {
-			// No document change, marked text remains
-			newCursorPosAfterResolve = targetMark.from; // Stay at the start of the "kept" text
+			newCursorPosAfterResolve = targetMark.from;
 		}
 	}
 
@@ -176,8 +221,10 @@ export function resolveNextSuggestionCM6(
 		resolveSuggestionEffect.of({ id: targetMark.id }),
 	];
 
-	if (shouldForceResolve && !isPositionVisible(cm, newCursorPosAfterResolve)) {
-		currentEffects.push(EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "center" }));
+	if (shouldForceResolve && !isPositionComfortablyVisible(cm, newCursorPosAfterResolve)) {
+		currentEffects.push(
+			EditorView.scrollIntoView(newCursorPosAfterResolve, { y: "center", yMargin: 50 }),
+		);
 	}
 
 	const transactionSpec: TransactionSpec = {
@@ -198,20 +245,31 @@ export function resolveNextSuggestionCM6(
 	} else {
 		new Notice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`, 3000);
 		const nextSuggestionToFocus = findNextSuggestionMark(cm, cm.state.selection.main.head);
-		if (
-			nextSuggestionToFocus &&
-			(cm.state.selection.main.head !== nextSuggestionToFocus.from ||
-				!isPositionVisible(cm, nextSuggestionToFocus.from))
-		) {
-			cm.dispatch({
-				effects: isPositionVisible(cm, nextSuggestionToFocus.from)
-					? []
-					: EditorView.scrollIntoView(nextSuggestionToFocus.from, {
-							y: "center",
-							yMargin: 50,
-						}),
-				selection: EditorSelection.cursor(nextSuggestionToFocus.from),
-			});
+		if (nextSuggestionToFocus) {
+			const nextTargetPos = nextSuggestionToFocus.from;
+			const isCursorAlreadyAtNextTarget =
+				cm.state.selection.main.head === nextTargetPos && cm.state.selection.main.empty;
+
+			const effectsToDispatch: StateEffect<unknown>[] = [];
+			let needsDispatch = false;
+
+			if (!isCursorAlreadyAtNextTarget) {
+				needsDispatch = true;
+			}
+
+			if (!isPositionComfortablyVisible(cm, nextTargetPos)) {
+				effectsToDispatch.push(
+					EditorView.scrollIntoView(nextTargetPos, { y: "center", yMargin: 50 }),
+				);
+				needsDispatch = true;
+			}
+
+			if (needsDispatch) {
+				cm.dispatch({
+					effects: effectsToDispatch,
+					selection: EditorSelection.cursor(nextTargetPos),
+				});
+			}
 		}
 	}
 }
@@ -220,14 +278,8 @@ function getParagraphBoundaries(doc: Text, pos: number): { from: number; to: num
 	let lineFrom = doc.lineAt(pos);
 	let lineTo = doc.lineAt(pos);
 
-	// If the line at pos is empty, and it's not the first line,
-	// and the previous line is also empty, this is likely an empty paragraph
-	// between two other paragraphs. In this case, the paragraph is just this line.
 	if (lineFrom.text.trim() === "") {
-		// If it's an empty line, the paragraph is just this line itself.
-		// However, if we are looking for suggestions, they might be AT this position.
-		// The original logic expanded outwards. Let's keep that for finding content blocks.
-		// The crucial part is how this range is used to filter suggestions later.
+		// Empty line logic remains
 	}
 
 	while (lineFrom.number > 1) {
@@ -248,16 +300,14 @@ function* iterateParagraphs(
 	startPosition = 0,
 ): Generator<{ from: number; to: number }, void, undefined> {
 	let currentPos = startPosition;
-	if (currentPos >= doc.length && doc.length > 0) return; // Handle empty or fully iterated doc
+	if (currentPos >= doc.length && doc.length > 0) return;
 
 	while (currentPos < doc.length) {
 		const firstLineAtCurrentPos = doc.lineAt(currentPos);
 		let paragraphBeginLineNum = -1;
 
-		// Find the start of the next non-empty paragraph block
 		for (let n = firstLineAtCurrentPos.number; n <= doc.lines; n++) {
 			const line = doc.line(n);
-			// Ensure we don't re-process lines already passed by currentPos if currentPos is not at line.from
 			if (currentPos > line.to && n > firstLineAtCurrentPos.number) continue;
 			if (line.text.trim() !== "") {
 				paragraphBeginLineNum = n;
@@ -265,12 +315,11 @@ function* iterateParagraphs(
 			}
 		}
 
-		if (paragraphBeginLineNum === -1) return; // No more non-empty lines
+		if (paragraphBeginLineNum === -1) return;
 
 		const paragraphStartLine = doc.line(paragraphBeginLineNum);
 		let paragraphEndLine = paragraphStartLine;
 
-		// Find the end of this paragraph block
 		while (paragraphEndLine.number < doc.lines) {
 			const nextLine = doc.line(paragraphEndLine.number + 1);
 			if (nextLine.text.trim() === "") break;
@@ -278,8 +327,8 @@ function* iterateParagraphs(
 		}
 
 		yield { from: paragraphStartLine.from, to: paragraphEndLine.to };
-		currentPos = paragraphEndLine.to + 1; // Move to the start of the character after this paragraph
-		if (currentPos >= doc.length) return; // Re-check if we've reached the end
+		currentPos = paragraphEndLine.to + 1;
+		if (currentPos >= doc.length) return;
 	}
 }
 
@@ -311,13 +360,9 @@ export function resolveSuggestionsInSelectionCM6(
 
 	if (currentSelection.empty) {
 		isOperatingOnIdentifiedParagraph = true;
-		// For an empty selection, the operation range is the paragraph at the cursor.
-		// This includes the case of an empty line where suggestions might have been generated.
 		operationRange = getParagraphBoundaries(doc, cursorOriginalPos);
-		finalCursorPos = cursorOriginalPos; // Keep cursor where it was if in paragraph mode
+		finalCursorPos = cursorOriginalPos;
 
-		// Check if any suggestions exist within this identified paragraph.
-		// If not, and we are in "paragraph mode", try to find the *next* paragraph with suggestions.
 		const initialMarksInParagraph = allMarks.filter((mark) => {
 			const pFrom = operationRange.from;
 			const pTo = operationRange.to;
@@ -328,11 +373,9 @@ export function resolveSuggestionsInSelectionCM6(
 		});
 
 		if (initialMarksInParagraph.length === 0) {
-			// Current paragraph has no suggestions, try to find the next one.
 			let foundNextParagraphWithSuggestions = false;
-			const paragraphIterator = iterateParagraphs(doc, 0); // Start from beginning
+			const paragraphIterator = iterateParagraphs(doc, 0);
 			for (const p of paragraphIterator) {
-				// Skip if this paragraph is the one at cursor (already checked)
 				if (p.from === operationRange.from && p.to === operationRange.to) continue;
 
 				const marksInThisP = allMarks.filter((mark) => {
@@ -344,7 +387,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 				if (marksInThisP.length > 0) {
 					operationRange = p;
-					finalCursorPos = p.from; // Move cursor to start of this new paragraph
+					finalCursorPos = p.from;
 					foundNextParagraphWithSuggestions = true;
 					break;
 				}
@@ -358,20 +401,16 @@ export function resolveSuggestionsInSelectionCM6(
 			}
 		}
 	} else {
-		// Selection is not empty, operate on the selection range.
 		operationRange = { from: currentSelection.from, to: currentSelection.to };
-		finalCursorPos = currentSelection.from; // Move cursor to start of selection after operation
+		finalCursorPos = currentSelection.from;
 	}
 
 	const marksInScope = allMarks.filter((mark) => {
 		const pFrom = operationRange.from;
 		const pTo = operationRange.to;
 		if (mark.type === "added") {
-			// 'added' mark is a point. It's in scope if its point is within or at boundaries.
-			// This handles cases where pFrom === pTo (e.g., empty line).
 			return mark.from >= pFrom && mark.from <= pTo;
 		}
-		// 'removed' mark spans a range. It's in scope if it overlaps.
 		return mark.from < pTo && mark.to > pFrom;
 	});
 
@@ -385,7 +424,7 @@ export function resolveSuggestionsInSelectionCM6(
 
 	const changesArray: { from: number; to: number; insert: string }[] = [];
 	const effectsArray: StateEffect<{ id: string }>[] = [];
-	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from); // Process from end to start for changes
+	const sortedMarksInScope = [...marksInScope].sort((a, b) => b.from - a.from);
 
 	for (const mark of sortedMarksInScope) {
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
@@ -399,31 +438,26 @@ export function resolveSuggestionsInSelectionCM6(
 				textChange = { from: mark.from, to: mark.to, insert: "" };
 			}
 		}
-		// No document changes for "reject"
 		if (textChange) changesArray.push(textChange);
 	}
 
 	const transactionSpec: TransactionSpec = {
 		effects: effectsArray,
-		selection: EditorSelection.cursor(finalCursorPos), // Initial cursor position for adjustment
+		selection: EditorSelection.cursor(finalCursorPos),
 	};
 
 	if (changesArray.length > 0) {
 		transactionSpec.changes = changesArray;
-		// Calculate final cursor position after all changes
 		let adjustedCursorPos = finalCursorPos;
-		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from); // Sort start to end for calculation
+		const sortedChangesForCursor = [...changesArray].sort((a, b) => a.from - b.from);
 		for (const change of sortedChangesForCursor) {
 			if (adjustedCursorPos > change.from) {
 				if (adjustedCursorPos <= change.to) {
-					// Cursor was inside the deleted/modified part
 					adjustedCursorPos = change.from + change.insert.length;
 				} else {
-					// Cursor was after the change
 					adjustedCursorPos += change.insert.length - (change.to - change.from);
 				}
 			} else if (adjustedCursorPos === change.from && change.to === change.from) {
-				// Insertion at cursor (e.g. "added" mark)
 				adjustedCursorPos += change.insert.length;
 			}
 		}
