@@ -80,7 +80,7 @@ export interface TextTransformerPrompt {
 	presence_penalty?: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens?: number;
-	showInPromptPalette?: boolean;
+	showInPromptPalette?: boolean; // Made optional
 }
 
 export interface TextTransformerSettings {
@@ -144,14 +144,6 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		showInPromptPalette: true,
 	},
 	{
-		id: "lengthen",
-		name: "Lengthen",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Expand and elaborate the following text for greater detail and depth, but do not add unrelated information.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
-		isDefault: true,
-		enabled: true,
-		showInPromptPalette: true,
-	},
-	{
 		id: "fix-grammar",
 		name: "Fix grammar",
 		text: "[AI ROLE]: Professional proofreader. \n[TASK]: Correct any grammatical, spelling, or punctuation errors in the following text.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
@@ -160,9 +152,17 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		showInPromptPalette: true,
 	},
 	{
-		id: "simplify-language",
-		name: "Simplify language",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
+		id: "lengthen",
+		name: "Lengthen",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Expand and elaborate the following text for greater detail and depth, but do not add unrelated information.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
+		isDefault: true,
+		enabled: true,
+		showInPromptPalette: true,
+	},
+	{
+		id: "structure",
+		name: "Refine Structure",
+		text: "[AI ROLE]: Expert editor.\n[TASK]: Refine the structure of the following text, in ways compatible with Obsidian Markdown (#headers, - bullet and 1. numbered lists, **bold**, *italics*, etc.) \n[RULE]: Make the minimal changes which  enhance comprehension; \n[RULE]: IMPORTANT: don't overdo it! Minimal is preferable.\nIf more context is provided, it should inform the response. Only output the revised text. This is the text:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
@@ -184,13 +184,13 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		showInPromptPalette: true,
 	},
 	{
-		id: "structure",
-		name: "Refine Structure",
-		text: "[AI ROLE]: Expert editor.\n[TASK]: Refine the structure of the following text, in ways compatible with Obsidian Markdown (#headers, - bullet and 1. numbered lists, **bold**, *italics*, etc.) \n[RULE]: Make the minimal changes which  enhance comprehension; \n[RULE]: IMPORTANT: don't overdo it! Minimal is preferable.\nIf more context is provided, it should inform the response. Only output the revised text. This is the text:",
+		id: "simplify-language",
+		name: "Simplify language",
+		text: "[AI ROLE]: Professional editor. \n[TASK]: Rewrite the following text in simpler language, making it easier to understand while preserving the original meaning.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
-	},
+	},	
 	{
 		id: "cleanup",
 		name: "Cleanup Text/Chat",
@@ -209,7 +209,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "translate",
-		name: `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`,
+		name: `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`, // Name will be dynamically updated in loadSettings
 		text: "[AI ROLE]: Professional translator. \n [TASK]: Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style.\nIf more context is provided, it should inform the response. Output only the translated text and nothing else. The text is:",
 		isDefault: true,
 		enabled: true,

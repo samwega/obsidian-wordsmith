@@ -55,7 +55,6 @@ export default class TextTransformer extends Plugin {
 			icon: "wand-2",
 			editorCallback: (editor: Editor): void => {
 				new CustomPromptModal(this.app, this, async (promptText) => {
-					// generateTextAndApplyAsSuggestionCM6 will handle updating file suggestions
 					await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
 				}).open();
 			},
@@ -77,7 +76,6 @@ export default class TextTransformer extends Plugin {
 				}
 
 				if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
-					// textTransformerTextCM6 will handle updating file suggestions
 					await textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
 					return;
 				}
@@ -86,7 +84,6 @@ export default class TextTransformer extends Plugin {
 						this.app,
 						enabledPrompts,
 						async (prompt: TextTransformerPrompt) => {
-							// textTransformerTextCM6 will handle updating file suggestions
 							await textTransformerTextCM6(this, editor, prompt, activeFile);
 							resolve();
 						},
@@ -170,7 +167,7 @@ export default class TextTransformer extends Plugin {
 			id: "focus-next-suggestion",
 			name: "Focus next suggestion",
 			editorCallback: (editor: Editor): void => {
-				focusNextSuggestionCM6(this, editor); // No file needed, doesn't modify persisted state
+				focusNextSuggestionCM6(this, editor);
 			},
 			icon: "arrow-down-circle",
 		});
@@ -179,7 +176,7 @@ export default class TextTransformer extends Plugin {
 			id: "focus-previous-suggestion",
 			name: "Focus previous suggestion",
 			editorCallback: (editor: Editor): void => {
-				focusPreviousSuggestionCM6(this, editor); // No file needed, doesn't modify persisted state
+				focusPreviousSuggestionCM6(this, editor);
 			},
 			icon: "arrow-up-circle",
 		});
@@ -218,35 +215,103 @@ export default class TextTransformer extends Plugin {
 		const loaded = (await this.loadData()) as Partial<TextTransformerSettings> | null;
 
 		if (loaded) {
-			const tempDefaultSettings = { ...DEFAULT_SETTINGS };
-			tempDefaultSettings.defaultPromptId = undefined;
-			const { prompts: loadedPrompts, ...otherLoadedSettings } =
-				loaded as Partial<TextTransformerSettings>;
+			const { prompts: loadedPrompts, ...otherLoadedSettings } = loaded;
 			Object.assign(this.settings, otherLoadedSettings);
 
-			if (!Array.isArray(loadedPrompts) || loadedPrompts.length === 0) {
-				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => ({ ...p }));
-			} else {
-				const existingIds = new Set(loadedPrompts.map((p) => p.id));
-				const newPromptsToAdd = DEFAULT_TEXT_TRANSFORMER_PROMPTS.filter(
-					(defP) => !existingIds.has(defP.id),
-				);
+			if (Array.isArray(loadedPrompts) && loadedPrompts.length > 0) {
+				const processedDefaultPromptsMap = new Map<string, TextTransformerPrompt>();
+				const keptCustomPrompts: TextTransformerPrompt[] = [];
 
-				this.settings.prompts = [
-					...loadedPrompts.map((p) => ({
-						...(DEFAULT_TEXT_TRANSFORMER_PROMPTS.find((dp) => dp.id === p.id) || {}),
-						...p,
-					})),
-					...newPromptsToAdd.map((p) => ({ ...p })),
-				];
+				loadedPrompts.forEach((loadedPrompt) => {
+					if (loadedPrompt.isDefault) {
+						const defaultDefinition = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(
+							(dp) => dp.id === loadedPrompt.id,
+						);
+						if (defaultDefinition) {
+							let currentDefaultName = defaultDefinition.name;
+							if (defaultDefinition.id === "translate") {
+								const langSetting =
+									this.settings.translationLanguage ||
+									DEFAULT_SETTINGS.translationLanguage;
+								const capitalizedLang =
+									langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
+								currentDefaultName = `Translate to ${capitalizedLang}—autodetects source language`;
+							}
+							processedDefaultPromptsMap.set(loadedPrompt.id, {
+								...defaultDefinition,
+								...loadedPrompt,
+								text: defaultDefinition.text,
+								name: currentDefaultName,
+								isDefault: true,
+							});
+						}
+						// Orphaned defaults are implicitly pruned by not being added to the map
+					} else {
+						keptCustomPrompts.push({ ...loadedPrompt, isDefault: false });
+					}
+				});
+
+				const finalPrompts: TextTransformerPrompt[] = [];
+				DEFAULT_TEXT_TRANSFORMER_PROMPTS.forEach((defaultDefFromCode) => {
+					if (processedDefaultPromptsMap.has(defaultDefFromCode.id)) {
+						finalPrompts.push(processedDefaultPromptsMap.get(defaultDefFromCode.id)!);
+					} else {
+						// This is a new default prompt not present in user's saved data
+						let name = defaultDefFromCode.name;
+						if (defaultDefFromCode.id === "translate") {
+							const langSetting =
+								this.settings.translationLanguage ||
+								DEFAULT_SETTINGS.translationLanguage;
+							const capitalizedLang =
+								langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
+							name = `Translate to ${capitalizedLang}—autodetects source language`;
+						}
+						finalPrompts.push({ ...defaultDefFromCode, name: name });
+					}
+				});
+
+				finalPrompts.push(...keptCustomPrompts); // Add all custom prompts at the end
+				this.settings.prompts = finalPrompts;
+			} else {
+				// No prompts in data.json or array is empty, initialize with current defaults
+				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
+					let name = p.name;
+					if (p.id === "translate") {
+						const langSetting =
+							this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
+						const capitalizedLang =
+							langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
+						name = `Translate to ${capitalizedLang}—autodetects source language`;
+					}
+					return { ...p, name: name };
+				});
 			}
 		} else {
-			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => ({ ...p }));
+			// No data.json file, initialize with current defaults
+			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
+				let name = p.name;
+				if (p.id === "translate") {
+					const langSetting =
+						this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
+					const capitalizedLang =
+						langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
+					name = `Translate to ${capitalizedLang}—autodetects source language`;
+				}
+				return { ...p, name: name };
+			});
 		}
 
 		this.settings.prompts.forEach((p) => {
 			if (typeof p.enabled === "undefined") {
 				p.enabled = true;
+			}
+			if (typeof p.showInPromptPalette === "undefined") {
+				if (p.isDefault) {
+					const defaultDef = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(def => def.id === p.id);
+					p.showInPromptPalette = defaultDef?.showInPromptPalette ?? true;
+				} else {
+					p.showInPromptPalette = true;
+				}
 			}
 		});
 
@@ -254,16 +319,16 @@ export default class TextTransformer extends Plugin {
 			this.settings.model = DEFAULT_SETTINGS.model;
 		}
 
-		const tempDefaultSettings = { ...DEFAULT_SETTINGS };
-		tempDefaultSettings.defaultPromptId = undefined;
+		const { prompts, defaultPromptId, ...keysForLoop } = DEFAULT_SETTINGS;
 
-		for (const key of Object.keys(tempDefaultSettings) as Array<
-			keyof Omit<TextTransformerSettings, "defaultPromptId">
+		for (const key of Object.keys(keysForLoop) as Array<
+			keyof typeof keysForLoop
 		>) {
-			if (typeof this.settings[key] === "undefined") {
-				(this.settings as unknown as Record<string, unknown>)[key] =
-					DEFAULT_SETTINGS[key as keyof TextTransformerSettings];
+			if (typeof (this.settings as any)[key] === "undefined") {
+				(this.settings as any)[key] = (DEFAULT_SETTINGS as any)[key];
 			}
 		}
+
+		await this.saveData(this.settings);
 	}
 }
