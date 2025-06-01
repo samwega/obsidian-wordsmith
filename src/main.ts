@@ -260,8 +260,7 @@ export default class TextTransformer extends Plugin {
 						let name = defaultDefFromCode.name;
 						if (defaultDefFromCode.id === "translate") {
 							const langSetting =
-								this.settings.translationLanguage ||
-								DEFAULT_SETTINGS.translationLanguage;
+								this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
 							const capitalizedLang =
 								langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 							name = `Translate to ${capitalizedLang}—autodetects source language`;
@@ -293,8 +292,7 @@ export default class TextTransformer extends Plugin {
 				if (p.id === "translate") {
 					const langSetting =
 						this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
-					const capitalizedLang =
-						langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
+					const capitalizedLang = langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 					name = `Translate to ${capitalizedLang}—autodetects source language`;
 				}
 				return { ...p, name: name };
@@ -307,7 +305,7 @@ export default class TextTransformer extends Plugin {
 			}
 			if (typeof p.showInPromptPalette === "undefined") {
 				if (p.isDefault) {
-					const defaultDef = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(def => def.id === p.id);
+					const defaultDef = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find((def) => def.id === p.id);
 					p.showInPromptPalette = defaultDef?.showInPromptPalette ?? true;
 				} else {
 					p.showInPromptPalette = true;
@@ -321,9 +319,7 @@ export default class TextTransformer extends Plugin {
 
 		const { prompts, defaultPromptId, ...keysForLoop } = DEFAULT_SETTINGS;
 
-		for (const key of Object.keys(keysForLoop) as Array<
-			keyof typeof keysForLoop
-		>) {
+		for (const key of Object.keys(keysForLoop) as Array<keyof typeof keysForLoop>) {
 			if (typeof (this.settings as any)[key] === "undefined") {
 				(this.settings as any)[key] = (DEFAULT_SETTINGS as any)[key];
 			}

@@ -190,7 +190,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
-	},	
+	},
 	{
 		id: "cleanup",
 		name: "Cleanup Text/Chat",

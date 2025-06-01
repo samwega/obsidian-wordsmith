@@ -175,6 +175,29 @@ body.theme-light .text-transformer-removed-active {
 	margin-top: 8px;
 }
 
+/* Fix for alignment of items in the prompts grid */
+.tt-prompts-grid > .setting-item {
+	margin: 0 !important;
+	padding: 6px 0 !important; /* Add vertical padding */
+}
+
+/* Ensure first column items have proper spacing */
+.tt-prompts-grid > .setting-item.tt-grid-item-left {
+	padding-right: 15px !important; /* Add right padding for first column */
+	padding-left: 0 !important;
+}
+
+/* Ensure second column items have proper spacing */
+.tt-prompts-grid > .setting-item.tt-grid-item-right {
+	padding-left: 15px !important; /* Add left padding for second column */
+	padding-right: 0 !important;
+}
+
+/* Add some space between grid items */
+.tt-prompts-grid {
+	row-gap: 8px; /* Add vertical gap between rows */
+}
+
 .tt-add-prompt-button-container {
 	/* This is a Setting.settingEl */
 	margin-top: 10px; /* Original footer margin */
