@@ -254,7 +254,10 @@ export default class TextTransformer extends Plugin {
 				const finalPrompts: TextTransformerPrompt[] = [];
 				DEFAULT_TEXT_TRANSFORMER_PROMPTS.forEach((defaultDefFromCode) => {
 					if (processedDefaultPromptsMap.has(defaultDefFromCode.id)) {
-						finalPrompts.push(processedDefaultPromptsMap.get(defaultDefFromCode.id)!);
+						const prompt = processedDefaultPromptsMap.get(defaultDefFromCode.id);
+						if (prompt) {
+							finalPrompts.push(prompt);
+						}
 					} else {
 						// This is a new default prompt not present in user's saved data
 						let name = defaultDefFromCode.name;
@@ -320,8 +323,9 @@ export default class TextTransformer extends Plugin {
 		const { prompts, defaultPromptId, ...keysForLoop } = DEFAULT_SETTINGS;
 
 		for (const key of Object.keys(keysForLoop) as Array<keyof typeof keysForLoop>) {
-			if (typeof (this.settings as any)[key] === "undefined") {
-				(this.settings as any)[key] = (DEFAULT_SETTINGS as any)[key];
+			const typedKey = key as keyof TextTransformerSettings;
+			if (typeof this.settings[typedKey] === "undefined") {
+				(this.settings as unknown as Record<string, unknown>)[key] = DEFAULT_SETTINGS[key];
 			}
 		}
 
