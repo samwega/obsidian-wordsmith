@@ -130,7 +130,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
 		id: "improve",
 		name: "Improve",
-		text: "[AI ROLE]: Professional editor. \n[TASK]: Masterfully improve the following text in terms of style, clarity, readability and language. Preserve the original meaning and any technical jargon. Suggest structural changes only if they significantly improve flow or understanding. Avoid unnecessary expansion or major reformatting (e.g., no unwarranted lists). Try to make as little changes as possible, refrain from doing any changes when the writing is already sufficiently clear and concise.\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:",
+		text: "[AI ROLE]: Professional editor.\n[TASK]: Masterfully refine the provided text, enhancing its style, clarity, readability, and language. Crucially, preserve the original meaning, technical jargon, and the author's unique voice and personal style. Implement structural changes only if they markedly improve flow or comprehension. Avoid unnecessary expansion or significant reformatting (e.g., no unwarranted lists). Strive for minimal alterations; if the text is already clear and concise, refrain from changes.\nIf additional context is supplied, use it to inform your revisions. Output only the revised text. The text to improve is:",
 		isDefault: true,
 		enabled: true,
 		showInPromptPalette: true,
