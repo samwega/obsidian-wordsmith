@@ -59,7 +59,6 @@ body.theme-light .text-transformer-removed {
 	border-bottom: 2px solid #93fe78;
 	/* border-bottom-right-radius: 10px; */
 	border-top-right-radius: 10px;
-	border-left: 2px solid #93fe78;
 }
 
 /* Dark Theme Active "Removed" Suggestion (As per previous preference) */
@@ -72,7 +71,6 @@ body.theme-light .text-transformer-removed {
 	border-bottom: 2px solid #fca698;
 	/* border-top-right-radius: 10px; */
 	border-top-right-radius: 10px;
-	border-left: 2px solid #fca698;
 }
 
 /* Light Theme Active "Added" Suggestion Overrides - Enhanced Contrast */
@@ -85,7 +83,6 @@ body.theme-light .text-transformer-added-active {
 	box-shadow: 0 0 6px rgba(29, 147, 39, 0.8);
 	border-bottom: 2px solid #107018;
 	border-top-right-radius: 10px;
-	border-left: 2px solid #107018;
 }
 
 /* Light Theme Active "Removed" Suggestion Overrides (As per previous preference) */
@@ -96,7 +93,6 @@ body.theme-light .text-transformer-removed-active {
 	box-shadow: 0 0 6px rgba(226, 60, 74, 0.8);
 	border-bottom: 2px solid #e23c4a;
 	border-top-right-radius: 10px;
-	border-left: 2px solid #e23c4a;
 }
 
 /* Styles for CustomPromptModal */
