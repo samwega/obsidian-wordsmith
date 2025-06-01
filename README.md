@@ -47,6 +47,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [Customizing Prompts](#customizing-prompts)
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
+  * [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
   * [✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨](#-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-)
     * [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
   * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
@@ -149,6 +150,16 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 ## Release History
 
+### ✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨
+
+* **Filename Inclusion for Improved Contextual Understanding:**—When using "Full Note" or "Dynamic Context" options, WordSmith now automatically includes the **name of the current file** (e.g., `Filename: My Note About AI.md`) as part of the context sent to the AI. Previously, if you didn't include the title of the note as a header, it would not be incldued with the context.
+* **Reliable Preset Prompt Management:**
+  * The way preset (built-in) prompts are handled in your `data.json` settings file has been improved.
+  * With every plugin reload, WordSmith now ensures that all **preset prompts are correctly reset to their latest built-in definitions and maintained in their intended order.**
+  * Any user customizations made directly to preset prompts in `data.json` will be overwritten to ensure stability and access to the latest official prompt versions.
+  * **User-created prompts remain untouched and are preserved.**
+* **Minor UI Style Tweaks:** Subtle adjustments have been made to the user interface for a cleaner and more consistent visual experience.
+
 ### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
 
 This significant architectural update refines how WordSmith presents and manages "added" text suggestions, leading to a smoother, more robust, and performant experience.
@@ -181,7 +192,7 @@ Version 1.9.0 marks a significant step forward in WordSmith's technical foundati
 
 * **1.9.1**—Critical Bug fix: improve suggestion handling for empty paragraphs and refine mark mapping logic (introduced in version 1.9.0 from the refactoring for "ghost text" suggestions).
 * **1.9.2**—The CM6 implementation of suggestions (ghost text) caused a lot more issues than expected. In particular: fixed aggressive view centering & the corect highlighting of the first of multi-line suggestions.  I'm finally satisfied with the results. Finally a release that should be bug free!
-* **1.9.3**—Tweaks to *Improve* Preset Prompt; Default Prompts renamed Preset Prompts & Custom Prompts renamed User Prompts.
+* **1.9.3**—Tweaks to *Improve* Preset Prompt; "Default Prompts" renamed "Preset Prompts" & "Custom Prompts" renamed "User Prompts".
 
 ### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
 
