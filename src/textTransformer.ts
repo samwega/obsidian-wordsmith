@@ -59,9 +59,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 				const customContext = await contextPanel.getCustomContextText();
 				if (customContext) {
 					contextParts.push(
-						`--- Custom Context Start ---
-${customContext}
---- Custom Context End ---`,
+						`--- Custom Context Start ---\n${customContext}\n--- Custom Context End ---`,
 					);
 				}
 			}
@@ -97,9 +95,7 @@ ${customContext}
 					}
 				}
 				contextParts.push(
-					`--- Dynamic Context Start ---
-${finalDynamicContext}
---- Dynamic Context End ---`,
+					`--- Dynamic Context Start ---\nFilename: ${currentFile.name}\n${finalDynamicContext}\n--- Dynamic Context End ---`,
 				);
 			} else if (useWholeNote && currentFile) {
 				let fileContent = await app.vault.cachedRead(currentFile);
@@ -109,18 +105,14 @@ ${finalDynamicContext}
 					GENERATION_TARGET_CURSOR_MARKER +
 					fileContent.substring(safeCursorOffset);
 				contextParts.push(
-					`--- Entire Note Context Start ---
-${fileContent}
---- Entire Note Context End ---`,
+					`--- Entire Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Entire Note Context End ---`,
 				);
 			}
 		}
 	}
 
 	if (contextParts.length > 0) {
-		additionalContextForAI = contextParts.join(`
-
-`);
+		additionalContextForAI = contextParts.join("\n\n");
 	}
 
 	const adHocPrompt: TextTransformerPrompt = {
@@ -269,9 +261,7 @@ async function validateAndApplyAIDrivenChanges(
 				const customText = await contextPanel.getCustomContextText();
 				if (customText) {
 					contextParts.push(
-						`--- Custom User-Provided Context Start ---
-${customText}
---- Custom User-Provided Context End ---`,
+						`--- Custom User-Provided Context Start ---\n${customText}\n--- Custom User-Provided Context End ---`,
 					);
 				}
 			}
@@ -299,9 +289,7 @@ ${customText}
 						`${markerStart}${originalText}${markerEnd}`,
 					);
 				contextParts.push(
-					`--- Dynamic Context Start ---
-${dynamicContextText}
---- Dynamic Context End ---`,
+					`--- Dynamic Context Start ---\nFilename: ${file.name}\n${dynamicContextText}\n--- Dynamic Context End ---`,
 				);
 			} else if (useWholeNote && file) {
 				const fileContent = await app.vault.cachedRead(file);
@@ -312,9 +300,7 @@ ${dynamicContextText}
 						`${markerStart}${originalText}${markerEnd}`,
 					);
 				contextParts.push(
-					`--- Whole Note Context Start ---
-${wholeNoteContext}
---- Whole Note Context End ---`,
+					`--- Whole Note Context Start ---\nFilename: ${file.name}\n${wholeNoteContext}\n--- Whole Note Context End ---`,
 				);
 			}
 			if (contextParts.length > 0) additionalContextForAI = contextParts.join("\n\n");
