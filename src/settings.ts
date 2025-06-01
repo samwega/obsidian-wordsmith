@@ -257,7 +257,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		);
 
 		promptManagementWrapper.createEl("div", {
-			text: "Default Prompts",
+			text: "Preset Prompts",
 			cls: "tt-prompt-section-title",
 		});
 
@@ -271,7 +271,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		if (customPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 			promptManagementWrapper.createEl("div", {
-				text: "Custom Prompts",
+				text: "User Prompts",
 				cls: "tt-prompt-section-title",
 			});
 
