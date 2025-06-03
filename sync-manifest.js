@@ -24,9 +24,7 @@ try {
 	manifestJson.description = packageJson.description;
 	manifestJson.authorUrl = "https://github.com/samwega";
 	manifestJson.helpUrl = "https://github.com/samwega/obsidian-wordsmith#readme";
-	if (manifestJson.fundingUrl) {
-		manifestJson.fundingUrl = undefined;
-	}
+	manifestJson.fundingUrl = undefined;
 
 	// Write the updated manifest.json back to the file
 	fs.writeFileSync(manifestJsonPath, JSON.stringify(manifestJson, null, 2), "utf8");
