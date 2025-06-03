@@ -198,12 +198,16 @@ function createBulkResolutionTransaction(
 		effectsArray.push(resolveSuggestionEffect.of({ id: mark.id }));
 		const textChange = createTextChangeSpec(mark, action);
 
-		if (textChange && !changesArray.some((change) => 
-			(textChange.from >= change.from && textChange.from < change.to) ||
-			(textChange.to > change.from && textChange.to <= change.to) ||
-			(change.from >= textChange.from && change.from < textChange.to) ||
-			(change.to > textChange.from && change.to <= textChange.to)
-		)) {
+		if (
+			textChange &&
+			!changesArray.some(
+				(change) =>
+					(textChange.from >= change.from && textChange.from < change.to) ||
+					(textChange.to > change.from && textChange.to <= change.to) ||
+					(change.from >= textChange.from && change.from < textChange.to) ||
+					(change.to > textChange.from && change.to <= textChange.to),
+			)
+		) {
 			changesArray.push(textChange);
 		}
 
