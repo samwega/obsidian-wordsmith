@@ -25,63 +25,51 @@ export async function openAiRequest(
 		return;
 	}
 
+	const customContextLabelStart = "--- Custom User-Provided Context Start ---";
+	const customContextLabelEnd = "--- Custom User-Provided Context End ---";
+
 	let systemMessageContent =
 		"You are an AI assistant embedded in Obsidian helping with text tasks.";
 
 	if (oldText === "" && additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)) {
+		// Generation task with cursor marker and potential custom context
 		systemMessageContent +=
 			" The user wants to generate new text. " +
-			`The provided context (marked as --- Context Start --- and --- Context End ---) may contain a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
+			`The provided context (marked as ${customContextLabelStart} and ${customContextLabelEnd}) may contain a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
 			"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
-			"Focus on fulfilling the user's ad-hoc prompt as well as any instructions contained in the Custom User-Provided Context as the primary instruction. If more context is provided, it should inform the response. Output ONLY the generated text, without any preambles.";
+			`Focus on fulfilling the user's ad-hoc prompt. If '${customContextLabelStart}' and '${customContextLabelEnd}' are present, any instructions contained within them MUST be strictly obeyed and are considered as important as the user's ad-hoc prompt. If more context is provided, it should inform the response. Output ONLY the generated text, without any preambles.`;
 	} else if (oldText === "") {
+		// Generation task without cursor marker, potential custom context handled later
 		systemMessageContent +=
 			" The user wants to generate new text. " +
-			"Focus on fulfilling the user's ad-hoc prompt as the primary instruction. Output ONLY the generated text, without any preambles or explanatory sentences.";
+			`Focus on fulfilling the user\'s ad-hoc prompt as the primary instruction. If \'${customContextLabelStart}\' and \'${customContextLabelEnd}\' are present, any instructions contained within them MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `; // Custom context instructions added if context exists
 	} else {
-		systemMessageContent +=
-			" You will be provided with context (marked as --- Context Start --- and --- Context End ---). " +
-			"This context is for your awareness only. Do not comment on or alter the context itself. " +
-			"User's transformation instruction: " +
-			prompt.text +
-			". Apply this instruction ONLY to the user-provided text that follows.";
+		// Transformation task
+		systemMessageContent += " You are provided with text to transform. ";
+		if (additionalContextForAI) {
+			systemMessageContent += `You will also be given 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}). Any instructions, rules, or requests found within this Custom User-Provided Context MUST be strictly obeyed and are as important as the main 'User\'s transformation instruction'. Both sets of instructions should be applied ONLY to the user-provided 'Text to Transform'. Do not comment on or alter the Custom User-Provided Context itself; it is for your awareness and to provide supplementary directives. `;
+		} else {
+			systemMessageContent += `Your task is to apply the \'User\\\'s transformation instruction\' ONLY to the user-provided text. `;
+		}
 	}
 
+	// Append the actual custom context if it exists
 	if (additionalContextForAI) {
-		systemMessageContent += `
-
---- Context Start ---
-${additionalContextForAI}
---- Context End ---`;
+		systemMessageContent += `\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
 	}
 
-	// For non-generation tasks, reiterate the prompt after context if context exists.
-	if (oldText !== "" && additionalContextForAI) {
-		systemMessageContent += `
-
-User's transformation instruction: ${prompt.text}
-
-Apply this instruction ONLY to the user-provided text that follows.`;
-	} else if (oldText !== "" && !additionalContextForAI) {
-		systemMessageContent += `
-
-User's transformation instruction: ${prompt.text}
-
-Apply this instruction ONLY to the user-provided text that follows.`;
-	} else if (oldText === "" && !additionalContextForAI) {
-		// For generation without context, the primary instruction is already in the system message.
-		systemMessageContent += `
-
-User's ad-hoc prompt: ${prompt.text}
-
-Generate text to fulfill this prompt. Output ONLY the generated text.`;
-	} else if (oldText === "" && additionalContextForAI) {
-		// For generation with context, the primary instruction is already in the system message.
-		systemMessageContent += `
-
-User's ad-hoc prompt: ${prompt.text}
-
-Generate text to fulfill this prompt, considering the provided context and the ${GENERATION_TARGET_CURSOR_MARKER} marker if present. Output ONLY the generated text.`;
+	// Append the user's ad-hoc prompt or transformation instruction
+	if (oldText === "") {
+		// Generation tasks
+		if (additionalContextForAI) {
+			// additionalContextForAI is present for generation
+			systemMessageContent += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt, considering the provided context and the ${GENERATION_TARGET_CURSOR_MARKER} marker if present. Output ONLY the generated text.`;
+		} else {
+			systemMessageContent += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt. Output ONLY the generated text.`;
+		}
+	} else {
+		// Transformation tasks
+		systemMessageContent += `\n\nUser's transformation instruction: ${prompt.text}\n\nApply this instruction ONLY to the user-provided text that follows.`;
 	}
 
 	const messages = [

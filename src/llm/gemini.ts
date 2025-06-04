@@ -33,48 +33,45 @@ export async function geminiRequest(
 	}
 
 	let fullPrompt = "";
+	const customContextLabelStart = "--- Custom User-Provided Context Start ---";
+	const customContextLabelEnd = "--- Custom User-Provided Context End ---";
 
 	if (isGenerationTask) {
 		fullPrompt =
-			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt.";
-		if (additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)) {
-			fullPrompt +=
-				` The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
-				"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
-				"Focus on fulfilling the user's ad-hoc prompt as well as any instructions contained in the Custom User-Provided Context as the primary instruction. If more context is provided, it should inform the response. Output ONLY the generated text, without any preambles or explanatory sentences.";
+			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt. Your primary instruction is to fulfill the user's ad-hoc prompt. ";
+
+		// Instruction regarding custom context (if it exists)
+		if (additionalContextForAI) {
+			fullPrompt += `You will also be given 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}). Any instructions, rules, or requests found within this Custom User-Provided Context MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `;
+			if (additionalContextForAI.includes(GENERATION_TARGET_CURSOR_MARKER)) {
+				fullPrompt += `The Custom User-Provided Context also contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted. `;
+			}
+		}
+
+		fullPrompt +=
+			"Output ONLY the generated text, without any preambles or explanatory sentences. "; // General output rule
+
+		// Append the actual custom context if it exists
+		if (additionalContextForAI) {
+			fullPrompt += `\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
+		}
+
+		// Append the user's ad-hoc prompt
+		fullPrompt += `\n\nUser\'s ad-hoc prompt: ${prompt.text}\n\nGenerated text:`;
+	} else {
+		// Transformation logic
+		fullPrompt = "You are an AI assistant. "; // Base role
+
+		if (additionalContextForAI) {
+			fullPrompt += `You will be provided with 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}) and a 'Text to Transform'. Any instructions contained in the Custom User-Provided Context MUST be strictly obeyed and are as important as the main 'User's instruction'. Both sets of instructions should be applied ONLY to the 'Text to Transform'. Do not comment on or alter the Custom User-Provided Context itself; it is for your awareness and to provide supplementary directives.\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
 		} else {
 			fullPrompt +=
-				" Focus on fulfilling the user's ad-hoc prompt as the primary instruction. Output ONLY the generated text, without any preambles or explanatory sentences.";
+				"You will be provided with a 'Text to Transform'. Your task is to apply the 'User's instruction' ONLY to the 'Text to Transform'.";
 		}
-		if (additionalContextForAI) {
-			fullPrompt += `
 
---- Context Start ---
-${additionalContextForAI}
---- Context End ---`;
-		}
-		fullPrompt += `
-
-User's ad-hoc prompt: ${prompt.text}
-
-Generated text:`; // Guide the AI to start generation
-	} else {
-		// Existing transformation logic
-		if (additionalContextForAI) {
-			fullPrompt = `You will be provided with context (marked as --- Context Start --- and --- Context End ---) and a text to transform (marked as --- Text to Transform Start --- and --- Text to Transform End ---).
-Your task is to apply the specific instruction (e.g., summarize, improve, fix grammar) ONLY to the 'Text to Transform'. Do not comment on or alter the context itself. Any instructions contained in the Custom User-Provided Context must also be obeyed. The context is for your awareness only.
-
---- Context Start ---
-${additionalContextForAI}
---- Context End ---`;
-		}
-		fullPrompt += `
-
-User's instruction: ${prompt.text}
-
---- Text to Transform Start ---
-${oldText}
---- Text to Transform End ---`;
+		fullPrompt += `\n\nUser\'s instruction: ${prompt.text}`;
+		fullPrompt += `\n\n--- Text to Transform Start ---\n${oldText}\n--- Text to Transform End ---`;
+		fullPrompt += "\n\nTransformed text:";
 	}
 
 	let response: RequestUrlResponse;
@@ -137,6 +134,12 @@ ${oldText}
 	let newText = candidates?.[0]?.content?.parts?.[0]?.text || "";
 	if (newText.startsWith("Generated text:")) {
 		newText = newText.substring("Generated text:".length).trimStart();
+	}
+	if (newText.startsWith("Transformed text:")) {
+		newText = newText.substring("Transformed text:".length).trimStart();
+	}
+	if (newText.startsWith("Transformed text:")) {
+		newText = newText.substring("Transformed text:".length).trimStart();
 	}
 
 	const modelSpec = MODEL_SPECS[settings.model];
