@@ -1,10 +1,5 @@
 // src/lib/editor/suggestion-handler.ts
-import {
-	ChangeSet,
-	EditorSelection,
-	StateEffect,
-	TransactionSpec,
-} from "@codemirror/state";
+import { ChangeSet, EditorSelection, StateEffect, TransactionSpec } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Editor, Notice, TFile } from "obsidian";
 
@@ -46,9 +41,7 @@ function createTextChangeSpec(
 	if (action === "accept") {
 		if (mark.type === "added") {
 			const textToInsert =
-				mark.isNewlineChange && mark.newlineChar
-					? mark.newlineChar
-					: (mark.ghostText ?? "");
+				mark.isNewlineChange && mark.newlineChar ? mark.newlineChar : (mark.ghostText ?? "");
 			return { from: mark.from, to: mark.from, insert: textToInsert };
 		}
 		if (mark.type === "removed") {
@@ -114,10 +107,7 @@ function focusSuggestion(cm: EditorView, targetMark: SuggestionMark): void {
 	});
 }
 
-export function focusNextSuggestionCM6(
-	_plugin: TextTransformer,
-	editor: Editor,
-): void {
+export function focusNextSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		showNotice("Modern editor version required.");
@@ -135,10 +125,7 @@ export function focusNextSuggestionCM6(
 	}
 }
 
-export function focusPreviousSuggestionCM6(
-	_plugin: TextTransformer,
-	editor: Editor,
-): void {
+export function focusPreviousSuggestionCM6(_plugin: TextTransformer, editor: Editor): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		showNotice("Modern editor version required.");
@@ -156,15 +143,11 @@ export function focusPreviousSuggestionCM6(
 	}
 }
 
-function findNextSuggestionMark(
-	cm: EditorView,
-	fromPos?: number,
-): SuggestionMark | null {
+function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMark | null {
 	const marks = cm.state.field(suggestionStateField, false);
 	if (!marks || marks.length === 0) return null;
 
-	const searchStartPos =
-		fromPos !== undefined ? fromPos : cm.state.selection.main.head;
+	const searchStartPos = fromPos !== undefined ? fromPos : cm.state.selection.main.head;
 	const sortedMarks = [...marks].sort((a, b) => a.from - b.from);
 
 	// Find the first mark at or after searchStartPos
@@ -187,17 +170,14 @@ function createResolutionTransaction(
 		// If a change is made (typically on "accept")
 		if (targetMark.type === "added") {
 			// Cursor goes after the inserted text
-			newCursorPosAfterResolve =
-				targetMark.from + (textChangeSpec.insert?.length ?? 0);
+			newCursorPosAfterResolve = targetMark.from + (textChangeSpec.insert?.length ?? 0);
 		} else if (targetMark.type === "removed") {
 			// Cursor stays at the beginning of the removed range
 			newCursorPosAfterResolve = targetMark.from;
 		}
 	} // If "rejecting", or "accepting" something that results in no change, cursor stays at targetMark.from.
 
-	const effects: StateEffect<unknown>[] = [
-		resolveSuggestionEffect.of({ id: targetMark.id }),
-	];
+	const effects: StateEffect<unknown>[] = [resolveSuggestionEffect.of({ id: targetMark.id })];
 
 	// shouldForceResolve seems to be for when it's the last suggestion or explicitly navigating.
 	// The scroll effect uses the calculated newCursorPosAfterResolve.
@@ -285,28 +265,19 @@ function handleResolutionFeedback(
 	action: SuggestionAction,
 	resolvedMarkFrom: number, // Original 'from' of the resolved mark/set of marks
 ): void {
-	const marksAfterResolution =
-		cm.state.field(suggestionStateField, false) || [];
+	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
 	if (marksAfterResolution.length === 0) {
 		showNotice(`Last suggestion ${action}ed. All suggestions resolved!`);
 	} else {
-		showNotice(
-			`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`,
-		);
+		showNotice(`Suggestion ${action}ed. ${marksAfterResolution.length} remaining.`);
 		// Try to find the next suggestion at or after where the last one was.
-		const nextSuggestionToFocus = findNextSuggestionMark(
-			cm,
-			resolvedMarkFrom,
-		);
+		const nextSuggestionToFocus = findNextSuggestionMark(cm, resolvedMarkFrom);
 
 		if (nextSuggestionToFocus) {
 			const mainSelection = cm.state.selection.main;
 			// Only refocus if cursor isn't already there, or if there are other marks,
 			// to avoid redundant scrolling if only one mark was resolved and it was the last.
-			if (
-				mainSelection.head !== nextSuggestionToFocus.from ||
-				marksAfterResolution.length > 0
-			) {
+			if (mainSelection.head !== nextSuggestionToFocus.from || marksAfterResolution.length > 0) {
 				focusSuggestion(cm, nextSuggestionToFocus);
 			}
 		}
@@ -341,9 +312,7 @@ export function resolveNextSuggestionCM6(
 	if (!targetMark) {
 		// This case should ideally not be hit if allMarksInState.length > 0 due to wrap-around in findNextSuggestionMark.
 		// However, as a safeguard:
-		showNotice(
-			"Could not find a suggestion to resolve. Attempting to use the first available.",
-		);
+		showNotice("Could not find a suggestion to resolve. Attempting to use the first available.");
 		targetMark = allMarksInState[0]; // Default to the very first mark
 		if (!targetMark) {
 			// Should be impossible if allMarksInState is not empty
@@ -354,8 +323,7 @@ export function resolveNextSuggestionCM6(
 	}
 
 	// effectivelyOnTarget: cursor is exactly at the start of the target suggestion.
-	const effectivelyOnTarget =
-		currentSelection.empty && currentSelection.head === targetMark.from;
+	const effectivelyOnTarget = currentSelection.empty && currentSelection.head === targetMark.from;
 
 	// If not already on target and not forcing (i.e., multiple suggestions exist and we just found the next one),
 	// first focus it. The user then presses again to resolve.
@@ -368,11 +336,7 @@ export function resolveNextSuggestionCM6(
 	// If we are here, either it's the last suggestion, or we were already on target. Resolve it.
 	const resolvedMarkOriginalFrom = targetMark.from;
 
-	const transactionSpec = createResolutionTransaction(
-		targetMark,
-		action,
-		shouldForceResolve,
-	);
+	const transactionSpec = createResolutionTransaction(targetMark, action, shouldForceResolve);
 	cm.dispatch(cm.state.update(transactionSpec));
 	handleResolutionFeedback(cm, action, resolvedMarkOriginalFrom);
 }
@@ -485,8 +449,7 @@ export function resolveSuggestionsInSelectionCM6(
 		return;
 	}
 
-	const { operationRange, marksInScope, isOperatingOnIdentifiedParagraph } =
-		scopeResult;
+	const { operationRange, marksInScope, isOperatingOnIdentifiedParagraph } = scopeResult;
 
 	// This check is technically redundant if handleParagraphNavigationAndGetScope ensures marksInScope > 0
 	// when returning a non-null result, but it's a good safeguard.
@@ -514,21 +477,14 @@ export function resolveSuggestionsInSelectionCM6(
 		// If accepting and there were actual changes:
 		// Map the 'from' position of the last text change through the ChangeSet.
 		// `assoc = 1` biases the mapped position to be *after* an insertion at that point.
-		const mappedBasePos = changeSet.mapPos(
-			components.lastChangeOriginalFrom,
-			1,
-		);
+		const mappedBasePos = changeSet.mapPos(components.lastChangeOriginalFrom, 1);
 		// Add the length of the text inserted by that last change.
-		finalMappedCursorPos =
-			mappedBasePos + components.lastChangeInsertionLength;
+		finalMappedCursorPos = mappedBasePos + components.lastChangeInsertionLength;
 	} else if (components.fallbackOriginalCursorPos !== null) {
 		// For 'reject' action, or 'accept' with no effective text changes:
 		// Map the fallback position (e.g., start of the first mark in scope).
 		// If rejecting, `components.changes` is empty, so `changeSet.mapPos` is an identity map.
-		finalMappedCursorPos = changeSet.mapPos(
-			components.fallbackOriginalCursorPos,
-			1,
-		);
+		finalMappedCursorPos = changeSet.mapPos(components.fallbackOriginalCursorPos, 1);
 	} else {
 		// Absolute fallback: Should not be reached if marksInScope is non-empty.
 		// Map the current cursor position (though it might not be ideal).
@@ -538,16 +494,10 @@ export function resolveSuggestionsInSelectionCM6(
 	// Determine the length of the document *after* all changes are applied.
 	const newDocLength = changeSet.newLength;
 	// Strictly clamp the final cursor position to be within the new document bounds.
-	finalMappedCursorPos = Math.max(
-		0,
-		Math.min(finalMappedCursorPos, newDocLength),
-	);
+	finalMappedCursorPos = Math.max(0, Math.min(finalMappedCursorPos, newDocLength));
 
 	const transactionSpec: TransactionSpec = {
-		effects: [
-			...components.effects,
-			createScrollEffect(finalMappedCursorPos),
-		],
+		effects: [...components.effects, createScrollEffect(finalMappedCursorPos)],
 		selection: EditorSelection.cursor(finalMappedCursorPos),
 	};
 
@@ -560,8 +510,7 @@ export function resolveSuggestionsInSelectionCM6(
 	const noticeMessage = `${marksInScope.length} suggestion(s) in ${isOperatingOnIdentifiedParagraph ? "paragraph" : "selection"} ${action}ed.`;
 	showNotice(noticeMessage);
 
-	const remainingMarksAfterOp =
-		cm.state.field(suggestionStateField, false) || [];
+	const remainingMarksAfterOp = cm.state.field(suggestionStateField, false) || [];
 	if (remainingMarksAfterOp.length === 0 && marksInScope.length > 0) {
 		showNotice("All suggestions resolved!", 2000);
 	} else if (remainingMarksAfterOp.length > 0) {
