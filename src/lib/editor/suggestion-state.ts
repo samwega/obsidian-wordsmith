@@ -1,4 +1,4 @@
-// src/suggestion-state.ts
+// src/lib/editor/suggestion-state.ts
 import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state";
 import {
 	Decoration,
@@ -8,7 +8,7 @@ import {
 	ViewUpdate,
 	WidgetType,
 } from "@codemirror/view";
-import { NEWLINE_ADD_SYMBOL } from "./textTransformer";
+import { NEWLINE_ADD_SYMBOL } from "../constants";
 
 export interface SuggestionMark {
 	id: string;
@@ -34,45 +34,25 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 		if (tr.changes.length > 0) {
 			newMarks = newMarks
 				.map((mark) => {
-					// Map 'from' position
-					// 'from' is the start of a mark. If an insertion occurs exactly at 'from',
-					// the mark's start should move to be *after* the inserted text.
-					// assoc = 1 achieves this by associating 'from' with the mark's own content
-					// (or the character that was originally at 'from'), causing it to move
-					// with that content past any new text inserted immediately before it at 'from'.
 					const from = tr.changes.mapPos(mark.from, 1, MapMode.TrackDel);
-
 					let to = mark.to;
 
 					if (mark.type === "removed") {
-						// Map 'to' position for "removed" marks.
-						// 'to' is the end of a "removed" span.
-						// If an insertion occurs exactly at 'to', the mark should NOT expand to include it;
-						// the new text should appear *after* the mark. assoc = -1 achieves this for 'to',
-						// by associating 'to' with the content *inside* the mark, just before the original 'to'.
-						// If an insertion occurs *inside* the mark (between 'from' and 'to'),
-						// 'to' (mapped with assoc = -1 when 'from' is mapped with assoc = 1)
-						// will shift to include this new text, effectively expanding the mark,
-						// which is typically desired for "removed" spans.
 						const toAssoc = -1;
 						const mappedTo = tr.changes.mapPos(mark.to, toAssoc, MapMode.TrackDel);
-						if (mappedTo === null) return null; // Entire range including 'to' was deleted in a way that it can't be mapped.
+						if (mappedTo === null) return null;
 						to = mappedTo;
 					} else if (mark.type === "added") {
-						// For 'added' marks, 'to' is always the same as 'from'.
-						// 'from' (and thus 'to') is already mapped above.
 						if (from !== null) {
 							to = from;
 						} else {
-							// If 'from' became null (e.g., deletion across the mark's point), remove the mark.
 							return null;
 						}
 					}
 
 					if (from === null) {
-						return null; // Mark's anchor point 'from' was deleted.
+						return null;
 					}
-					// For "removed" marks, ensure from < to after mapping. If not, mark is invalid.
 					if (mark.type === "removed" && from >= to) {
 						return null;
 					}
@@ -110,7 +90,7 @@ class GhostTextWidget extends WidgetType {
 		const span = document.createElement("span");
 		span.textContent = this.displayText;
 		span.className = this.className;
-		span.setAttribute("spellcheck", "false"); // important for visual consistency
+		span.setAttribute("spellcheck", "false");
 		return span;
 	}
 
@@ -119,8 +99,6 @@ class GhostTextWidget extends WidgetType {
 	}
 
 	override ignoreEvent(): boolean {
-		// if true, the editor will ignore events targetting this widget.
-		// if false, events will be handled by the editor.
 		return false;
 	}
 }
@@ -129,12 +107,12 @@ class SuggestionViewPluginClass {
 	decorations: DecorationSet;
 
 	constructor(view: EditorView) {
-		this.decorations = Decoration.none; // Initialize safely
+		this.decorations = Decoration.none;
 		try {
 			this.decorations = this.computeDecorations(view);
 		} catch (e) {
 			console.error("WordSmith ViewPlugin: Error in constructor computeDecorations:", e);
-			this.decorations = Decoration.none; // Fallback
+			this.decorations = Decoration.none;
 		}
 	}
 
@@ -170,7 +148,7 @@ class SuggestionViewPluginClass {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
 				console.error("WordSmith ViewPlugin: Error in update computeDecorations:", e);
-				this.decorations = Decoration.none; // Fallback
+				this.decorations = Decoration.none;
 			}
 		}
 	}
@@ -189,7 +167,6 @@ class SuggestionViewPluginClass {
 		}
 
 		const activeDecorations: Range<Decoration>[] = [];
-
 		let isInsideConsecutiveAddedBlockAtCursor = false;
 		let consecutiveAddedBlockFromPos = -1;
 
@@ -206,22 +183,14 @@ class SuggestionViewPluginClass {
 						isInsideConsecutiveAddedBlockAtCursor &&
 						mark.from === consecutiveAddedBlockFromPos
 					) {
-						// Cursor is at this 'from' position, but it's not the first 'added' mark
-						// in the sequence at this 'from' position. So, it's not 'active'.
 						isActive = false;
 					} else {
-						// Cursor is at this 'from' position, and it's either:
-						// 1. The first 'added' mark encountered at this 'from' position.
-						// 2. The 'from' position is different from the last sequence.
 						isActive = true;
-						isInsideConsecutiveAddedBlockAtCursor = true; // Start/continue a block at cursor
+						isInsideConsecutiveAddedBlockAtCursor = true;
 						consecutiveAddedBlockFromPos = mark.from;
 					}
 				} else {
-					// Cursor is not at this mark's 'from' position.
 					isActive = false;
-					// If this mark's 'from' position is different from the ongoing block,
-					// or if there was no block, reset the tracking.
 					if (
 						mark.from !== consecutiveAddedBlockFromPos ||
 						!isInsideConsecutiveAddedBlockAtCursor
@@ -254,8 +223,8 @@ class SuggestionViewPluginClass {
 				try {
 					const widgetDecoration = Decoration.widget({
 						widget: new GhostTextWidget(displayText, effectiveClassName),
-						side: 1, // Positive side for insertions
-						block: false, // Ensure all "added" suggestions are inline
+						side: 1,
+						block: false,
 					}).range(mark.from);
 					activeDecorations.push(widgetDecoration);
 				} catch (e) {
@@ -267,8 +236,6 @@ class SuggestionViewPluginClass {
 			} else if (mark.type === "removed") {
 				baseClassName = "text-transformer-removed";
 				isActive = isSelectionEmpty && cursorPos === mark.from;
-
-				// Reset tracking for consecutive 'added' blocks if we encounter a 'removed' mark
 				isInsideConsecutiveAddedBlockAtCursor = false;
 				consecutiveAddedBlockFromPos = -1;
 
@@ -307,25 +274,19 @@ class SuggestionViewPluginClass {
 				}
 			} else {
 				console.warn("WordSmith ViewPlugin: Mark with unknown type skipped:", mark);
-				// Reset tracking for consecutive 'added' blocks for unknown types as well
 				isInsideConsecutiveAddedBlockAtCursor = false;
 				consecutiveAddedBlockFromPos = -1;
 			}
 		}
 
 		activeDecorations.sort((a, b) => a.from - b.from);
-
-		const decoSet = Decoration.set(activeDecorations, true);
-		return decoSet;
+		return Decoration.set(activeDecorations, true);
 	}
 }
 
 const suggestionViewPlugin = ViewPlugin.fromClass(SuggestionViewPluginClass, {
 	decorations: (pluginInstance: SuggestionViewPluginClass): DecorationSet => {
-		if (pluginInstance?.decorations) {
-			return pluginInstance.decorations;
-		}
-		return Decoration.none;
+		return pluginInstance?.decorations || Decoration.none;
 	},
 });
 

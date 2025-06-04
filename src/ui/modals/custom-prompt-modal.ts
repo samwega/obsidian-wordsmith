@@ -1,5 +1,6 @@
+// src/ui/modals/custom-prompt-modal.ts
 import { App, ButtonComponent, Modal, Notice, TextAreaComponent, ToggleComponent } from "obsidian";
-import TextTransformer from "./main";
+import type TextTransformer from "../../main";
 
 export class CustomPromptModal extends Modal {
 	private promptText = "";
@@ -34,6 +35,7 @@ export class CustomPromptModal extends Modal {
 
 		textArea.inputEl.classList.add("custom-prompt-modal-textarea");
 
+		// Delay focus to ensure modal is fully rendered
 		setTimeout(() => {
 			textArea.inputEl.focus();
 		}, 50);
@@ -50,12 +52,7 @@ export class CustomPromptModal extends Modal {
 		});
 
 		const toggleContainer = buttonContainer.createDiv("toggle-container");
-
-		toggleContainer.createEl("span", {
-			text: "Save prompt to clipboard",
-			cls: "toggle-label",
-		});
-
+		toggleContainer.createEl("span", { text: "Save prompt to clipboard", cls: "toggle-label" });
 		new ToggleComponent(toggleContainer)
 			.setValue(this.plugin.settings.saveToClipboard)
 			.onChange(async (value) => {
@@ -74,7 +71,10 @@ export class CustomPromptModal extends Modal {
 	private submitForm(): void {
 		if (this.promptText.trim()) {
 			if (this.plugin.settings.saveToClipboard) {
-				navigator.clipboard.writeText(this.promptText);
+				navigator.clipboard.writeText(this.promptText).catch((err) => {
+					console.error("Failed to copy prompt to clipboard:", err);
+					new Notice("Failed to copy prompt to clipboard.");
+				});
 			}
 			this.onSubmit(this.promptText);
 			this.close();

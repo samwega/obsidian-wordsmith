@@ -1,8 +1,19 @@
+// src/lib/llm/openai.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { MODEL_SPECS } from "src/settings-data";
-import { logError } from "src/utils";
-import { TextTransformerPrompt, TextTransformerSettings } from "../settings-data";
+import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
+import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
+import { logError } from "../lib/utils";
 
+/**
+ * Sends a request to the OpenAI API.
+ * @param settings The plugin settings.
+ * @param oldText The original text to be transformed. Empty for generation tasks.
+ * @param prompt The prompt detailing the transformation or generation task.
+ * @param additionalContextForAI Optional additional context to provide to the AI.
+ * @returns A promise that resolves to an object containing the new text,
+ *          whether the output might be overlength, and the estimated cost,
+ *          or undefined if an error occurs.
+ */
 export async function openAiRequest(
 	settings: TextTransformerSettings,
 	oldText: string, // This will be an empty string for generation tasks
@@ -17,13 +28,10 @@ export async function openAiRequest(
 	let systemMessageContent =
 		"You are an AI assistant embedded in Obsidian helping with text tasks.";
 
-	if (
-		oldText === "" &&
-		additionalContextForAI?.includes("<<<GENERATION_TARGET_CURSOR_POSITION>>>")
-	) {
+	if (oldText === "" && additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)) {
 		systemMessageContent +=
 			" The user wants to generate new text. " +
-			"The provided context (marked as --- Context Start --- and --- Context End ---) may contain a marker '<<<GENERATION_TARGET_CURSOR_POSITION>>>'. " +
+			`The provided context (marked as --- Context Start --- and --- Context End ---) may contain a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
 			"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
 			"Focus on fulfilling the user's ad-hoc prompt as the primary instruction, using the context for awareness. Output ONLY the generated text, without any preambles or explanatory sentences.";
 	} else if (oldText === "") {
@@ -73,12 +81,12 @@ Generate text to fulfill this prompt. Output ONLY the generated text.`;
 
 User's ad-hoc prompt: ${prompt.text}
 
-Generate text to fulfill this prompt, considering the provided context and the <<<GENERATION_TARGET_CURSOR_POSITION>>> marker if present. Output ONLY the generated text.`;
+Generate text to fulfill this prompt, considering the provided context and the ${GENERATION_TARGET_CURSOR_MARKER} marker if present. Output ONLY the generated text.`;
 	}
 
 	const messages = [
 		{ role: "system", content: systemMessageContent },
-		{ role: "user", content: oldText === "" ? prompt.text : oldText }, // If oldText is empty, user message is the ad-hoc prompt itself for clarity to AI, though system prompt is primary driver.
+		{ role: "user", content: oldText === "" ? prompt.text : oldText },
 	];
 
 	let response: RequestUrlResponse;
@@ -91,7 +99,6 @@ Generate text to fulfill this prompt, considering the provided context and the <
 			body: JSON.stringify({
 				model: settings.model,
 				messages: messages,
-				// Pass through relevant parameters from the prompt object if they exist
 				temperature: prompt.temperature ?? settings.temperature,
 				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 				frequency_penalty: prompt.frequency_penalty ?? settings.frequency_penalty,

@@ -1,25 +1,151 @@
-// src/textTransformer.ts
+// src/lib/core/text-transformer.ts
 import { EditorSelection } from "@codemirror/state";
+import type { EditorView } from "@codemirror/view";
 import { diffWordsWithSpace } from "diff";
 import { Editor, Notice, TFile } from "obsidian";
 
-import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import TextTransformer from "./main";
-import { geminiRequest } from "./providers/gemini";
-import { openAiRequest } from "./providers/openai";
-import { TextTransformerPrompt } from "./settings-data";
+import { geminiRequest } from "../../llm/gemini";
+import { openAiRequest } from "../../llm/openai";
+import type TextTransformer from "../../main";
+import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context-control-panel";
+import type { TextTransformerPrompt } from "../settings-data";
 
+import {
+	GENERATION_TARGET_CURSOR_MARKER,
+	USER_SELECTED_TEXT_END_MARKER,
+	USER_SELECTED_TEXT_START_MARKER,
+} from "../constants";
 import {
 	SuggestionMark,
 	clearAllSuggestionsEffect,
 	generateSuggestionId,
 	setSuggestionsEffect,
 	suggestionStateField,
-} from "./suggestion-state";
-import { getCmEditorView } from "./utils";
+} from "../editor/suggestion-state";
+import { getCmEditorView } from "../utils";
 
-export const NEWLINE_ADD_SYMBOL = "↵"; // Used by GhostTextWidget for visual representation
-const GENERATION_TARGET_CURSOR_MARKER = "<<<GENERATION_TARGET_CURSOR_POSITION>>>";
+/**
+ * Gathers context from the ContextControlPanel settings and the current document state.
+ * @param plugin The TextTransformer plugin instance.
+ * @param cmView The CodeMirror EditorView instance.
+ * @param taskType Specifies if the task is 'generation' or 'transformation', affecting marker usage.
+ * @param scopeDetails Optional details about the current selection or paragraph for transformation tasks.
+ * @returns A promise that resolves to a string containing the formatted context for the AI.
+ */
+async function gatherContextForAI(
+	plugin: TextTransformer,
+	cmView: EditorView,
+	taskType: "generation" | "transformation",
+	scopeDetails?: { range: { from: number; to: number }; originalText: string },
+): Promise<string> {
+	const { app } = plugin;
+	const contextParts: string[] = [];
+	const currentFile = app.workspace.getActiveFile();
+
+	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+	if (contextPanelLeaves.length > 0) {
+		const view = contextPanelLeaves[0].view;
+		// Type assertion to ContextControlPanel after checking instance type
+		if (view instanceof ContextControlPanel) {
+			const contextPanel = view; // Now correctly typed
+
+			// 1. Custom Context
+			if (contextPanel.getCustomContextState()) {
+				const customContext = await contextPanel.getCustomContextText();
+				if (customContext) {
+					contextParts.push(
+						`--- Custom User-Provided Context Start ---\n${customContext}\n--- Custom User-Provided Context End ---`,
+					);
+				}
+			}
+
+			const useDynamic = contextPanel.getDynamicContextState();
+			const useWholeNote = contextPanel.getWholeNoteContextState();
+			const doc = cmView.state.doc;
+
+			// 2. Dynamic Context or Whole Note Context
+			if (useDynamic && currentFile) {
+				const linesToInclude = plugin.settings.dynamicContextLineCount;
+				const cursorOffset = cmView.state.selection.main.head;
+
+				let startLineNum: number;
+				let endLineNum: number;
+				let textToMark = "";
+
+				if (taskType === "generation") {
+					const cursorLineNum = doc.lineAt(cursorOffset).number;
+					startLineNum = Math.max(1, cursorLineNum - linesToInclude);
+					endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
+				} else if (scopeDetails) {
+					const selectionStartLine = doc.lineAt(scopeDetails.range.from).number;
+					const selectionEndLine = doc.lineAt(scopeDetails.range.to).number;
+					startLineNum = Math.max(1, selectionStartLine - linesToInclude);
+					endLineNum = Math.min(doc.lines, selectionEndLine + linesToInclude);
+					textToMark = scopeDetails.originalText;
+				} else {
+					startLineNum = 1;
+					endLineNum = doc.lines;
+				}
+
+				let dynamicContextAccumulator = "";
+				for (let i = startLineNum; i <= endLineNum; i++) {
+					const line = doc.line(i);
+					let lineText = line.text;
+
+					if (
+						taskType === "generation" &&
+						cursorOffset >= line.from &&
+						cursorOffset <= line.to
+					) {
+						const charPosInLine = cursorOffset - line.from;
+						lineText =
+							lineText.substring(0, charPosInLine) +
+							GENERATION_TARGET_CURSOR_MARKER +
+							lineText.substring(charPosInLine);
+					}
+					dynamicContextAccumulator += lineText;
+					if (i < endLineNum) {
+						dynamicContextAccumulator += "\n";
+					}
+				}
+
+				if (
+					taskType === "transformation" &&
+					textToMark &&
+					dynamicContextAccumulator.includes(textToMark)
+				) {
+					dynamicContextAccumulator = dynamicContextAccumulator.replace(
+						textToMark,
+						`${USER_SELECTED_TEXT_START_MARKER}${textToMark}${USER_SELECTED_TEXT_END_MARKER}`,
+					);
+				}
+
+				contextParts.push(
+					`--- Dynamic Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Dynamic Context End ---`,
+				);
+			} else if (useWholeNote && currentFile) {
+				let fileContent = await app.vault.cachedRead(currentFile);
+				if (taskType === "generation") {
+					const cursorOffset = cmView.state.selection.main.head;
+					const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
+					fileContent =
+						fileContent.substring(0, safeCursorOffset) +
+						GENERATION_TARGET_CURSOR_MARKER +
+						fileContent.substring(safeCursorOffset);
+				} else if (scopeDetails && fileContent.includes(scopeDetails.originalText)) {
+					fileContent = fileContent.replace(
+						scopeDetails.originalText,
+						`${USER_SELECTED_TEXT_START_MARKER}${scopeDetails.originalText}${USER_SELECTED_TEXT_END_MARKER}`,
+					);
+				}
+				contextParts.push(
+					`--- Entire Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Entire Note Context End ---`,
+				);
+			}
+		}
+	}
+	return contextParts.join("\n\n");
+}
 
 export async function generateTextAndApplyAsSuggestionCM6(
 	plugin: TextTransformer,
@@ -44,76 +170,10 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		return;
 	}
 
-	const { app, settings } = plugin;
-	let additionalContextForAI = "";
-	const contextParts: string[] = [];
+	const { settings } = plugin;
 	const cursorOffset = cm.state.selection.main.head;
 
-	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
-	if (contextPanelLeaves.length > 0) {
-		const view = contextPanelLeaves[0].view;
-		if (view instanceof ContextControlPanel) {
-			const contextPanel = view as ContextControlPanel;
-
-			if (contextPanel.getCustomContextState()) {
-				const customContext = await contextPanel.getCustomContextText();
-				if (customContext) {
-					contextParts.push(
-						`--- Custom Context Start ---\n${customContext}\n--- Custom Context End ---`,
-					);
-				}
-			}
-
-			const useDynamic = contextPanel.getDynamicContextState();
-			const useWholeNote = contextPanel.getWholeNoteContextState();
-
-			if (useDynamic) {
-				const linesToInclude = plugin.settings.dynamicContextLineCount;
-				const doc = cm.state.doc;
-				const cursorLineNum = doc.lineAt(cursorOffset).number;
-				const startLineNum = Math.max(1, cursorLineNum - linesToInclude);
-				const endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
-
-				let finalDynamicContext = "";
-				for (let i = startLineNum; i <= endLineNum; i++) {
-					const line = doc.line(i);
-					const lineText = line.text;
-					const lineStartOffset = line.from;
-					const lineEndOffset = line.to;
-
-					if (cursorOffset >= lineStartOffset && cursorOffset <= lineEndOffset) {
-						const charPosInLine = cursorOffset - lineStartOffset;
-						finalDynamicContext +=
-							lineText.substring(0, charPosInLine) +
-							GENERATION_TARGET_CURSOR_MARKER +
-							lineText.substring(charPosInLine);
-					} else {
-						finalDynamicContext += lineText;
-					}
-					if (i < endLineNum) {
-						finalDynamicContext += "\n";
-					}
-				}
-				contextParts.push(
-					`--- Dynamic Context Start ---\nFilename: ${currentFile.name}\n${finalDynamicContext}\n--- Dynamic Context End ---`,
-				);
-			} else if (useWholeNote && currentFile) {
-				let fileContent = await app.vault.cachedRead(currentFile);
-				const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
-				fileContent =
-					fileContent.substring(0, safeCursorOffset) +
-					GENERATION_TARGET_CURSOR_MARKER +
-					fileContent.substring(safeCursorOffset);
-				contextParts.push(
-					`--- Entire Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Entire Note Context End ---`,
-				);
-			}
-		}
-	}
-
-	if (contextParts.length > 0) {
-		additionalContextForAI = contextParts.join("\n\n");
-	}
+	const additionalContextForAI = await gatherContextForAI(plugin, cm, "generation");
 
 	const adHocPrompt: TextTransformerPrompt = {
 		id: "ad-hoc-generation",
@@ -121,13 +181,13 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		text: userPromptText,
 		isDefault: false,
 		enabled: true,
-		showInPromptPalette: false,
+		// showInPromptPalette: false, // Not strictly needed to specify false if undefined means false
 	};
 
 	const notice = new Notice("🤖 Generating text via ad-hoc prompt...", 0);
 	let response: { newText: string; isOverlength: boolean; cost: number } | undefined;
 	try {
-		const oldTextForAI = ""; // For generation tasks, oldText is empty
+		const oldTextForAI = "";
 		response = settings.model.startsWith("gemini-")
 			? await geminiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI, true)
 			: await openAiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI);
@@ -191,7 +251,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 
 	cm.dispatch(
 		cm.state.update({
-			changes: { from: cursorOffset, to: cursorOffset, insert: "" }, // No direct document change
+			changes: { from: cursorOffset, to: cursorOffset, insert: "" },
 			effects: [clearAllSuggestionsEffect.of(null), setSuggestionsEffect.of(marksToApply)],
 			selection:
 				marksToApply.length > 0
@@ -214,8 +274,8 @@ export async function generateTextAndApplyAsSuggestionCM6(
 
 async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
-	editor: Editor,
-	originalText: string, // Raw original text for AI
+	editor: Editor, // Keep editor for potential future use or for methods not using cm directly
+	originalText: string,
 	scope: "Selection" | "Paragraph",
 	promptInfo: TextTransformerPrompt,
 	scopeRangeCm: { from: number; to: number },
@@ -241,71 +301,16 @@ async function validateAndApplyAIDrivenChanges(
 		return false;
 	}
 
-	const { app, settings } = plugin;
+	const { settings } = plugin;
 	const fileBeforePath = file.path;
 	const longInput = originalText.length > (settings.longInputThreshold || 1500);
 	const veryLongInput = originalText.length > (settings.veryLongInputThreshold || 15000);
 	const notifDuration = longInput ? 0 : 4_000;
-	let additionalContextForAI = "";
 
-	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
-	if (contextPanelLeaves.length > 0) {
-		const view = contextPanelLeaves[0].view;
-		if (view instanceof ContextControlPanel) {
-			const contextPanel = view as ContextControlPanel;
-			const contextParts: string[] = [];
-			const markerStart = "[[[USER_SELECTED_TEXT_STARTING_HERE>>>";
-			const markerEnd = "<<<USER_SELECTED_TEXT_ENDING_HERE]]]";
-
-			if (contextPanel.getCustomContextState()) {
-				const customText = await contextPanel.getCustomContextText();
-				if (customText) {
-					contextParts.push(
-						`--- Custom User-Provided Context Start ---\n${customText}\n--- Custom User-Provided Context End ---`,
-					);
-				}
-			}
-
-			const useWholeNote = contextPanel.getWholeNoteContextState();
-			const useDynamic = contextPanel.getDynamicContextState();
-
-			if (useDynamic) {
-				const linesToIncludeAround = plugin.settings.dynamicContextLineCount;
-				const selectionStartLine: number = editor.offsetToPos(scopeRangeCm.from).line;
-				const selectionEndLine: number = editor.offsetToPos(scopeRangeCm.to).line;
-
-				const contextStartLine = Math.max(0, selectionStartLine - linesToIncludeAround);
-				const contextEndLine = Math.min(
-					editor.lastLine(),
-					selectionEndLine + linesToIncludeAround,
-				);
-				const dynamicContextLines: string[] = [];
-				for (let i = contextStartLine; i <= contextEndLine; i++)
-					dynamicContextLines.push(editor.getLine(i));
-				let dynamicContextText = dynamicContextLines.join("\n");
-				if (dynamicContextText.includes(originalText))
-					dynamicContextText = dynamicContextText.replace(
-						originalText,
-						`${markerStart}${originalText}${markerEnd}`,
-					);
-				contextParts.push(
-					`--- Dynamic Context Start ---\nFilename: ${file.name}\n${dynamicContextText}\n--- Dynamic Context End ---`,
-				);
-			} else if (useWholeNote && file) {
-				const fileContent = await app.vault.cachedRead(file);
-				let wholeNoteContext = fileContent;
-				if (fileContent.includes(originalText))
-					wholeNoteContext = wholeNoteContext.replace(
-						originalText,
-						`${markerStart}${originalText}${markerEnd}`,
-					);
-				contextParts.push(
-					`--- Whole Note Context Start ---\nFilename: ${file.name}\n${wholeNoteContext}\n--- Whole Note Context End ---`,
-				);
-			}
-			if (contextParts.length > 0) additionalContextForAI = contextParts.join("\n\n");
-		}
-	}
+	const additionalContextForAI = await gatherContextForAI(plugin, cm, "transformation", {
+		range: scopeRangeCm,
+		originalText,
+	});
 
 	let initialMsg = `🤖 ${scope} is being text transformed…`;
 	if (additionalContextForAI) initialMsg += " (with context)";
@@ -327,7 +332,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	let response: ResponseType;
 	try {
 		response = settings.model.startsWith("gemini-")
-			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI)
+			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI, false)
 			: await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
 	} catch (error) {
 		new Notice(

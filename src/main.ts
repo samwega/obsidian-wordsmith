@@ -2,25 +2,33 @@
 import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import {
+	generateTextAndApplyAsSuggestionCM6,
+	textTransformerTextCM6,
+} from "./lib/core/textTransformer";
+import {
 	clearAllActiveSuggestionsCM6,
 	focusNextSuggestionCM6,
 	focusPreviousSuggestionCM6,
 	resolveNextSuggestionCM6,
 	resolveSuggestionsInSelectionCM6,
-} from "./suggestion-handler";
-import { textTransformerSuggestionExtensions } from "./suggestion-state";
-import { generateTextAndApplyAsSuggestionCM6, textTransformerTextCM6 } from "./textTransformer";
+} from "./lib/editor/suggestion-handler";
+import { textTransformerSuggestionExtensions } from "./lib/editor/suggestion-state";
 
-import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./context-control-panel";
-import { CustomPromptModal } from "./custom-prompt-modal";
-import { PromptPaletteModal } from "./prompt-palette";
-import { TextTransformerSettingsMenu } from "./settings";
-import { DEFAULT_SETTINGS, TextTransformerPrompt, TextTransformerSettings } from "./settings-data";
-import { DEFAULT_TEXT_TRANSFORMER_PROMPTS, MODEL_SPECS } from "./settings-data";
+import {
+	DEFAULT_SETTINGS,
+	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
+	MODEL_SPECS,
+	TextTransformerPrompt,
+	TextTransformerSettings,
+} from "./lib/settings-data";
+import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./ui/context-control-panel";
+import { CustomPromptModal } from "./ui/modals/custom-prompt-modal";
+import { PromptPaletteModal } from "./ui/modals/prompt-palette";
+import { TextTransformerSettingsMenu } from "./ui/settings";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	defaultSettings = DEFAULT_SETTINGS; // Expose DEFAULT_SETTINGS in camelCase
+	defaultSettings = DEFAULT_SETTINGS;
 	settings!: TextTransformerSettings;
 
 	override async onload(): Promise<void> {
@@ -64,9 +72,13 @@ export default class TextTransformer extends Plugin {
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
 			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this.settings.prompts.filter((p) => p.enabled);
+				const enabledPrompts = this.settings.prompts.filter(
+					(p) => p.enabled && p.showInPromptPalette !== false,
+				);
 				if (enabledPrompts.length === 0) {
-					new Notice("No enabled prompts. Please configure prompts in WordSmith settings.");
+					new Notice(
+						"No enabled prompts (for palette). Please configure prompts in WordSmith settings.",
+					);
 					return;
 				}
 				const activeFile = this.app.workspace.getActiveFile();
@@ -79,13 +91,20 @@ export default class TextTransformer extends Plugin {
 					await textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
 					return;
 				}
-				return new Promise<void>((resolve) => {
+
+				return new Promise<void>((resolve, reject) => {
 					const modal = new PromptPaletteModal(
 						this.app,
 						enabledPrompts,
 						async (prompt: TextTransformerPrompt) => {
-							await textTransformerTextCM6(this, editor, prompt, activeFile);
-							resolve();
+							try {
+								await textTransformerTextCM6(this, editor, prompt, activeFile);
+								resolve();
+							} catch (error) {
+								console.error("Error transforming text:", error);
+								new Notice("Error during text transformation.");
+								reject(error);
+							}
 						},
 						() => {
 							resolve();
@@ -186,16 +205,20 @@ export default class TextTransformer extends Plugin {
 
 	async activateView(): Promise<void> {
 		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
-		await this.app.workspace.getRightLeaf(false)?.setViewState({
-			type: CONTEXT_CONTROL_VIEW_TYPE,
-			active: true,
-		});
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)[0],
-		);
+		const leaf = this.app.workspace.getRightLeaf(false);
+		if (leaf) {
+			await leaf.setViewState({
+				type: CONTEXT_CONTROL_VIEW_TYPE,
+				active: true,
+			});
+			this.app.workspace.revealLeaf(leaf);
+		} else {
+			new Notice("Could not get a right leaf to activate the context control panel.");
+		}
 	}
 
 	override onunload(): void {
+		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
 
@@ -210,13 +233,49 @@ export default class TextTransformer extends Plugin {
 			});
 	}
 
-	async loadSettings(): Promise<void> {
-		this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
-		const loaded = (await this.loadData()) as Partial<TextTransformerSettings> | null;
+	private _createPromptObject(
+		base: Omit<TextTransformerPrompt, "id" | "isDefault" | "enabled" | "showInPromptPalette"> &
+			Partial<
+				Pick<TextTransformerPrompt, "id" | "isDefault" | "enabled" | "showInPromptPalette">
+			>,
+		updates: Partial<TextTransformerPrompt>,
+	): TextTransformerPrompt {
+		const combined = { ...base, ...updates };
 
-		if (loaded) {
-			const { prompts: loadedPrompts, ...otherLoadedSettings } = loaded;
+		const newPrompt: TextTransformerPrompt = {
+			id: combined.id || `custom-${Date.now()}`,
+			name: combined.name,
+			text: combined.text,
+			isDefault: typeof combined.isDefault === "boolean" ? combined.isDefault : false,
+			enabled: typeof combined.enabled === "boolean" ? combined.enabled : true,
+			showInPromptPalette:
+				typeof combined.showInPromptPalette === "boolean" ? combined.showInPromptPalette : true,
+			// model, temperature, etc. can be undefined
+		};
+		// Conditionally add properties if they are not undefined to satisfy exactOptionalPropertyTypes
+		if (typeof combined.model !== "undefined") newPrompt.model = combined.model;
+		if (typeof combined.temperature !== "undefined") newPrompt.temperature = combined.temperature;
+		if (typeof combined.frequency_penalty !== "undefined")
+			newPrompt.frequency_penalty = combined.frequency_penalty;
+		if (typeof combined.presence_penalty !== "undefined")
+			newPrompt.presence_penalty = combined.presence_penalty;
+		if (typeof combined.max_tokens !== "undefined") newPrompt.max_tokens = combined.max_tokens;
+
+		return newPrompt;
+	}
+
+	async loadSettings(): Promise<void> {
+		this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)) as TextTransformerSettings;
+
+		const loadedData = (await this.loadData()) as Partial<TextTransformerSettings> | null;
+
+		if (loadedData) {
+			const { prompts: loadedPrompts, ...otherLoadedSettings } = loadedData;
 			Object.assign(this.settings, otherLoadedSettings);
+
+			if (typeof this.settings.translationLanguage === "undefined") {
+				this.settings.translationLanguage = DEFAULT_SETTINGS.translationLanguage;
+			}
 
 			if (Array.isArray(loadedPrompts) && loadedPrompts.length > 0) {
 				const processedDefaultPromptsMap = new Map<string, TextTransformerPrompt>();
@@ -237,17 +296,37 @@ export default class TextTransformer extends Plugin {
 									langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 								currentDefaultName = `Translate to ${capitalizedLang}—autodetects source language`;
 							}
-							processedDefaultPromptsMap.set(loadedPrompt.id, {
-								...defaultDefinition,
-								...loadedPrompt,
-								text: defaultDefinition.text,
-								name: currentDefaultName,
-								isDefault: true,
-							});
+							processedDefaultPromptsMap.set(
+								loadedPrompt.id,
+								this._createPromptObject(defaultDefinition, {
+									name: currentDefaultName,
+									enabled:
+										typeof loadedPrompt.enabled === "boolean"
+											? loadedPrompt.enabled
+											: defaultDefinition.enabled,
+									showInPromptPalette:
+										typeof loadedPrompt.showInPromptPalette === "boolean"
+											? loadedPrompt.showInPromptPalette
+											: typeof defaultDefinition.showInPromptPalette === "boolean"
+												? defaultDefinition.showInPromptPalette
+												: true,
+									isDefault: true,
+								}),
+							);
 						}
-						// Orphaned defaults are implicitly pruned by not being added to the map
 					} else {
-						keptCustomPrompts.push({ ...loadedPrompt, isDefault: false });
+						keptCustomPrompts.push(
+							this._createPromptObject(loadedPrompt, {
+								// Base is loadedPrompt
+								isDefault: false, // Ensure this is false
+								enabled:
+									typeof loadedPrompt.enabled === "boolean" ? loadedPrompt.enabled : true,
+								showInPromptPalette:
+									typeof loadedPrompt.showInPromptPalette === "boolean"
+										? loadedPrompt.showInPromptPalette
+										: true,
+							}),
+						);
 					}
 				});
 
@@ -255,11 +334,8 @@ export default class TextTransformer extends Plugin {
 				DEFAULT_TEXT_TRANSFORMER_PROMPTS.forEach((defaultDefFromCode) => {
 					if (processedDefaultPromptsMap.has(defaultDefFromCode.id)) {
 						const prompt = processedDefaultPromptsMap.get(defaultDefFromCode.id);
-						if (prompt) {
-							finalPrompts.push(prompt);
-						}
+						if (prompt) finalPrompts.push(prompt);
 					} else {
-						// This is a new default prompt not present in user's saved data
 						let name = defaultDefFromCode.name;
 						if (defaultDefFromCode.id === "translate") {
 							const langSetting =
@@ -268,14 +344,13 @@ export default class TextTransformer extends Plugin {
 								langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 							name = `Translate to ${capitalizedLang}—autodetects source language`;
 						}
-						finalPrompts.push({ ...defaultDefFromCode, name: name });
+						finalPrompts.push(this._createPromptObject(defaultDefFromCode, { name }));
 					}
 				});
 
-				finalPrompts.push(...keptCustomPrompts); // Add all custom prompts at the end
+				finalPrompts.push(...keptCustomPrompts);
 				this.settings.prompts = finalPrompts;
 			} else {
-				// No prompts in data.json or array is empty, initialize with current defaults
 				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
 					let name = p.name;
 					if (p.id === "translate") {
@@ -285,11 +360,10 @@ export default class TextTransformer extends Plugin {
 							langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 						name = `Translate to ${capitalizedLang}—autodetects source language`;
 					}
-					return { ...p, name: name };
+					return this._createPromptObject(p, { name });
 				});
 			}
 		} else {
-			// No data.json file, initialize with current defaults
 			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
 				let name = p.name;
 				if (p.id === "translate") {
@@ -298,35 +372,24 @@ export default class TextTransformer extends Plugin {
 					const capitalizedLang = langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 					name = `Translate to ${capitalizedLang}—autodetects source language`;
 				}
-				return { ...p, name: name };
+				return this._createPromptObject(p, { name });
 			});
 		}
 
-		this.settings.prompts.forEach((p) => {
-			if (typeof p.enabled === "undefined") {
-				p.enabled = true;
+		const { prompts, defaultPromptId, ...defaultKeysForLoop } = DEFAULT_SETTINGS;
+		for (const key of Object.keys(defaultKeysForLoop) as Array<keyof typeof defaultKeysForLoop>) {
+			const typedKey = key as keyof Omit<TextTransformerSettings, "prompts" | "defaultPromptId">;
+			if (
+				typeof this.settings[typedKey] === "undefined" &&
+				typeof DEFAULT_SETTINGS[typedKey] !== "undefined"
+			) {
+				(this.settings as unknown as Record<string, unknown>)[typedKey] =
+					DEFAULT_SETTINGS[typedKey];
 			}
-			if (typeof p.showInPromptPalette === "undefined") {
-				if (p.isDefault) {
-					const defaultDef = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find((def) => def.id === p.id);
-					p.showInPromptPalette = defaultDef?.showInPromptPalette ?? true;
-				} else {
-					p.showInPromptPalette = true;
-				}
-			}
-		});
+		}
 
 		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {
 			this.settings.model = DEFAULT_SETTINGS.model;
-		}
-
-		const { prompts, defaultPromptId, ...keysForLoop } = DEFAULT_SETTINGS;
-
-		for (const key of Object.keys(keysForLoop) as Array<keyof typeof keysForLoop>) {
-			const typedKey = key as keyof TextTransformerSettings;
-			if (typeof this.settings[typedKey] === "undefined") {
-				(this.settings as unknown as Record<string, unknown>)[key] = DEFAULT_SETTINGS[key];
-			}
 		}
 
 		await this.saveData(this.settings);

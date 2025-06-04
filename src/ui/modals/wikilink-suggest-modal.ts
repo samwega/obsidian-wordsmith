@@ -1,19 +1,23 @@
-// src/wikilink-suggest-modal.ts
+// src/ui/modals/wikilink-suggest-modal.ts
 import { App, SuggestModal, TFile } from "obsidian";
 
 export class WikilinkSuggestModal extends SuggestModal<TFile> {
-	private onChoose: (file: TFile) => void;
+	private onChooseFile: (file: TFile) => void; // Renamed for clarity
 
-	constructor(app: App, onChoose: (file: TFile) => void) {
+	constructor(app: App, onChooseFile: (file: TFile) => void) {
 		super(app);
-		this.onChoose = onChoose;
+		this.onChooseFile = onChooseFile;
 		this.setPlaceholder("Type to search for a note to link...");
 	}
 
 	getSuggestions(query: string): TFile[] {
 		const lowerCaseQuery = query.toLowerCase();
 		return this.app.vault.getMarkdownFiles().filter((file) => {
-			return file.basename.toLowerCase().includes(lowerCaseQuery);
+			// Search in basename and path for better matching
+			return (
+				file.basename.toLowerCase().includes(lowerCaseQuery) ||
+				file.path.toLowerCase().includes(lowerCaseQuery)
+			);
 		});
 	}
 
@@ -23,6 +27,6 @@ export class WikilinkSuggestModal extends SuggestModal<TFile> {
 	}
 
 	onChooseSuggestion(file: TFile, _evt: MouseEvent | KeyboardEvent): void {
-		this.onChoose(file);
+		this.onChooseFile(file);
 	}
 }

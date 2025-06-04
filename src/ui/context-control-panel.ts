@@ -1,4 +1,4 @@
-// src/context-control-panel.ts
+// src/ui/context-control-panel.ts
 import {
 	DropdownComponent,
 	ItemView,
@@ -8,11 +8,10 @@ import {
 	TextAreaComponent,
 	ToggleComponent,
 	WorkspaceLeaf,
-	// App, // App is available via this.plugin.app
 } from "obsidian";
-import TextTransformer from "./main";
-import { MODEL_SPECS, SupportedModels } from "./settings-data";
-import { WikilinkSuggestModal } from "./wikilink-suggest-modal";
+import { MODEL_SPECS, SupportedModels } from "../lib/settings-data";
+import type TextTransformer from "../main";
+import { WikilinkSuggestModal } from "./modals/wikilink-suggest-modal";
 
 export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
@@ -25,7 +24,7 @@ export class ContextControlPanel extends ItemView {
 
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
-	private modelDropdown: DropdownComponent | null = null; // Correctly typed
+	private modelDropdown: DropdownComponent | null = null;
 	private dynamicContextLinesSetting: Setting | null = null;
 
 	private descriptionContainer: HTMLDivElement | null = null;
@@ -59,19 +58,22 @@ export class ContextControlPanel extends ItemView {
 		}
 	}
 
-	override async onOpen(): Promise<void> {
-		const container = this.contentEl;
-		container.empty();
+	override onOpen(): Promise<void> {
+		const { contentEl } = this;
+		contentEl.empty();
 
-		const headerContainer = container.createDiv();
-		headerContainer.classList.add("ccp-header-container");
+		this._renderHeader(contentEl);
+		this._renderDescriptionSection(contentEl);
+		this._renderContextToggles(contentEl);
+		this._renderCustomContextArea(contentEl);
+		return Promise.resolve();
+	}
 
-		const titleEl = headerContainer.createEl("div", { text: "WS Model" });
-		titleEl.classList.add("ccp-title");
+	private _renderHeader(container: HTMLElement): void {
+		const headerContainer = container.createDiv({ cls: "ccp-header-container" });
+		headerContainer.createEl("div", { text: "WS Model", cls: "ccp-title" });
 
 		const modelSelectorContainer = headerContainer.createDiv();
-
-		// Corrected DropdownComponent instantiation and assignment
 		this.modelDropdown = new DropdownComponent(modelSelectorContainer);
 		for (const key in MODEL_SPECS) {
 			if (!Object.hasOwn(MODEL_SPECS, key)) continue;
@@ -83,50 +85,41 @@ export class ContextControlPanel extends ItemView {
 			await this.plugin.saveSettings();
 		});
 		this.modelDropdown.selectEl.classList.add("ccp-model-dropdown-select");
+	}
 
-		const contextOptionsHeader = container.createDiv();
-		contextOptionsHeader.classList.add("ccp-context-options-header");
-
+	private _renderDescriptionSection(container: HTMLElement): void {
+		const contextOptionsHeader = container.createDiv({ cls: "ccp-context-options-header" });
 		this.descriptionIndicator = contextOptionsHeader.createEl("span", {
 			text: this.isDescriptionExpanded ? "🞃 " : "‣ ",
+			cls: "ccp-description-indicator",
 		});
-		this.descriptionIndicator.classList.add("ccp-description-indicator");
+		contextOptionsHeader.createEl("div", { text: "Context Options:", cls: "ccp-subtitle" });
 
-		const subTitleTextEl = contextOptionsHeader.createEl("div", { text: "Context Options:" });
-		subTitleTextEl.classList.add("ccp-subtitle");
-
-		this.descriptionContainer = container.createDiv();
-		this.descriptionContainer.classList.add("ccp-description-container");
+		this.descriptionContainer = container.createDiv({ cls: "ccp-description-container" });
 		if (this.isDescriptionExpanded) this.descriptionContainer.classList.add("is-visible");
 
-		const p1 = this.descriptionContainer.createEl("p", {
+		// const p1 = this.descriptionContainer.createEl("p", { // p1 was unused
+		this.descriptionContainer.createEl("p", {
 			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
+			cls: "ccp-description-p1",
 		});
-		p1.classList.add("ccp-description-p1");
 
-		this.descriptionContainer
-			.createEl("p", {
-				text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
-			})
-			.classList.add("ccp-description-paragraph");
-
-		this.descriptionContainer
-			.createEl("p", {
-				text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
-			})
-			.classList.add("ccp-description-paragraph");
-
-		this.descriptionContainer
-			.createEl("p", {
-				text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
-			})
-			.classList.add("ccp-description-paragraph");
-
-		this.descriptionContainer
-			.createEl("p", {
-				text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
-			})
-			.classList.add("ccp-description-paragraph");
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
+			cls: "ccp-description-paragraph",
+		});
+		this.descriptionContainer.createEl("p", {
+			text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
+			cls: "ccp-description-paragraph",
+		});
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
+			cls: "ccp-description-paragraph",
+		});
+		this.descriptionContainer.createEl("p", {
+			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
+			cls: "ccp-description-paragraph",
+		});
 
 		contextOptionsHeader.addEventListener("click", () => {
 			this.isDescriptionExpanded = !this.isDescriptionExpanded;
@@ -135,7 +128,9 @@ export class ContextControlPanel extends ItemView {
 				this.descriptionIndicator.setText(this.isDescriptionExpanded ? "🞃 " : "‣ ");
 			}
 		});
+	}
 
+	private _renderContextToggles(container: HTMLElement): void {
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
 			toggle.setValue(this.useDynamicContext).onChange((value) => {
@@ -144,9 +139,7 @@ export class ContextControlPanel extends ItemView {
 					this.useWholeNoteContext = false;
 					this.wholeNoteContextToggleComponent.setValue(false);
 				}
-				if (this.dynamicContextLinesSetting) {
-					this.dynamicContextLinesSetting.settingEl.classList.toggle("is-visible", value);
-				}
+				this.dynamicContextLinesSetting?.settingEl.classList.toggle("is-visible", value);
 			});
 		});
 
@@ -171,14 +164,13 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.max = "21";
 				text.inputEl.classList.add("ccp-dynamic-lines-input");
 			});
-		if (this.dynamicContextLinesSetting) {
-			this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
-			this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
-			this.dynamicContextLinesSetting.settingEl.classList.toggle(
-				"is-visible",
-				this.useDynamicContext,
-			);
-		}
+
+		this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
+		this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
+		this.dynamicContextLinesSetting.settingEl.classList.toggle(
+			"is-visible",
+			this.useDynamicContext,
+		);
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
 			this.wholeNoteContextToggleComponent = toggle;
@@ -187,9 +179,7 @@ export class ContextControlPanel extends ItemView {
 				if (value && this.dynamicContextToggleComponent) {
 					this.useDynamicContext = false;
 					this.dynamicContextToggleComponent.setValue(false);
-					if (this.dynamicContextLinesSetting) {
-						this.dynamicContextLinesSetting.settingEl.classList.remove("is-visible");
-					}
+					this.dynamicContextLinesSetting?.settingEl.classList.remove("is-visible");
 				}
 			});
 		});
@@ -197,17 +187,18 @@ export class ContextControlPanel extends ItemView {
 		new Setting(container).setName("Custom").addToggle((toggle) =>
 			toggle.setValue(this.useCustomContext).onChange((value) => {
 				this.useCustomContext = value;
-				if (this.customContextTextAreaContainer) {
-					this.customContextTextAreaContainer.classList.toggle("is-visible", value);
-				}
+				this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
 				if (value && this.customContextTextArea) {
 					this.customContextTextArea.inputEl.focus();
 				}
 			}),
 		);
+	}
 
-		this.customContextTextAreaContainer = container.createDiv();
-		this.customContextTextAreaContainer.classList.add("ccp-custom-context-container");
+	private _renderCustomContextArea(container: HTMLElement): void {
+		this.customContextTextAreaContainer = container.createDiv({
+			cls: "ccp-custom-context-container",
+		});
 		if (this.useCustomContext) this.customContextTextAreaContainer.classList.add("is-visible");
 
 		this.customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
@@ -216,7 +207,6 @@ export class ContextControlPanel extends ItemView {
 			.onChange((value) => {
 				this.customContextText = value;
 			});
-
 		this.customContextTextArea.inputEl.classList.add("ccp-custom-context-textarea");
 
 		this.customContextTextArea.inputEl.addEventListener("input", (event) => {
@@ -224,26 +214,23 @@ export class ContextControlPanel extends ItemView {
 				this.justInsertedLink = false;
 				return;
 			}
-
 			const inputEl = event.target as HTMLTextAreaElement;
 			const text = inputEl.value;
 			const cursorPos = inputEl.selectionStart;
 			const textBeforeCursor = text.substring(0, cursorPos);
-
 			const match = /\[\[([^\]]*)$/.exec(textBeforeCursor);
 
 			if (match) {
-				new WikilinkSuggestModal(this.plugin.app, (chosenFile) => {
+				new WikilinkSuggestModal(this.plugin.app, (chosenFile: TFile) => {
+					// Explicitly type chosenFile
 					const linkText = `[[${chosenFile.basename}]]`;
 					const textBeforeLinkOpen = textBeforeCursor.substring(0, match.index);
 					const textAfterCursor = text.substring(cursorPos);
-
 					const newText = textBeforeLinkOpen + linkText + textAfterCursor;
 					this.customContextText = newText;
 
 					if (this.customContextTextArea) {
 						this.customContextTextArea.setValue(newText);
-
 						const newCursorPos = textBeforeLinkOpen.length + linkText.length;
 						this.customContextTextArea.inputEl.selectionStart = newCursorPos;
 						this.customContextTextArea.inputEl.selectionEnd = newCursorPos;
@@ -260,10 +247,10 @@ export class ContextControlPanel extends ItemView {
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null;
 		this.dynamicContextLinesSetting = null;
-		this.customContextTextArea = null;
 		this.descriptionContainer = null;
 		this.descriptionIndicator = null;
 		this.customContextTextAreaContainer = null;
+		this.customContextTextArea = null;
 		return super.onClose();
 	}
 
@@ -282,9 +269,7 @@ export class ContextControlPanel extends ItemView {
 
 		const textToProcess = this.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
-		let match: RegExpExecArray | null;
 		let lastIndex = 0;
-
 		const partsToResolve: (string | Promise<string>)[] = [];
 
 		if (!this.plugin || !this.plugin.app) {
@@ -292,15 +277,15 @@ export class ContextControlPanel extends ItemView {
 			return textToProcess;
 		}
 
+		wikilinkRegex.lastIndex = 0;
+		let match: RegExpExecArray | null;
 		while (true) {
 			match = wikilinkRegex.exec(textToProcess);
 			if (match === null) break;
 			partsToResolve.push(textToProcess.substring(lastIndex, match.index));
-
 			const linkFullText = match[1];
 			const linkPathOnly = linkFullText.split("|")[0].trim();
 			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
-
 			if (file instanceof TFile) {
 				partsToResolve.push(this.plugin.app.vault.cachedRead(file));
 			} else {
@@ -311,7 +296,6 @@ export class ContextControlPanel extends ItemView {
 		partsToResolve.push(textToProcess.substring(lastIndex));
 
 		const resolvedParts = await Promise.all(partsToResolve);
-
 		return resolvedParts.join("");
 	}
 

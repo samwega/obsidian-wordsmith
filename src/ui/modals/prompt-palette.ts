@@ -1,22 +1,23 @@
+// src/ui/modals/prompt-palette.ts
 import { App, SuggestModal } from "obsidian";
-import { TextTransformerPrompt } from "./settings-data";
+import type { TextTransformerPrompt } from "../../lib/settings-data";
 
 export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
 	private prompts: TextTransformerPrompt[];
 	private onChoose: (prompt: TextTransformerPrompt) => void;
-	private onCancel: (() => void) | undefined; // Correctly typed for exactOptionalPropertyTypes
+	private onCancel: (() => void) | undefined;
 	private chosen = false;
 
 	constructor(
 		app: App,
 		prompts: TextTransformerPrompt[],
-		_onChoose: (prompt: TextTransformerPrompt) => void,
-		_onCancel?: () => void, // onCancel is optional
+		onChoose: (prompt: TextTransformerPrompt) => void,
+		onCancel?: () => void,
 	) {
 		super(app);
-		this.prompts = prompts;
-		this.onChoose = _onChoose;
-		this.onCancel = _onCancel;
+		this.prompts = prompts.filter((p) => p.showInPromptPalette !== false);
+		this.onChoose = onChoose;
+		this.onCancel = onCancel;
 		this.setPlaceholder("Select a prompt...");
 	}
 
@@ -25,25 +26,25 @@ export class PromptPaletteModal extends SuggestModal<TextTransformerPrompt> {
 		return this.prompts.filter((p) => p.name.toLowerCase().includes(lower));
 	}
 
-	renderSuggestion(_prompt: TextTransformerPrompt, el: HTMLElement): void {
-		el.createEl("div", { text: _prompt.name });
+	renderSuggestion(prompt: TextTransformerPrompt, el: HTMLElement): void {
+		el.createEl("div", { text: prompt.name });
 		let smallText = "";
-		if (_prompt.isDefault) {
+		if (prompt.isDefault) {
 			smallText = "Default";
-		} else if (_prompt.id.startsWith("custom-")) {
+		} else if (prompt.id.startsWith("custom-")) {
 			smallText = "Custom";
 		}
-		el.createEl("small", { text: smallText });
+		if (smallText) {
+			el.createEl("small", { text: smallText, cls: "text-muted" });
+		}
 	}
 
 	onChooseSuggestion(prompt: TextTransformerPrompt, _evt: MouseEvent | KeyboardEvent): void {
-		// _evt marked as unused
 		this.chosen = true;
 		this.onChoose(prompt);
 	}
 
 	override onClose(): void {
-		// Added override
 		super.onClose();
 		if (!this.chosen && this.onCancel) {
 			this.onCancel();

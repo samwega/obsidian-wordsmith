@@ -1,15 +1,12 @@
-// src/settings.ts
+// src/ui/settings.ts
 import { PluginSettingTab, Setting } from "obsidian";
-import TextTransformer from "./main";
-import { MODEL_SPECS } from "./settings-data";
-import type { SupportedModels, TextTransformerPrompt } from "./settings-data";
-
-//──────────────────────────────────────────────────────────────────────────────
+import { MODEL_SPECS, SupportedModels, TextTransformerPrompt } from "../lib/settings-data";
+import type TextTransformer from "../main";
 
 export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
-	private addPromptButtonSettingInstance: Setting | null = null; // Instance for the button
+	private addPromptButtonSettingInstance: Setting | null = null;
 
 	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
@@ -20,7 +17,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// Reset the form and button instance references when the display is re-rendered
 		this.addPromptForm = null;
 		this.addPromptButtonSettingInstance = null;
 
@@ -28,28 +24,33 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		this._renderApiModelSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
-		// _renderDynamicContextSection has been removed
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
 		const apiModelSetting = new Setting(containerEl).setName("API Keys & Model");
+		apiModelSetting.settingEl.classList.add("api-model-setting-el"); // Keep class if used by CSS
 
-		apiModelSetting.settingEl.classList.add("api-model-setting-el");
-
-		const apiModelSectionContents = containerEl.createDiv();
-		apiModelSectionContents.classList.add("tt-api-model-section-contents");
+		const apiModelSectionContents = containerEl.createDiv({
+			cls: "tt-api-model-section-contents",
+		});
 
 		apiModelSetting.addButton((button) => {
-			button.setButtonText("Show").onClick(() => {
-				if (apiModelSectionContents.classList.contains("is-visible")) {
-					apiModelSectionContents.classList.remove("is-visible");
-					button.setButtonText("Show");
-				} else {
-					apiModelSectionContents.classList.add("is-visible");
-					button.setButtonText("Hide");
-				}
-			});
+			button
+				.setButtonText(
+					apiModelSectionContents.classList.contains("is-visible") ? "Hide" : "Show",
+				)
+				.onClick(() => {
+					const isVisible = apiModelSectionContents.classList.toggle("is-visible");
+					button.setButtonText(isVisible ? "Hide" : "Show");
+					apiModelSectionContents.style.display = isVisible ? "block" : "none";
+				});
 		});
+		// Initial state from class
+		apiModelSectionContents.style.display = apiModelSectionContents.classList.contains(
+			"is-visible",
+		)
+			? "block"
+			: "none";
 
 		apiModelSetting.addDropdown((dropdown) => {
 			for (const key in MODEL_SPECS) {
@@ -66,8 +67,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		apiModelSetting.nameEl.classList.add("tt-setting-name-el");
 		apiModelSetting.controlEl.classList.add("tt-setting-control-el");
 
-		const openaiSetting = new Setting(apiModelSectionContents)
+		new Setting(apiModelSectionContents)
 			.setName("OpenAI API key")
+			.setDesc("API key for OpenAI models.")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -75,11 +77,12 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					this.plugin.settings.openAiApiKey = value.trim();
 					await this.plugin.saveSettings();
 				});
-			});
-		openaiSetting.settingEl.classList.add("api-key-setting-el");
+			})
+			.settingEl.classList.add("api-key-setting-el");
 
-		const geminiSetting = new Setting(apiModelSectionContents)
+		new Setting(apiModelSectionContents)
 			.setName("Gemini API key")
+			.setDesc("API key for Google Gemini models.")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -87,10 +90,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					this.plugin.settings.geminiApiKey = value.trim();
 					await this.plugin.saveSettings();
 				});
-			});
-		geminiSetting.settingEl.classList.add("api-key-setting-el");
+			})
+			.settingEl.classList.add("api-key-setting-el");
 
-		// Define the structure of the description
 		const contentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> = [
 			{
 				type: "text",
@@ -121,29 +123,19 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "text", text: " - intelligence = 4, speed = thinking. Price = $0.011" },
 			{ type: "br" },
 		];
-
-		const modelDescDiv = apiModelSectionContents.createEl("div");
-
-		// Populate the div using DOM manipulation
+		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });
 		contentStructure.forEach((item) => {
-			if (item.type === "text" && typeof item.text === "string") {
+			if (item.type === "text" && typeof item.text === "string")
 				modelDescDiv.appendText(item.text);
-			} else if (item.type === "strong" && typeof item.text === "string") {
+			else if (item.type === "strong" && typeof item.text === "string")
 				modelDescDiv.createEl("strong", { text: item.text });
-			} else if (item.type === "br") {
-				modelDescDiv.createEl("br");
-			}
+			else if (item.type === "br") modelDescDiv.createEl("br");
 		});
-
-		modelDescDiv.classList.add("tt-model-description");
 	}
-
-	// _renderDynamicContextSection has been removed
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
 		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.classList.add("tt-edit-prompt-form");
+		form.className = "add-prompt-form tt-edit-prompt-form"; // Combined classes
 
 		const nameInput = form.appendChild(document.createElement("input"));
 		nameInput.type = "text";
@@ -162,38 +154,33 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const saveBtn = buttonRow.appendChild(document.createElement("button"));
 		saveBtn.textContent = "Save";
 		saveBtn.classList.add("tt-edit-prompt-save-button");
-
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.classList.add("tt-edit-prompt-cancel-button");
-
 		saveBtn.onclick = async (): Promise<void> => {
-			const newName = (nameInput as HTMLInputElement).value.trim();
-			const newText = (textInput as HTMLTextAreaElement).value.trim();
-			if (!newName || !newText) return;
+			const newName = nameInput.value.trim();
+			const newText = textInput.value.trim();
+			if (!newName || !newText) return; // Basic validation
+
 			const existingPrompt = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
 			if (existingPrompt) {
 				existingPrompt.name = newName;
 				existingPrompt.text = newText;
 				await this.plugin.saveSettings();
 			}
-			form.remove();
-			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show();
-			this.display();
+			this._closePromptForm();
+			this.display(); // Re-render to show updated list
 		};
+
+		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+		cancelBtn.textContent = "Cancel";
+		cancelBtn.classList.add("tt-edit-prompt-cancel-button");
 		cancelBtn.onclick = (): void => {
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show();
+			this._closePromptForm();
 		};
 		return form;
 	}
 
 	private _createAddPromptForm(): HTMLDivElement {
 		const form = document.createElement("div");
-		form.className = "add-prompt-form";
-		form.classList.add("tt-add-prompt-form");
+		form.className = "add-prompt-form tt-add-prompt-form"; // Combined classes
 
 		const nameInput = form.appendChild(document.createElement("input"));
 		nameInput.type = "text";
@@ -212,61 +199,60 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const saveBtn = buttonRow.appendChild(document.createElement("button"));
 		saveBtn.textContent = "Save";
 		saveBtn.classList.add("tt-add-prompt-save-button");
-
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.classList.add("tt-add-prompt-cancel-button");
-
 		saveBtn.onclick = async (): Promise<void> => {
-			const name = (nameInput as HTMLInputElement).value.trim();
-			const text = (textInput as HTMLTextAreaElement).value.trim();
-			if (!name || !text) return;
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
+			const name = nameInput.value.trim();
+			const text = textInput.value.trim();
+			if (!name || !text) return; // Basic validation
+
 			this.plugin.settings.prompts.push({
 				id: `custom-${Date.now()}`,
 				name,
 				text,
 				isDefault: false,
 				enabled: true,
+				showInPromptPalette: true, // Default for new custom prompts
 			});
 			await this.plugin.saveSettings();
-			this.addPromptButtonSettingInstance?.settingEl.show();
-			this.display();
+			this._closePromptForm();
+			this.display(); // Re-render to show new prompt
 		};
+
+		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
+		cancelBtn.textContent = "Cancel";
+		cancelBtn.classList.add("tt-add-prompt-cancel-button");
 		cancelBtn.onclick = (): void => {
-			this.addPromptForm?.remove();
-			this.addPromptForm = null;
-			this.addPromptButtonSettingInstance?.settingEl.show();
+			this._closePromptForm();
 		};
 		return form;
 	}
 
+	private _closePromptForm(): void {
+		this.addPromptForm?.remove();
+		this.addPromptForm = null;
+		this.addPromptButtonSettingInstance?.settingEl.show();
+	}
+
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
 		containerEl.createEl("h3", { text: "Prompt Management" });
-		// Add a wrapper div with a class for easier targeting of the whole section
 		const promptManagementWrapper = containerEl.createDiv({
 			cls: "prompt-management-section-container",
 		});
 
-		const defaultPrompts = this.plugin.settings.prompts.filter(
-			(p: TextTransformerPrompt) => p.isDefault,
-		);
-		const customPrompts = this.plugin.settings.prompts.filter(
-			(p: TextTransformerPrompt) => !p.isDefault,
-		);
+		const defaultPrompts = this.plugin.settings.prompts.filter((p) => p.isDefault);
+		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
 
-		promptManagementWrapper.createEl("div", {
-			text: "Preset Prompts",
-			cls: "tt-prompt-section-title",
-		});
-
-		const defaultPromptsGrid = promptManagementWrapper.createEl("div", {
-			cls: "tt-prompts-grid",
-		});
-		defaultPrompts.forEach((prompt, index) =>
-			this._renderPromptItem(prompt, defaultPromptsGrid, index),
-		);
+		if (defaultPrompts.length > 0) {
+			promptManagementWrapper.createEl("div", {
+				text: "Preset Prompts",
+				cls: "tt-prompt-section-title",
+			});
+			const defaultPromptsGrid = promptManagementWrapper.createEl("div", {
+				cls: "tt-prompts-grid",
+			});
+			defaultPrompts.forEach((prompt, index) =>
+				this._renderPromptItem(prompt, defaultPromptsGrid, index),
+			);
+		}
 
 		if (customPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
@@ -274,7 +260,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				text: "User Prompts",
 				cls: "tt-prompt-section-title",
 			});
-
 			const customPromptsGrid = promptManagementWrapper.createEl("div", {
 				cls: "tt-prompts-grid",
 			});
@@ -283,45 +268,38 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			);
 		}
 
-		// If an edit form exists from a previous render (e.g. after saving an edit), re-insert it.
-		// This logic might need refinement if it causes issues with new edit form creation.
-		if (this.addPromptForm?.classList.contains("tt-edit-prompt-form")) {
-			const addPromptButtonSettingEl = promptManagementWrapper.querySelector(
-				".tt-add-prompt-button-container",
-			);
-			if (addPromptButtonSettingEl) {
-				promptManagementWrapper.insertBefore(this.addPromptForm, addPromptButtonSettingEl);
+		// If a form (edit or add) was active and needs to be re-inserted (e.g. after validation fail, though current logic closes on success/cancel)
+		if (this.addPromptForm) {
+			const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
+			if (addBtnContainer) {
+				promptManagementWrapper.insertBefore(this.addPromptForm, addBtnContainer);
 			} else {
 				promptManagementWrapper.appendChild(this.addPromptForm);
 			}
 		}
 
-		// Always create the Setting instance for the button in each render pass
 		this.addPromptButtonSettingInstance = new Setting(promptManagementWrapper)
-			.setName("Add New Prompt") // Keep name for consistency if styles target it
-			.setDesc("Create a new custom prompt for your text transformations.") // Keep desc
+			.setName("Add New Prompt")
+			.setDesc("Create a new custom prompt for your text transformations.")
 			.addButton((button) => {
-				button.setButtonText("Add New Prompt");
-				button.onClick(() => {
-					if (this.addPromptForm) {
-						// If a form (e.g., edit form) was already open
-						this.addPromptForm.remove();
-						this.addPromptForm = null; // Clear ref to old form
+				button.setButtonText("Add New Prompt").onClick(() => {
+					if (this.addPromptForm) this._closePromptForm(); // Close any existing form
+
+					this.addPromptForm = this._createAddPromptForm();
+					const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
+					if (addBtnContainer) {
+						addBtnContainer.insertAdjacentElement("beforebegin", this.addPromptForm);
+						addBtnContainer.hide();
+					} else {
+						// Fallback, though should not happen if button instance exists
+						promptManagementWrapper.appendChild(this.addPromptForm);
 					}
-					this.addPromptForm = this._createAddPromptForm(); // Create and assign the new add form
-					// Insert Add form before the button itself
-					this.addPromptButtonSettingInstance?.settingEl.insertAdjacentElement(
-						"beforebegin",
-						this.addPromptForm,
-					);
-					this.addPromptButtonSettingInstance?.settingEl.hide(); // Hide button when form is shown
 				});
 			});
 		this.addPromptButtonSettingInstance.settingEl.classList.add("tt-add-prompt-button-container");
 
-		// Visibility logic based on .show() / .hide()
+		// Initial visibility of add button
 		if (this.addPromptForm) {
-			// Check if a form (add or edit) is active
 			this.addPromptButtonSettingInstance?.settingEl.hide();
 		} else {
 			this.addPromptButtonSettingInstance?.settingEl.show();
@@ -334,10 +312,12 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		index: number,
 	): void {
 		const setting = new Setting(gridContainer);
+		setting.settingEl.classList.add("tt-prompt-item");
+		if (index % 2 === 0) setting.settingEl.classList.add("tt-grid-item-left");
+		else setting.settingEl.classList.add("tt-grid-item-right");
 
 		if (prompt.id === "translate") {
-			setting.setName("Translate to:"); // Static name
-
+			setting.setName("Translate to:");
 			setting.addText((text) =>
 				text
 					.setPlaceholder("E.g., Spanish")
@@ -345,10 +325,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					.onChange(async (value) => {
 						const newLang = value.trim();
 						this.plugin.settings.translationLanguage = newLang;
-
-						// Update the prompt name in the plugin settings for the Command Palette
 						const translatePromptObj = this.plugin.settings.prompts.find(
-							(p: TextTransformerPrompt) => p.id === "translate",
+							(p) => p.id === "translate",
 						);
 						if (translatePromptObj) {
 							const langToDisplay =
@@ -357,23 +335,12 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 								langToDisplay.charAt(0).toUpperCase() + langToDisplay.slice(1);
 							translatePromptObj.name = `Translate to ${capitalizedLang}—autodetects source language`;
 						}
-
 						await this.plugin.saveSettings();
-						// DO NOT call setting.setName() or this.display() here to prevent focus loss
+						// No re-display to keep focus
 					}),
 			);
 		} else {
-			setting.setName(prompt.name); // For all other prompts
-			// If other prompts might have descriptions, add them here:
-			// if (prompt.description) setting.setDesc(prompt.description);
-		}
-
-		setting.settingEl.classList.add("tt-prompt-item");
-
-		if (index % 2 === 0) {
-			setting.settingEl.classList.add("tt-grid-item-left");
-		} else {
-			setting.settingEl.classList.add("tt-grid-item-right");
+			setting.setName(prompt.name);
 		}
 
 		if (!prompt.isDefault) {
@@ -381,46 +348,32 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				btn.setIcon("pencil")
 					.setTooltip("Edit")
 					.onClick((): void => {
-						if (this.addPromptForm) {
-							this.addPromptForm.remove();
-							this.addPromptForm = null; // Clear the reference
-						}
+						if (this.addPromptForm) this._closePromptForm(); // Close any existing form
+
 						this.addPromptForm = this._createEditPromptForm(prompt);
+						const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
 
-						// Find the main container for the prompt management section
-						const promptManagementSection = gridContainer.closest(
-							".prompt-management-section-container",
-						); // Need to add this class to the main container
-						const addPromptButtonContainer = promptManagementSection?.querySelector(
-							".tt-add-prompt-button-container",
-						);
-
-						if (promptManagementSection && addPromptButtonContainer) {
-							promptManagementSection.insertBefore(
-								this.addPromptForm,
-								addPromptButtonContainer,
-							);
-						} else if (promptManagementSection) {
-							// Fallback if button container not found, append to section
-							promptManagementSection.appendChild(this.addPromptForm);
+						if (addBtnContainer) {
+							gridContainer
+								.closest(".prompt-management-section-container")
+								?.insertBefore(this.addPromptForm, addBtnContainer);
+							addBtnContainer.hide();
 						} else {
-							// Fallback: if absolutely nothing else, append to grid's parent (less ideal)
-							gridContainer.parentElement?.appendChild(this.addPromptForm);
+							gridContainer
+								.closest(".prompt-management-section-container")
+								?.appendChild(this.addPromptForm);
 						}
-						this.addPromptButtonSettingInstance?.settingEl.hide();
 					});
 			});
 			setting.addExtraButton((btn) => {
 				btn.setIcon("trash")
 					.setTooltip("Delete")
 					.onClick(async (): Promise<void> => {
-						const realIdx = this.plugin.settings.prompts.findIndex(
-							(p: TextTransformerPrompt) => p.id === prompt.id,
-						);
+						const realIdx = this.plugin.settings.prompts.findIndex((p) => p.id === prompt.id);
 						if (realIdx > -1) {
 							this.plugin.settings.prompts.splice(realIdx, 1);
 							await this.plugin.saveSettings();
-							this.display();
+							this.display(); // Re-render after deletion
 						}
 					});
 			});
@@ -428,9 +381,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		setting.addToggle((tg) => {
 			tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-				const p = this.plugin.settings.prompts.find(
-					(p: TextTransformerPrompt) => p.id === prompt.id,
-				);
+				const p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
 				if (p) p.enabled = value;
 				await this.plugin.saveSettings();
 			});
@@ -438,12 +389,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	override hide(): void {
-		// If a form is open when the settings tab is hidden, remove it and clear the reference.
+		// Ensure form is removed if settings tab is closed while form is open
 		if (this.addPromptForm) {
-			this.addPromptForm.remove(); // Remove from DOM
-			this.addPromptForm = null; // Clear the instance variable
+			this._closePromptForm();
 		}
-		// No need to call super.hide() or empty containerEl here,
-		// as display() handles re-rendering and Component lifecycle manages the tab's main element.
+		super.hide(); // Call base class hide
 	}
 }
