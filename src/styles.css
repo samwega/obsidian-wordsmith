@@ -12,6 +12,8 @@
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
 	border-bottom: 1px solid transparent;
+	margin-left: 1px;  /* Adds 1px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 1px of space to the right of the symbol's box */
 }
 
 .text-transformer-removed {
@@ -22,28 +24,50 @@
 	text-decoration: line-through;
 	text-decoration-thickness: 1px;
 	text-decoration-style: solid;
-	text-decoration-color: var(--text-faint, #b69588); /* Strikethrough line color (might need adjustment for light) */
+	text-decoration-color: var(
+		--text-faint,
+		#b69588
+	); /* Strikethrough line color (might need adjustment for light) */
 
 	padding: 0 1px;
 	/* border-radius: 2px; */ /* Optional */
 	/* Add a base border to ensure it can be colored when active without layout shift */
 	border-bottom: 1px solid transparent;
+	margin-left: 1px;  /* Adds 1px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 1px of space to the right of the symbol's box */
 }
 
 /* --- Light Theme Overrides --- */
 body.theme-light .text-transformer-added {
-	background-color: rgba(144, 238, 144, 0.45); /* A slightly more opaque, standard light green */
+	background-color: rgba(
+		144,
+		238,
+		144,
+		0.45
+	); /* A slightly more opaque, standard light green */
 	color: #185018; /* Dark green text for high contrast on light backgrounds */
 	/* border-bottom: 1px solid var(--color-green, #28a745); /* A solid, visible green for underline */
 	border-bottom: 1px solid transparent;
+	margin-left: 1px;  /* Adds 1px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 1px of space to the right of the symbol's box */
 }
 
 body.theme-light .text-transformer-removed {
-	background-color: rgba(255, 182, 193, 0.5); /* A standard light pink, slightly more opaque */
+	background-color: rgba(
+		255,
+		182,
+		193,
+		0.5
+	); /* A standard light pink, slightly more opaque */
 	color: #781111; /* Dark red text for high contrast on light backgrounds */
-	text-decoration-color: var(--color-red, #dc3545); /* A clear red for the strikethrough line */
+	text-decoration-color: var(
+		--color-red,
+		#dc3545
+	); /* A clear red for the strikethrough line */
 	/* Add a base border to ensure it can be colored when active without layout shift */
 	border-bottom: 1px solid transparent;
+	margin-left: 1px;  /* Adds 1px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 1px of space to the right of the symbol's box */
 }
 
 /* --- Active Suggestion Highlights --- */
@@ -59,6 +83,8 @@ body.theme-light .text-transformer-removed {
 	border-bottom: 2px solid #93fe78;
 	/* border-bottom-right-radius: 10px; */
 	border-top-right-radius: 10px;
+	margin-left: 1px;  /* Adds 4px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
 }
 
 /* Dark Theme Active "Removed" Suggestion (As per previous preference) */
@@ -71,11 +97,18 @@ body.theme-light .text-transformer-removed {
 	border-bottom: 2px solid #fca698;
 	/* border-top-right-radius: 10px; */
 	border-top-right-radius: 10px;
+	margin-left: 1px;  /* Adds 4px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
 }
 
 /* Light Theme Active "Added" Suggestion Overrides - Enhanced Contrast */
 body.theme-light .text-transformer-added-active {
-	background-color: rgba(100, 240, 100, 0.8); /* More opaque and vibrant light green */
+	background-color: rgba(
+		100,
+		240,
+		100,
+		0.8
+	); /* More opaque and vibrant light green */
 	/* The existing 1px border-bottom from .text-transformer-added.theme-light remains */
 	outline: 1px solid #107018; /* Strong, defined darker green outline for contrast */
 	outline-offset: -1px;
@@ -83,16 +116,25 @@ body.theme-light .text-transformer-added-active {
 	box-shadow: 0 0 6px rgba(29, 147, 39, 0.8);
 	border-bottom: 2px solid #107018;
 	border-top-right-radius: 10px;
+	margin-left: 1px;  /* Adds 4px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
 }
 
 /* Light Theme Active "Removed" Suggestion Overrides (As per previous preference) */
 body.theme-light .text-transformer-removed-active {
-	background-color: rgba(255, 160, 170, 0.7); /* More opaque/intense light red/pink */
+	background-color: rgba(
+		255,
+		160,
+		170,
+		0.7
+	); /* More opaque/intense light red/pink */
 	outline: 1px solid #f53346; /* Strong, defined darker red outline for contrast */
 	outline-offset: -1px;
 	box-shadow: 0 0 6px rgba(226, 60, 74, 0.8);
 	border-bottom: 2px solid #e23c4a;
 	border-top-right-radius: 10px;
+	margin-left: 1px;  /* Adds 4px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
 }
 
 /* Styles for Newline Indicator Symbols (e.g., ↵, ¶) */
@@ -105,7 +147,7 @@ body.theme-light .text-transformer-removed-active {
 	border-top-right-radius: 12px;
 	display: inline-block; /* Necessary for margin, padding, and border-radius to work as expected */
 	line-height: 0.35; /* Helps manage the height with vertical padding */
-	margin-left: 1px; /* Adds 4px of space to the left of the symbol's box */
+	margin-left: 1px;  /* Adds 4px of space to the left of the symbol's box */
 	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
 	vertical-align: middle; /* Often helps align inline-block elements nicely with surrounding text */
 }
@@ -255,7 +297,10 @@ body.theme-light .text-transformer-removed-active {
 	border: 1px solid var(--background-modifier-border);
 	width: 100%;
 	flex-shrink: 0;
-	background-color: var(--input-background, var(--background-secondary)); /* Added for consistency */
+	background-color: var(
+		--input-background,
+		var(--background-secondary)
+	); /* Added for consistency */
 	color: var(--text-normal); /* Added for consistency */
 }
 
