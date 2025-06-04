@@ -1,11 +1,5 @@
 // src/lib/editor/suggestion-state.ts
-import {
-	Extension,
-	MapMode,
-	Range,
-	StateEffect,
-	StateField,
-} from "@codemirror/state";
+import { Extension, MapMode, Range, StateEffect, StateField } from "@codemirror/state";
 import {
 	Decoration,
 	DecorationSet,
@@ -45,11 +39,7 @@ export const suggestionStateField = StateField.define<SuggestionMark[]>({
 
 					if (mark.type === "removed") {
 						const toAssoc = -1;
-						const mappedTo = tr.changes.mapPos(
-							mark.to,
-							toAssoc,
-							MapMode.TrackDel,
-						);
+						const mappedTo = tr.changes.mapPos(mark.to, toAssoc, MapMode.TrackDel);
 						if (mappedTo === null) return null;
 						to = mappedTo;
 					} else if (mark.type === "added") {
@@ -105,10 +95,7 @@ class GhostTextWidget extends WidgetType {
 	}
 
 	override eq(other: GhostTextWidget): boolean {
-		return (
-			other.displayText === this.displayText &&
-			other.className === this.className
-		);
+		return other.displayText === this.displayText && other.className === this.className;
 	}
 
 	override ignoreEvent(): boolean {
@@ -124,10 +111,7 @@ class SuggestionViewPluginClass {
 		try {
 			this.decorations = this.computeDecorations(view);
 		} catch (e) {
-			console.error(
-				"WordSmith ViewPlugin: Error in constructor computeDecorations:",
-				e,
-			);
+			console.error("WordSmith ViewPlugin: Error in constructor computeDecorations:", e);
 			this.decorations = Decoration.none;
 		}
 	}
@@ -163,10 +147,7 @@ class SuggestionViewPluginClass {
 			try {
 				this.decorations = this.computeDecorations(update.view);
 			} catch (e) {
-				console.error(
-					"WordSmith ViewPlugin: Error in update computeDecorations:",
-					e,
-				);
+				console.error("WordSmith ViewPlugin: Error in update computeDecorations:", e);
 				this.decorations = Decoration.none;
 			}
 		}
@@ -195,8 +176,7 @@ class SuggestionViewPluginClass {
 
 			if (mark.type === "added") {
 				baseClassName = "text-transformer-added";
-				const isCursorCurrentlyAtThisMarkFrom =
-					isSelectionEmpty && cursorPos === mark.from;
+				const isCursorCurrentlyAtThisMarkFrom = isSelectionEmpty && cursorPos === mark.from;
 
 				if (isCursorCurrentlyAtThisMarkFrom) {
 					if (
@@ -235,9 +215,7 @@ class SuggestionViewPluginClass {
 					continue;
 				}
 
-				const displayText = mark.isNewlineChange
-					? NEWLINE_ADD_SYMBOL
-					: (mark.ghostText ?? "");
+				const displayText = mark.isNewlineChange ? NEWLINE_ADD_SYMBOL : (mark.ghostText ?? "");
 				let effectiveClassName = baseClassName;
 				if (isActive) {
 					effectiveClassName += ` ${baseClassName}-active`;
@@ -286,19 +264,13 @@ class SuggestionViewPluginClass {
 					effectiveClassName += ` ${baseClassName}-active`;
 				}
 
-				if (
-					mark.isNewlineChange &&
-					mark.ghostText === NEWLINE_REMOVE_SYMBOL
-				) {
+				if (mark.isNewlineChange && mark.ghostText === NEWLINE_REMOVE_SYMBOL) {
 					// Add newline-symbol-indicator for specific styling (e.g., no strikethrough)
 					// The base classes (text-transformer-removed [-active]) provide background/color/active effects.
 					const symbolWidgetClassName = `${effectiveClassName} newline-symbol-indicator`;
 					try {
 						const widgetDecoration = Decoration.widget({
-							widget: new GhostTextWidget(
-								NEWLINE_REMOVE_SYMBOL,
-								symbolWidgetClassName,
-							),
+							widget: new GhostTextWidget(NEWLINE_REMOVE_SYMBOL, symbolWidgetClassName),
 							side: 1,
 							block: false,
 						}).range(mark.from);
@@ -326,10 +298,7 @@ class SuggestionViewPluginClass {
 					}
 				}
 			} else {
-				console.warn(
-					"WordSmith ViewPlugin: Mark with unknown type skipped:",
-					mark,
-				);
+				console.warn("WordSmith ViewPlugin: Mark with unknown type skipped:", mark);
 				isInsideConsecutiveAddedBlockAtCursor = false;
 				consecutiveAddedBlockFromPos = -1;
 			}
