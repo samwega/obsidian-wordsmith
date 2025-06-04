@@ -26,7 +26,9 @@ export async function geminiRequest(
 	prompt: TextTransformerPrompt,
 	additionalContextForAI?: string,
 	isGenerationTask = false,
-): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
+): Promise<
+	{ newText: string; isOverlength: boolean; cost: number } | undefined
+> {
 	if (!settings.geminiApiKey) {
 		new Notice("Please set your Gemini API key in the plugin settings.");
 		return;
@@ -41,7 +43,7 @@ export async function geminiRequest(
 			fullPrompt +=
 				` The provided context (marked as --- Context Start --- and --- Context End ---) contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
 				"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
-				"Focus on fulfilling the user's ad-hoc prompt as the primary instruction, using the context for awareness. Output ONLY the generated text, without any preambles or explanatory sentences.";
+				"Focus on fulfilling the user's ad-hoc prompt as the primary instruction. If more context is provided, it should inform the response. Output ONLY the generated text, without any preambles or explanatory sentences.";
 		} else {
 			fullPrompt +=
 				" Focus on fulfilling the user's ad-hoc prompt as the primary instruction. Output ONLY the generated text, without any preambles or explanatory sentences.";
@@ -79,10 +81,14 @@ ${oldText}
 
 	let response: RequestUrlResponse;
 	try {
-		const actualModelId = GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
+		const actualModelId =
+			GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
 		const requestBody: {
 			contents: Array<{ parts: Array<{ text: string }> }>;
-			generationConfig: { temperature: number; thinkingConfig?: { thinkingBudget: number } };
+			generationConfig: {
+				temperature: number;
+				thinkingConfig?: { thinkingBudget: number };
+			};
 			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
 			tool_config: {
 				// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
@@ -123,7 +129,10 @@ ${oldText}
 	} catch (err) {
 		console.error("Gemini API error:", err);
 		if (err && typeof err === "object" && "response" in err) {
-			console.error("Gemini API error response:", (err as { response?: unknown }).response);
+			console.error(
+				"Gemini API error response:",
+				(err as { response?: unknown }).response,
+			);
 		}
 		logError(err);
 		new Notice("Gemini API request failed. Check your API key and model.");
