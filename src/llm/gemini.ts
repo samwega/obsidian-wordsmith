@@ -26,9 +26,7 @@ export async function geminiRequest(
 	prompt: TextTransformerPrompt,
 	additionalContextForAI?: string,
 	isGenerationTask = false,
-): Promise<
-	{ newText: string; isOverlength: boolean; cost: number } | undefined
-> {
+): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.geminiApiKey) {
 		new Notice("Please set your Gemini API key in the plugin settings.");
 		return;
@@ -81,8 +79,7 @@ ${oldText}
 
 	let response: RequestUrlResponse;
 	try {
-		const actualModelId =
-			GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
+		const actualModelId = GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
 		const requestBody: {
 			contents: Array<{ parts: Array<{ text: string }> }>;
 			generationConfig: {
@@ -129,10 +126,7 @@ ${oldText}
 	} catch (err) {
 		console.error("Gemini API error:", err);
 		if (err && typeof err === "object" && "response" in err) {
-			console.error(
-				"Gemini API error response:",
-				(err as { response?: unknown }).response,
-			);
+			console.error("Gemini API error response:", (err as { response?: unknown }).response);
 		}
 		logError(err);
 		new Notice("Gemini API request failed. Check your API key and model.");

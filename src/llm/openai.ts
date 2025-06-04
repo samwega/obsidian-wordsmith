@@ -1,11 +1,7 @@
 // src/lib/llm/openai.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
-import {
-	MODEL_SPECS,
-	TextTransformerPrompt,
-	TextTransformerSettings,
-} from "../lib/settings-data";
+import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
 
 /**
@@ -23,9 +19,7 @@ export async function openAiRequest(
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
 	additionalContextForAI?: string,
-): Promise<
-	{ newText: string; isOverlength: boolean; cost: number } | undefined
-> {
+): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.openAiApiKey) {
 		new Notice("Please set your OpenAI API key in the plugin settings.");
 		return;
@@ -34,10 +28,7 @@ export async function openAiRequest(
 	let systemMessageContent =
 		"You are an AI assistant embedded in Obsidian helping with text tasks.";
 
-	if (
-		oldText === "" &&
-		additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)
-	) {
+	if (oldText === "" && additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)) {
 		systemMessageContent +=
 			" The user wants to generate new text. " +
 			`The provided context (marked as --- Context Start --- and --- Context End ---) may contain a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
@@ -110,11 +101,9 @@ Generate text to fulfill this prompt, considering the provided context and the $
 				messages: messages,
 				temperature: prompt.temperature ?? settings.temperature,
 				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-				frequency_penalty:
-					prompt.frequency_penalty ?? settings.frequency_penalty,
+				frequency_penalty: prompt.frequency_penalty ?? settings.frequency_penalty,
 				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-				presence_penalty:
-					prompt.presence_penalty ?? settings.presence_penalty,
+				presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
 				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 				max_tokens: prompt.max_tokens ?? settings.max_tokens,
 			}),
@@ -122,8 +111,7 @@ Generate text to fulfill this prompt, considering the provided context and the $
 		console.debug("[WordSmith plugin] OpenAI response", response);
 	} catch (error) {
 		if ((error as { status: number }).status === 401) {
-			const msg =
-				"OpenAI API key is not valid. Please verify the key in the plugin settings.";
+			const msg = "OpenAI API key is not valid. Please verify the key in the plugin settings.";
 			new Notice(msg, 6_000);
 			return;
 		}
