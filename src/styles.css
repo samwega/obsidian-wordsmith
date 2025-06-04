@@ -99,8 +99,15 @@ body.theme-light .text-transformer-removed-active {
 /* This class is added to GhostTextWidgets for newline symbols */
 .newline-symbol-indicator {
 	font-family: var(--font-monospace); /* Often good for symbols */
-	padding: 2px 6px; /* Give symbols a little breathing room */
-	border-radius: 7px;
+	padding: 5px 5px 9px 3px; /* Vertical padding inside the element, background extends here */
+	border: 2px solid transparent; /* Forms the edge where border-radius applies */
+	border-bottom-left-radius: 12px;
+	border-top-right-radius: 12px;
+	display: inline-block; /* Necessary for margin, padding, and border-radius to work as expected */
+	line-height: 0.35; /* Helps manage the height with vertical padding */
+	margin-left: 1px; /* Adds 4px of space to the left of the symbol's box */
+	margin-right: 1px; /* Adds 4px of space to the right of the symbol's box */
+	vertical-align: middle; /* Often helps align inline-block elements nicely with surrounding text */
 }
 
 /* Specifically for REMOVED newline symbols (¶) to ensure no strikethrough from .text-transformer-removed */
