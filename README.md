@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.10.1
+**Current Version:** v1.10.2
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -48,6 +48,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
   * [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
+    * [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
   * [✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨](#-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-)
     * [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
   * [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
@@ -163,6 +164,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 #### Minor Versions of v.1.10.x
 
 * **1.10.1**—Complete codebase refactoring. Files were getting too big and unmanageable. Many improvements.
+* **1.10.2**—Fix: reintroduced the Pilcrow ¶ functionality accidentally removed during refactoring when we switched to ghost text CM6 inplementation. This time the ¶ symbol uses ghost text, rather than modify the user's actual text. Also completely revamped the style for both ¶ and ↵ symbols. 
 
 ### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
 
