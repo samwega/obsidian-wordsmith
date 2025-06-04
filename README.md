@@ -164,7 +164,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 #### Minor Versions of v.1.10.x
 
 * **1.10.1**—Complete codebase refactoring. Files were getting too big and unmanageable. Many improvements.
-* **1.10.2**—Fix: reintroduced the Pilcrow ¶ functionality accidentally removed during refactoring when we switched to ghost text CM6 inplementation. This time the ¶ symbol uses ghost text, rather than modify the user's actual text. Also completely revamped the style for both ¶ and ↵ symbols. 
+* **1.10.2**—Fix: reintroduced the Pilcrow ¶ functionality accidentally removed during refactoring when we switched to ghost text CM6 inplementation. This time the ¶ symbol uses ghost text, rather than modify the user's actual text. Also completely revamped the style for both ¶ and ↵ symbols.
 
 ### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
 
