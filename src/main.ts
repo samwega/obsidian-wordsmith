@@ -296,6 +296,12 @@ export default class TextTransformer extends Plugin {
 									langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
 								currentDefaultName = `Translate to ${capitalizedLang}—autodetects source language`;
 							}
+							let showInPromptPalette = true;
+							if (typeof loadedPrompt.showInPromptPalette === "boolean") {
+								showInPromptPalette = loadedPrompt.showInPromptPalette;
+							} else if (typeof defaultDefinition.showInPromptPalette === "boolean") {
+								showInPromptPalette = defaultDefinition.showInPromptPalette;
+							}
 							processedDefaultPromptsMap.set(
 								loadedPrompt.id,
 								this._createPromptObject(defaultDefinition, {
@@ -304,12 +310,7 @@ export default class TextTransformer extends Plugin {
 										typeof loadedPrompt.enabled === "boolean"
 											? loadedPrompt.enabled
 											: defaultDefinition.enabled,
-									showInPromptPalette:
-										typeof loadedPrompt.showInPromptPalette === "boolean"
-											? loadedPrompt.showInPromptPalette
-											: typeof defaultDefinition.showInPromptPalette === "boolean"
-												? defaultDefinition.showInPromptPalette
-												: true,
+									showInPromptPalette,
 									isDefault: true,
 								}),
 							);
