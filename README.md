@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.10.2
+**Current Version:** v1.10.3
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -165,6 +165,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 * **1.10.1**—Complete codebase refactoring. Files were getting too big and unmanageable. Many improvements.
 * **1.10.2**—Fix: reintroduced the Pilcrow ¶ functionality accidentally removed during refactoring when we switched to ghost text CM6 inplementation. This time the ¶ symbol uses ghost text, rather than modify the user's actual text. Also completely revamped the style for both ¶ and ↵ symbols.
+* **1.10.3**—Improved AI compliance with any additional instructions the user might provite through the Custom Context input box, for the purposes of [Wiki - Personalized Memory: Crafting Memory Notes](https://github.com/samwega/obsidian-wordsmith/wiki/Personalized-Memory:-Crafting-Memory-Notes)
 
 ### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
 
