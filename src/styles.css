@@ -132,14 +132,6 @@ body.theme-light .text-transformer-removed-active {
 	/* It will inherit background-color, color, outline, box-shadow from .text-transformer-removed / .text-transformer-removed-active */
 }
 
-/* Specifically for ADDED newline symbols (↵) to ensure they don't get unintended background from added text blocks. */
-/* This might need adjustment if .text-transformer-added gives too strong a background for a symbol */
-.text-transformer-added.newline-symbol-indicator {
-	/* If .text-transformer-added background is too much, you can make it transparent here: */
-	/* background-color: transparent !important; */
-	/* color will be inherited from .text-transformer-added / .text-transformer-added-active */
-}
-
 /* Styles for CustomPromptModal */
 .custom-prompt-modal-title {
 	text-align: center;
@@ -325,9 +317,7 @@ body.theme-light .text-transformer-removed-active {
 }
 
 .tt-prompt-item {
-	/* Styles for individual prompt items in the grid */
-	/* For example, padding, alignment, etc. */
-	border: none !important; /* Added to remove default Setting border */
+	border: none !important;
 }
 
 .tt-prompt-item.tt-grid-item-left {

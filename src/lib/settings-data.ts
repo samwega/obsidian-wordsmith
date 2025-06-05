@@ -9,6 +9,9 @@ export const MODEL_SPECS = {
 			speed: 3,
 			url: "https://platform.openai.com/docs/models/gpt-4.1",
 		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
 	},
 	"gpt-4.1-mini": {
 		displayText: "GPT 4.1 mini",
@@ -19,6 +22,9 @@ export const MODEL_SPECS = {
 			speed: 4,
 			url: "https://platform.openai.com/docs/models/gpt-4.1-mini",
 		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
 	},
 	"gpt-4.1-nano": {
 		displayText: "GPT 4.1 nano",
@@ -29,6 +35,9 @@ export const MODEL_SPECS = {
 			speed: 5,
 			url: "https://platform.openai.com/docs/models/gpt-4.1-nano",
 		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
 	},
 	// Gemini models
 	"gemini-2.5-flash-preview-04-17": {
@@ -40,6 +49,9 @@ export const MODEL_SPECS = {
 			speed: 5,
 			url: "https://ai.google.dev/models/gemini",
 		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
 	},
 	"gemini-2.5-pro-preview-05-06": {
 		displayText: "Gemini 2.5 Pro",
@@ -50,6 +62,9 @@ export const MODEL_SPECS = {
 			speed: 4,
 			url: "https://ai.google.dev/models/gemini",
 		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0, // As per instruction, 1.0 is fine for all to start
 	},
 };
 
@@ -73,7 +88,6 @@ export interface TextTransformerPrompt {
 	isDefault: boolean;
 	enabled: boolean;
 	model?: SupportedModels;
-	temperature?: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	frequency_penalty?: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
@@ -101,9 +115,10 @@ export interface TextTransformerSettings {
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
 	saveToClipboard: boolean;
+	// debugMode: boolean; // Removed, will be a runtime property
 }
 
-export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> & {
+export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> & {
 	defaultPromptId?: string | null | undefined;
 } = {
 	openAiApiKey: "",
@@ -115,7 +130,7 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> 
 	translationLanguage: "English",
 	longInputThreshold: 1500,
 	veryLongInputThreshold: 15000,
-	temperature: 0.7,
+	temperature: 1.0,
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	frequency_penalty: 0,
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
@@ -123,8 +138,9 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId"> 
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: 2048,
 	saveToClipboard: false,
+	// debugMode: false, // Removed, will be a runtime property
 };
-// Note: defaultPromptId was removed from DEFAULT_SETTINGS structure as it's no longer part of TextTransformerSettings
+// Note: defaultPromptId and debugMode were removed from DEFAULT_SETTINGS structure
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{

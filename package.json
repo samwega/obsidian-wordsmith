@@ -3,7 +3,7 @@
 	"type": "module",
 	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, multiple AI providers, seamless, keyboard-first workflow.",
 	"author": "Alexander Glavan",
-	"version": "1.10.3",
+	"version": "1.11.0",
 	"keywords": [],
 	"license": "MIT",
 	"main": "main.js",
@@ -22,7 +22,7 @@
 		"markdownlint-cli": "latest",
 		"obsidian": "latest",
 		"tslib": "2.6.2",
-		"typescript": "^5.6.2"
+		"typescript": "^5.8.3"
 	},
 	"dependencies": {
 		"@codemirror/autocomplete": "^6.18.6",

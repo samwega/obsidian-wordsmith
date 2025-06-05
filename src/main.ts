@@ -30,6 +30,7 @@ import { TextTransformerSettingsMenu } from "./ui/settings";
 export default class TextTransformer extends Plugin {
 	defaultSettings = DEFAULT_SETTINGS;
 	settings!: TextTransformerSettings;
+	runtimeDebugMode = false;
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();
@@ -229,6 +230,7 @@ export default class TextTransformer extends Plugin {
 			.forEach((leaf: WorkspaceLeaf) => {
 				if (leaf.view instanceof ContextControlPanel) {
 					leaf.view.updateModelSelector();
+					leaf.view.updateTemperatureSliderDisplay(); // Added this line
 				}
 			});
 	}
@@ -254,7 +256,7 @@ export default class TextTransformer extends Plugin {
 		};
 		// Conditionally add properties if they are not undefined to satisfy exactOptionalPropertyTypes
 		if (typeof combined.model !== "undefined") newPrompt.model = combined.model;
-		if (typeof combined.temperature !== "undefined") newPrompt.temperature = combined.temperature;
+		// if (typeof combined.temperature !== "undefined") newPrompt.temperature = combined.temperature; // Removed as temperature is now global
 		if (typeof combined.frequency_penalty !== "undefined")
 			newPrompt.frequency_penalty = combined.frequency_penalty;
 		if (typeof combined.presence_penalty !== "undefined")
@@ -270,11 +272,25 @@ export default class TextTransformer extends Plugin {
 		const loadedData = (await this.loadData()) as Partial<TextTransformerSettings> | null;
 
 		if (loadedData) {
-			const { prompts: loadedPrompts, ...otherLoadedSettings } = loadedData;
+			const {
+				prompts: loadedPrompts,
+				debugMode,
+				...otherLoadedSettings
+			} = loadedData as Partial<TextTransformerSettings> & { debugMode?: boolean }; // Explicitly type to handle potential old debugMode
 			Object.assign(this.settings, otherLoadedSettings);
+
+			// runtimeDebugMode is initialized to false and not loaded from settings.
+			// If an old debugMode setting exists in data, it's now ignored for persistent settings.
 
 			if (typeof this.settings.translationLanguage === "undefined") {
 				this.settings.translationLanguage = DEFAULT_SETTINGS.translationLanguage;
+			}
+			// Ensure temperature is loaded or defaulted
+			if (
+				typeof this.settings.temperature === "undefined" ||
+				this.settings.temperature === null
+			) {
+				this.settings.temperature = DEFAULT_SETTINGS.temperature;
 			}
 
 			if (Array.isArray(loadedPrompts) && loadedPrompts.length > 0) {

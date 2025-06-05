@@ -22,6 +22,7 @@ import { logError } from "../lib/utils";
  *          or undefined if an error occurs.
  */
 export async function geminiRequest(
+	plugin: { runtimeDebugMode: boolean }, // Added plugin argument
 	settings: TextTransformerSettings,
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
@@ -127,7 +128,7 @@ export async function geminiRequest(
 				},
 			],
 			generationConfig: {
-				temperature: prompt.temperature ?? settings.temperature,
+				temperature: settings.temperature,
 			},
 			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
 			tool_config: {
@@ -140,6 +141,9 @@ export async function geminiRequest(
 			requestBody.generationConfig.thinkingConfig = {
 				thinkingBudget: isGenerationTask ? 1 : 0,
 			};
+		}
+		if (plugin.runtimeDebugMode) {
+			console.debug("[WordSmith plugin] Gemini Request Body:", requestBody);
 		}
 
 		response = await requestUrl({

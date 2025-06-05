@@ -190,8 +190,15 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	try {
 		const oldTextForAI = "";
 		response = settings.model.startsWith("gemini-")
-			? await geminiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI, true)
-			: await openAiRequest(settings, oldTextForAI, adHocPrompt, additionalContextForAI);
+			? await geminiRequest(
+					plugin,
+					settings,
+					oldTextForAI,
+					adHocPrompt,
+					additionalContextForAI,
+					true,
+				)
+			: await openAiRequest(plugin, settings, oldTextForAI, adHocPrompt, additionalContextForAI);
 	} catch (error) {
 		new Notice(
 			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -333,8 +340,21 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	let response: ResponseType;
 	try {
 		response = settings.model.startsWith("gemini-")
-			? await geminiRequest(settings, originalText, currentPrompt, additionalContextForAI, false)
-			: await openAiRequest(settings, originalText, currentPrompt, additionalContextForAI);
+			? await geminiRequest(
+					plugin,
+					settings,
+					originalText,
+					currentPrompt,
+					additionalContextForAI,
+					false,
+				)
+			: await openAiRequest(
+					plugin,
+					settings,
+					originalText,
+					currentPrompt,
+					additionalContextForAI,
+				);
 	} catch (error) {
 		new Notice(
 			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,

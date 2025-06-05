@@ -93,6 +93,44 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			})
 			.settingEl.classList.add("api-key-setting-el");
 
+		// Temperature Setting
+		new Setting(apiModelSectionContents)
+			.setName("Temperature")
+			.setDesc(
+				`0.0 - 0.6: More focused, deterministic, and predictable output. Ideal for factual recall or consistent styling.
+0.7 - 1.2: A balance between coherence and creativity. Good for general writing and drafting. (Default: 1.0)
+1.3 - 1.8: Increased creativity, novelty, and exploration of diverse ideas. Useful for brainstorming or unique content generation, but may be more prone to errors.
+Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
+			)
+			.addSlider((slider) => {
+				slider
+					.setLimits(0.0, 2.0, 0.1) // Changed step to 0.1
+					.setValue(this.plugin.settings.temperature)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.temperature = value;
+						await this.plugin.saveSettings();
+					});
+			});
+
+		// Debug Mode Setting
+		new Setting(apiModelSectionContents)
+			.setName("Debug Mode (Runtime Only)")
+			.setDesc(
+				"Enable verbose logging to the developer console for troubleshooting. This state is NOT saved and resets on reload.",
+			)
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.runtimeDebugMode).onChange((value) => {
+					this.plugin.runtimeDebugMode = value;
+					// Do not save this setting.
+					if (value) {
+						console.log("WordSmith: Debug mode enabled (runtime only).");
+					} else {
+						console.log("WordSmith: Debug mode disabled (runtime only).");
+					}
+				});
+			});
+
 		const contentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> = [
 			{
 				type: "text",

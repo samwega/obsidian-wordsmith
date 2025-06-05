@@ -4,6 +4,7 @@ import {
 	ItemView,
 	Notice,
 	Setting,
+	SliderComponent,
 	TFile,
 	TextAreaComponent,
 	ToggleComponent,
@@ -39,6 +40,7 @@ export class ContextControlPanel extends ItemView {
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
 	private modelDropdown: DropdownComponent | null = null;
+	private temperatureSliderComponent: SliderComponent | null = null;
 	private dynamicContextLinesSetting: Setting | null = null;
 
 	private descriptionContainer: HTMLDivElement | null = null;
@@ -72,14 +74,22 @@ export class ContextControlPanel extends ItemView {
 		}
 	}
 
+	updateTemperatureSliderDisplay(): void {
+		if (this.temperatureSliderComponent) {
+			this.temperatureSliderComponent.setValue(this.plugin.settings.temperature);
+		}
+	}
+
 	override onOpen(): Promise<void> {
 		const { contentEl } = this;
 		contentEl.empty();
 
 		this._renderHeader(contentEl);
+		this._renderTemperatureSlider(contentEl); // Slider rendered on a new line
 		this._renderDescriptionSection(contentEl);
 		this._renderContextToggles(contentEl);
 		this._renderCustomContextArea(contentEl);
+		this.updateTemperatureSliderDisplay(); // Call to initialize slider value
 		return Promise.resolve();
 	}
 
@@ -101,6 +111,24 @@ export class ContextControlPanel extends ItemView {
 		this.modelDropdown.selectEl.classList.add("ccp-model-dropdown-select");
 	}
 
+	private _renderTemperatureSlider(container: HTMLElement): void {
+		// Temperature Slider
+		new Setting(container)
+			.setName("Temperature") // Name changed
+			.addSlider((slider) => {
+				this.temperatureSliderComponent = slider;
+				slider
+					.setLimits(0.0, 2.0, 0.1) // Step is 0.1
+					.setValue(this.plugin.settings.temperature)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.temperature = value;
+						await this.plugin.saveSettings();
+					});
+			})
+			.settingEl.classList.add("ccp-temperature-slider-setting");
+	}
+
 	private _renderDescriptionSection(container: HTMLElement): void {
 		const contextOptionsHeader = container.createDiv({ cls: "ccp-context-options-header" });
 		this.descriptionIndicator = contextOptionsHeader.createEl("span", {
@@ -112,7 +140,6 @@ export class ContextControlPanel extends ItemView {
 		this.descriptionContainer = container.createDiv({ cls: "ccp-description-container" });
 		if (this.isDescriptionExpanded) this.descriptionContainer.classList.add("is-visible");
 
-		// const p1 = this.descriptionContainer.createEl("p", { // p1 was unused
 		this.descriptionContainer.createEl("p", {
 			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
 			cls: "ccp-description-p1",
@@ -236,7 +263,6 @@ export class ContextControlPanel extends ItemView {
 
 			if (match) {
 				new WikilinkSuggestModal(this.plugin.app, (chosenFile: TFile) => {
-					// Explicitly type chosenFile
 					const linkText = `[[${chosenFile.basename}]]`;
 					const textBeforeLinkOpen = textBeforeCursor.substring(0, match.index);
 					const textAfterCursor = text.substring(cursorPos);
@@ -260,6 +286,7 @@ export class ContextControlPanel extends ItemView {
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
 		this.modelDropdown = null;
+		this.temperatureSliderComponent = null;
 		this.dynamicContextLinesSetting = null;
 		this.descriptionContainer = null;
 		this.descriptionIndicator = null;
@@ -299,8 +326,8 @@ export class ContextControlPanel extends ItemView {
 		let match: RegExpExecArray | null;
 		wikilinkRegex.lastIndex = 0;
 
-		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while condition for brevity.
-		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
+		match = wikilinkRegex.exec(textToProcess);
+		while (match !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];
 
@@ -315,7 +342,7 @@ export class ContextControlPanel extends ItemView {
 						try {
 							const content = await this.plugin.app.vault.cachedRead(file);
 							const noteData: ReferencedNoteData = {
-								originalWikilink, // From the first encounter of this unique linkPathOnly
+								originalWikilink,
 								linkText: linkPathOnly,
 								sourcePath: file.path,
 								content,

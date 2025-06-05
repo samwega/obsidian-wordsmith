@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** v1.10.3
+**Current Version:** v1.11.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -150,6 +150,11 @@ Tailor WordSmith to your exact needs:
 See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/obsidian-wordsmith/wiki/API-Key-Setup%2C-AI-Providers%2C-Models) entry.
 
 ## Release History
+
+### ✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging
+
+* **Temperature Sliders**—now included in both the Context Side Pane and the settings panel. Previously, the temperature was hard coded at 0.7. Now, it will defaut to 1.0 for enhanced creativity. I've seen pretty good compliance with temperatures as high as 1.8 (not thoroughly tested yet).
+* **Console Debug Logging**—You now have a toggle which will log all WordSmith activity in the developer console. This will include the prompt sent to the model, so you can verify that it is sending the intended, properly constructed prompt. Temperature is also included.
 
 ### ✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨
 

@@ -16,6 +16,7 @@ import { logError } from "../lib/utils";
  *          or undefined if an error occurs.
  */
 export async function openAiRequest(
+	plugin: { runtimeDebugMode: boolean }, // Added plugin argument for runtimeDebugMode
 	settings: TextTransformerSettings,
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
@@ -101,25 +102,32 @@ export async function openAiRequest(
 	];
 
 	let response: RequestUrlResponse;
+	const requestBodyForOpenAI = {
+		model: settings.model,
+		messages: messages,
+		temperature: settings.temperature,
+		// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+		frequency_penalty: prompt.frequency_penalty ?? settings.frequency_penalty,
+		// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+		presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
+		// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+		max_tokens: prompt.max_tokens ?? settings.max_tokens,
+	};
+	if (plugin.runtimeDebugMode) {
+		console.debug("[WordSmith plugin] OpenAI Request Body:", requestBodyForOpenAI);
+	}
+
 	try {
 		response = await requestUrl({
 			url: "https://api.openai.com/v1/chat/completions",
 			method: "POST",
 			contentType: "application/json",
 			headers: { authorization: "Bearer " + settings.openAiApiKey },
-			body: JSON.stringify({
-				model: settings.model,
-				messages: messages,
-				temperature: prompt.temperature ?? settings.temperature,
-				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-				frequency_penalty: prompt.frequency_penalty ?? settings.frequency_penalty,
-				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-				presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
-				// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-				max_tokens: prompt.max_tokens ?? settings.max_tokens,
-			}),
+			body: JSON.stringify(requestBodyForOpenAI),
 		});
-		console.debug("[WordSmith plugin] OpenAI response", response);
+		if (plugin.runtimeDebugMode) {
+			console.debug("[WordSmith plugin] OpenAI response", response);
+		}
 	} catch (error) {
 		if ((error as { status: number }).status === 401) {
 			const msg = "OpenAI API key is not valid. Please verify the key in the plugin settings.";
