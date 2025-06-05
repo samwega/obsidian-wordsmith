@@ -1,6 +1,7 @@
 // src/lib/llm/gemini.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
+import type { AssembledContextForLLM } from "../lib/core/textTransformer";
 import {
 	GEMINI_MODEL_ID_MAP,
 	MODEL_SPECS,
@@ -24,7 +25,7 @@ export async function geminiRequest(
 	settings: TextTransformerSettings,
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
-	additionalContextForAI?: string,
+	assembledContext?: AssembledContextForLLM, // Changed parameter type and name
 	isGenerationTask = false,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.geminiApiKey) {
@@ -33,43 +34,74 @@ export async function geminiRequest(
 	}
 
 	let fullPrompt = "";
-	const customContextLabelStart = "--- Custom User-Provided Context Start ---";
-	const customContextLabelEnd = "--- Custom User-Provided Context End ---";
+	const customContextStart = "--- Custom Context Start ---";
+	const customContextEnd = "--- Custom Context End ---";
+	// REFERENCED_NOTES_START/END are part of assembledContext.referencedNotesContent if it exists
+	// CURRENT_NOTE_CONTEXT_START/END are part of assembledContext.editorContextContent if it exists
 
 	if (isGenerationTask) {
 		fullPrompt =
 			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt. Your primary instruction is to fulfill the user's ad-hoc prompt. ";
 
-		// Instruction regarding custom context (if it exists)
-		if (additionalContextForAI) {
-			fullPrompt += `You will also be given 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}). Any instructions, rules, or requests found within this Custom User-Provided Context MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `;
-			if (additionalContextForAI.includes(GENERATION_TARGET_CURSOR_MARKER)) {
-				fullPrompt += `The Custom User-Provided Context also contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted. `;
+		if (assembledContext?.customContext) {
+			fullPrompt += `You will be given \'Custom Context\' (marked as \'${customContextStart}\' and \'${customContextEnd}\'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `;
+		}
+		if (assembledContext?.referencedNotesContent) {
+			fullPrompt += `You may also be given \'Referenced Notes\' (typically marked with \'--- BEGIN REFERENCED NOTES ---\' and \'--- END REFERENCED NOTES ---\'). Treat this as supplementary background information unless instructed otherwise in the \'Custom Context\'. `;
+		}
+		if (assembledContext?.editorContextContent) {
+			fullPrompt += `Additionally, you will see \'Current Note Context\' (typically marked with \'--- Current Note Context Start ---\' and \'--- Current Note Context End ---\') which represents content from the current editor. `;
+			if (assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)) {
+				fullPrompt += `This \'Current Note Context\' contains a marker \'${GENERATION_TARGET_CURSOR_MARKER}\'. This marker indicates the precise spot where the new text should be generated or inserted. `;
 			}
 		}
 
 		fullPrompt +=
-			"Output ONLY the generated text, without any preambles or explanatory sentences. "; // General output rule
+			"Output ONLY the generated text, without any preambles or explanatory sentences. ";
 
-		// Append the actual custom context if it exists
-		if (additionalContextForAI) {
-			fullPrompt += `\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
+		// Append actual context blocks
+		if (assembledContext?.customContext) {
+			fullPrompt += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
+		}
+		if (assembledContext?.referencedNotesContent) {
+			fullPrompt += `\n\n${assembledContext.referencedNotesContent}`; // Already wrapped
+		}
+		if (assembledContext?.editorContextContent) {
+			fullPrompt += `\n\n${assembledContext.editorContextContent}`; // Already wrapped
 		}
 
-		// Append the user's ad-hoc prompt
-		fullPrompt += `\n\nUser\'s ad-hoc prompt: ${prompt.text}\n\nGenerated text:`;
+		fullPrompt += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt. Output ONLY the generated text.`;
 	} else {
 		// Transformation logic
-		fullPrompt = "You are an AI assistant. "; // Base role
+		fullPrompt = "You are an AI assistant. You will be provided with a 'Text to Transform'. ";
 
-		if (additionalContextForAI) {
-			fullPrompt += `You will be provided with 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}) and a 'Text to Transform'. Any instructions contained in the Custom User-Provided Context MUST be strictly obeyed and are as important as the main 'User's instruction'. Both sets of instructions should be applied ONLY to the 'Text to Transform'. Do not comment on or alter the Custom User-Provided Context itself; it is for your awareness and to provide supplementary directives.\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
-		} else {
-			fullPrompt +=
-				"You will be provided with a 'Text to Transform'. Your task is to apply the 'User's instruction' ONLY to the 'Text to Transform'.";
+		if (assembledContext?.customContext) {
+			fullPrompt += `You will also be given \'Custom Context\' (marked as \'${customContextStart}\' and \'${customContextEnd}\'). Any guidance, instructions, rules, or requests contained in this block MUST be strictly obeyed and are as important as the main \'User\'s instruction\'. `;
+		}
+		if (assembledContext?.referencedNotesContent) {
+			fullPrompt += `You may also be given \'Referenced Notes\' (typically marked with \'--- BEGIN REFERENCED NOTES ---\' and \'--- END REFERENCED NOTES ---\'). Treat this as background information for the transformation unless instructed otherwise in the \'Custom Context\'. `;
+		}
+		if (assembledContext?.editorContextContent) {
+			fullPrompt += `Additionally, \'Current Note Context\' (typically marked with \'--- Current Note Context Start ---\' and \'--- Current Note Context End ---\') provides surrounding content from the editor for awareness. `;
+		}
+		fullPrompt +=
+			"Apply instructions ONLY to the 'Text to Transform'. Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context). ";
+
+		// Append actual context blocks
+		if (assembledContext?.customContext) {
+			fullPrompt += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
+		}
+		if (assembledContext?.referencedNotesContent) {
+			fullPrompt += `\n\n${assembledContext.referencedNotesContent}`; // Already wrapped
+		}
+		if (assembledContext?.editorContextContent) {
+			// Note: The 'oldText' parameter is the specific text to transform.
+			// The 'editorContextContent' is the broader surrounding context.
+			// We display editorContextContent for awareness.
+			fullPrompt += `\n\n${assembledContext.editorContextContent}`; // Already wrapped
 		}
 
-		fullPrompt += `\n\nUser\'s instruction: ${prompt.text}`;
+		fullPrompt += `\n\nUser's instruction: ${prompt.text}`;
 		fullPrompt += `\n\n--- Text to Transform Start ---\n${oldText}\n--- Text to Transform End ---`;
 		fullPrompt += "\n\nTransformed text:";
 	}
@@ -134,9 +166,6 @@ export async function geminiRequest(
 	let newText = candidates?.[0]?.content?.parts?.[0]?.text || "";
 	if (newText.startsWith("Generated text:")) {
 		newText = newText.substring("Generated text:".length).trimStart();
-	}
-	if (newText.startsWith("Transformed text:")) {
-		newText = newText.substring("Transformed text:".length).trimStart();
 	}
 	if (newText.startsWith("Transformed text:")) {
 		newText = newText.substring("Transformed text:".length).trimStart();

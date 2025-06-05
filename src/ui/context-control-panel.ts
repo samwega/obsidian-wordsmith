@@ -13,6 +13,20 @@ import { MODEL_SPECS, SupportedModels } from "../lib/settings-data";
 import type TextTransformer from "../main";
 import { WikilinkSuggestModal } from "./modals/wikilink-suggest-modal";
 
+// Add these new interface definitions
+export interface ReferencedNoteData {
+	originalWikilink: string; // The exact string matched, e.g., "[[NoteA]]" or "[[NoteA|Alias]]"
+	linkText: string; // The text used for resolution, e.g., "NoteA"
+	aliasText?: string; // The alias text, e.g., "Alias" from "[[NoteA|Alias]]"
+	sourcePath: string; // Full path to the note, e.g., "folder/NoteA.md" or "[NOT FOUND]"
+	content: string; // Content of the note or "[This note could not be found.]"
+}
+
+export interface StructuredCustomContext {
+	rawText: string; // The original custom context text with [[wikilinks]] intact.
+	referencedNotes: ReferencedNoteData[];
+}
+
 export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
 export class ContextControlPanel extends ItemView {
@@ -262,44 +276,92 @@ export class ContextControlPanel extends ItemView {
 		return this.useCustomContext;
 	}
 
-	async getCustomContextText(): Promise<string> {
+	getDynamicContextState(): boolean {
+		return this.useDynamicContext;
+	}
+
+	async getStructuredCustomContext(): Promise<StructuredCustomContext> {
 		if (!this.useCustomContext || !this.customContextText) {
-			return "";
+			return { rawText: this.customContextText || "", referencedNotes: [] };
 		}
 
 		const textToProcess = this.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
-		let lastIndex = 0;
-		const partsToResolve: (string | Promise<string>)[] = [];
+		const uniqueReferencedNotes = new Map<string, Promise<ReferencedNoteData>>();
 
 		if (!this.plugin || !this.plugin.app) {
-			console.error("WordSmith: Plugin or App instance not available for getCustomContextText.");
-			return textToProcess;
+			console.error(
+				"WordSmith: Plugin or App instance not available for getStructuredCustomContext.",
+			);
+			return { rawText: textToProcess, referencedNotes: [] };
 		}
 
-		wikilinkRegex.lastIndex = 0;
 		let match: RegExpExecArray | null;
-		while (true) {
-			match = wikilinkRegex.exec(textToProcess);
-			if (match === null) break;
-			partsToResolve.push(textToProcess.substring(lastIndex, match.index));
+		wikilinkRegex.lastIndex = 0;
+
+		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while condition for brevity.
+		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
+			const originalWikilink = match[0];
 			const linkFullText = match[1];
-			const linkPathOnly = linkFullText.split("|")[0].trim();
-			const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
-			if (file instanceof TFile) {
-				partsToResolve.push(this.plugin.app.vault.cachedRead(file));
-			} else {
-				partsToResolve.push(match[0]);
+
+			const parts = linkFullText.split("|");
+			const linkPathOnly = parts[0].trim();
+			const aliasText = parts.length > 1 ? parts[1].trim() : undefined;
+
+			if (!uniqueReferencedNotes.has(linkPathOnly)) {
+				const promise = (async (): Promise<ReferencedNoteData> => {
+					const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
+					if (file instanceof TFile) {
+						try {
+							const content = await this.plugin.app.vault.cachedRead(file);
+							const noteData: ReferencedNoteData = {
+								originalWikilink, // From the first encounter of this unique linkPathOnly
+								linkText: linkPathOnly,
+								sourcePath: file.path,
+								content,
+							};
+							if (aliasText !== undefined) {
+								noteData.aliasText = aliasText;
+							}
+							return noteData;
+						} catch (error) {
+							console.error(
+								`WordSmith: Error reading file ${file.path} for wikilink ${originalWikilink}:`,
+								error,
+							);
+							const noteData: ReferencedNoteData = {
+								originalWikilink,
+								linkText: linkPathOnly,
+								sourcePath: file.path,
+								content: `[Error reading note: ${error instanceof Error ? error.message : "Unknown error"}]`,
+							};
+							if (aliasText !== undefined) {
+								noteData.aliasText = aliasText;
+							}
+							return noteData;
+						}
+					} else {
+						const noteData: ReferencedNoteData = {
+							originalWikilink,
+							linkText: linkPathOnly,
+							sourcePath: "[NOT FOUND]",
+							content: "[This note could not be found.]",
+						};
+						if (aliasText !== undefined) {
+							noteData.aliasText = aliasText;
+						}
+						return noteData;
+					}
+				})();
+				uniqueReferencedNotes.set(linkPathOnly, promise);
 			}
-			lastIndex = wikilinkRegex.lastIndex;
 		}
-		partsToResolve.push(textToProcess.substring(lastIndex));
 
-		const resolvedParts = await Promise.all(partsToResolve);
-		return resolvedParts.join("");
-	}
+		const resolvedNotes = await Promise.all(Array.from(uniqueReferencedNotes.values()));
 
-	getDynamicContextState(): boolean {
-		return this.useDynamicContext;
+		return {
+			rawText: textToProcess,
+			referencedNotes: resolvedNotes,
+		};
 	}
 }

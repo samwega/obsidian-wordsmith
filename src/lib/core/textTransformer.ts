@@ -10,12 +10,7 @@ import type TextTransformer from "../../main";
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context-control-panel";
 import type { TextTransformerPrompt } from "../settings-data";
 
-import {
-	GENERATION_TARGET_CURSOR_MARKER,
-	NEWLINE_REMOVE_SYMBOL,
-	USER_SELECTED_TEXT_END_MARKER,
-	USER_SELECTED_TEXT_START_MARKER,
-} from "../constants";
+import { GENERATION_TARGET_CURSOR_MARKER, NEWLINE_REMOVE_SYMBOL } from "../constants";
 import {
 	SuggestionMark,
 	clearAllSuggestionsEffect,
@@ -24,6 +19,12 @@ import {
 	suggestionStateField,
 } from "../editor/suggestion-state";
 import { getCmEditorView } from "../utils";
+
+export interface AssembledContextForLLM {
+	customContext?: string;
+	referencedNotesContent?: string;
+	editorContextContent?: string;
+}
 
 /**
  * Gathers context from the ContextControlPanel settings and the current document state.
@@ -38,9 +39,9 @@ async function gatherContextForAI(
 	cmView: EditorView,
 	taskType: "generation" | "transformation",
 	scopeDetails?: { range: { from: number; to: number }; originalText: string },
-): Promise<string> {
+): Promise<AssembledContextForLLM> {
 	const { app } = plugin;
-	const contextParts: string[] = [];
+	const assembledContext: AssembledContextForLLM = {};
 	const currentFile = app.workspace.getActiveFile();
 
 	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
@@ -52,11 +53,25 @@ async function gatherContextForAI(
 
 			// 1. Custom Context
 			if (contextPanel.getCustomContextState()) {
-				const customContext = await contextPanel.getCustomContextText();
-				if (customContext) {
-					contextParts.push(
-						`--- Custom User-Provided Context Start ---\n${customContext}\n--- Custom User-Provided Context End ---`,
-					);
+				const structuredContext = await contextPanel.getStructuredCustomContext();
+				if (structuredContext.rawText) {
+					// The LLM-specific functions will wrap the entire additionalContextForAI
+					// with the Custom User-Provided Context Start/End delimiters.
+					// So, we just push the rawText here.
+					assembledContext.customContext = structuredContext.rawText;
+				}
+
+				if (structuredContext.referencedNotes && structuredContext.referencedNotes.length > 0) {
+					let referencedNotesText = "--- BEGIN REFERENCED NOTES ---\n";
+					for (const note of structuredContext.referencedNotes) {
+						// Using note.originalWikilink to accurately represent what the user typed,
+						// including any alias.
+						referencedNotesText += `\n${note.originalWikilink}\n`;
+						referencedNotesText += `SourcePath: ${note.sourcePath}\n`;
+						referencedNotesText += `Content:\n${note.content}\n`;
+					}
+					referencedNotesText += "\n--- END REFERENCED NOTES ---";
+					assembledContext.referencedNotesContent = referencedNotesText;
 				}
 			}
 
@@ -71,7 +86,6 @@ async function gatherContextForAI(
 
 				let startLineNum: number;
 				let endLineNum: number;
-				let textToMark = "";
 
 				if (taskType === "generation") {
 					const cursorLineNum = doc.lineAt(cursorOffset).number;
@@ -82,7 +96,6 @@ async function gatherContextForAI(
 					const selectionEndLine = doc.lineAt(scopeDetails.range.to).number;
 					startLineNum = Math.max(1, selectionStartLine - linesToInclude);
 					endLineNum = Math.min(doc.lines, selectionEndLine + linesToInclude);
-					textToMark = scopeDetails.originalText;
 				} else {
 					// Should not happen for transformation if scopeDetails is always provided
 					startLineNum = 1;
@@ -110,23 +123,13 @@ async function gatherContextForAI(
 						dynamicContextAccumulator += "\n";
 					}
 				}
-
-				if (
-					taskType === "transformation" &&
-					textToMark &&
-					dynamicContextAccumulator.includes(textToMark)
-				) {
-					dynamicContextAccumulator = dynamicContextAccumulator.replace(
-						textToMark,
-						`${USER_SELECTED_TEXT_START_MARKER}${textToMark}${USER_SELECTED_TEXT_END_MARKER}`,
-					);
-				}
-
-				contextParts.push(
-					`--- Dynamic Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Dynamic Context End ---`,
-				);
+				// Use "Current Note Context" label
+				// For transformation tasks, textToMark (the selected text) is NOT marked here anymore.
+				// It's passed separately as 'oldText' to the LLM.
+				assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Current Note Context End ---`;
 			} else if (useWholeNote && currentFile) {
 				let fileContent = await app.vault.cachedRead(currentFile);
+
 				if (taskType === "generation") {
 					const cursorOffset = cmView.state.selection.main.head;
 					const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
@@ -134,19 +137,15 @@ async function gatherContextForAI(
 						fileContent.substring(0, safeCursorOffset) +
 						GENERATION_TARGET_CURSOR_MARKER +
 						fileContent.substring(safeCursorOffset);
-				} else if (scopeDetails && fileContent.includes(scopeDetails.originalText)) {
-					fileContent = fileContent.replace(
-						scopeDetails.originalText,
-						`${USER_SELECTED_TEXT_START_MARKER}${scopeDetails.originalText}${USER_SELECTED_TEXT_END_MARKER}`,
-					);
 				}
-				contextParts.push(
-					`--- Entire Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Entire Note Context End ---`,
-				);
+				// For transformation tasks, scopeDetails.originalText (the selected text) is NOT marked here anymore.
+				// It's passed separately as 'oldText' to the LLM.
+				// Use "Current Note Context" label
+				assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Current Note Context End ---`;
 			}
 		}
 	}
-	return contextParts.join("\n\n");
+	return assembledContext;
 }
 
 export async function generateTextAndApplyAsSuggestionCM6(

@@ -1,6 +1,7 @@
 // src/lib/llm/openai.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
+import type { AssembledContextForLLM } from "../lib/core/textTransformer"; // Added import
 import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
 
@@ -18,63 +19,69 @@ export async function openAiRequest(
 	settings: TextTransformerSettings,
 	oldText: string, // This will be an empty string for generation tasks
 	prompt: TextTransformerPrompt,
-	additionalContextForAI?: string,
+	assembledContext?: AssembledContextForLLM, // Changed parameter type and name
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
 	if (!settings.openAiApiKey) {
 		new Notice("Please set your OpenAI API key in the plugin settings.");
 		return;
 	}
 
-	const customContextLabelStart = "--- Custom User-Provided Context Start ---";
-	const customContextLabelEnd = "--- Custom User-Provided Context End ---";
+	const customContextStart = "--- Custom Context Start ---";
+	const customContextEnd = "--- Custom Context End ---";
+	// REFERENCED_NOTES_START/END are part of assembledContext.referencedNotesContent if it exists
+	// CURRENT_NOTE_CONTEXT_START/END are part of assembledContext.editorContextContent if it exists
 
 	let systemMessageContent =
-		"You are an AI assistant embedded in Obsidian helping with text tasks.";
+		"You are an AI assistant embedded in Obsidian helping with text tasks. Your primary instruction is to fulfill the user's ad-hoc prompt or transformation instruction. ";
 
-	if (oldText === "" && additionalContextForAI?.includes(GENERATION_TARGET_CURSOR_MARKER)) {
-		// Generation task with cursor marker and potential custom context
-		systemMessageContent +=
-			" The user wants to generate new text. " +
-			`The provided context (marked as ${customContextLabelStart} and ${customContextLabelEnd}) may contain a marker '${GENERATION_TARGET_CURSOR_MARKER}'. ` +
-			"This marker indicates the precise spot in the context where the user's cursor is, and thus where the new text should be generated or inserted. " +
-			`Focus on fulfilling the user's ad-hoc prompt. If '${customContextLabelStart}' and '${customContextLabelEnd}' are present, any instructions contained within them MUST be strictly obeyed and are considered as important as the user's ad-hoc prompt. If more context is provided, it should inform the response. Output ONLY the generated text, without any preambles.`;
-	} else if (oldText === "") {
-		// Generation task without cursor marker, potential custom context handled later
-		systemMessageContent +=
-			" The user wants to generate new text. " +
-			`Focus on fulfilling the user\'s ad-hoc prompt as the primary instruction. If \'${customContextLabelStart}\' and \'${customContextLabelEnd}\' are present, any instructions contained within them MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `; // Custom context instructions added if context exists
-	} else {
-		// Transformation task
-		systemMessageContent += " You are provided with text to transform. ";
-		if (additionalContextForAI) {
-			systemMessageContent += `You will also be given 'Custom User-Provided Context' (marked as ${customContextLabelStart} and ${customContextLabelEnd}). Any instructions, rules, or requests found within this Custom User-Provided Context MUST be strictly obeyed and are as important as the main 'User\'s transformation instruction'. Both sets of instructions should be applied ONLY to the user-provided 'Text to Transform'. Do not comment on or alter the Custom User-Provided Context itself; it is for your awareness and to provide supplementary directives. `;
-		} else {
-			systemMessageContent += `Your task is to apply the \'User\\\'s transformation instruction\' ONLY to the user-provided text. `;
+	// Instructions about context blocks
+	if (assembledContext?.customContext) {
+		systemMessageContent += `You will be given 'Custom Context' (marked as '${customContextStart}' and '${customContextEnd}'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed. `;
+	}
+	if (assembledContext?.referencedNotesContent) {
+		systemMessageContent += `You may also be given 'Referenced Notes' (typically marked with '--- BEGIN REFERENCED NOTES ---' and '--- END REFERENCED NOTES ---'). Treat this as supplementary background information unless instructed otherwise in the 'Custom Context'. `;
+	}
+	if (assembledContext?.editorContextContent) {
+		systemMessageContent += `Additionally, you will see 'Current Note Context' (typically marked with '--- Current Note Context Start ---' and '--- Current Note Context End ---') which represents content from the current editor. `;
+		if (
+			oldText === "" &&
+			assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)
+		) {
+			// Generation task
+			systemMessageContent += `This 'Current Note Context' contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted. `;
 		}
 	}
 
-	// Append the actual custom context if it exists
-	if (additionalContextForAI) {
-		systemMessageContent += `\n\n${customContextLabelStart}\n${additionalContextForAI}\n${customContextLabelEnd}`;
-	}
-
-	// Append the user's ad-hoc prompt or transformation instruction
 	if (oldText === "") {
-		// Generation tasks
-		if (additionalContextForAI) {
-			// additionalContextForAI is present for generation
-			systemMessageContent += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt, considering the provided context and the ${GENERATION_TARGET_CURSOR_MARKER} marker if present. Output ONLY the generated text.`;
-		} else {
-			systemMessageContent += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt. Output ONLY the generated text.`;
-		}
+		// Further instructions specific to Generation tasks
+		systemMessageContent +=
+			"Output ONLY the generated text, without any preambles or explanatory sentences. ";
 	} else {
-		// Transformation tasks
-		systemMessageContent += `\n\nUser's transformation instruction: ${prompt.text}\n\nApply this instruction ONLY to the user-provided text that follows.`;
+		// Further instructions specific to Transformation tasks
+		systemMessageContent +=
+			"Apply instructions ONLY to the 'Text to Transform' (which will be provided as the user message). Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context). ";
+	}
+
+	// Append actual context blocks
+	if (assembledContext?.customContext) {
+		systemMessageContent += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
+	}
+	if (assembledContext?.referencedNotesContent) {
+		systemMessageContent += `\n\n${assembledContext.referencedNotesContent}`; // Already wrapped
+	}
+	if (assembledContext?.editorContextContent) {
+		systemMessageContent += `\n\n${assembledContext.editorContextContent}`; // Already wrapped
 	}
 
 	const messages = [
 		{ role: "system", content: systemMessageContent },
-		{ role: "user", content: oldText === "" ? prompt.text : oldText },
+		{
+			role: "user",
+			content:
+				oldText === ""
+					? prompt.text
+					: `User's transformation instruction: ${prompt.text}\n\n--- Text to Transform Start ---\n${oldText}\n--- Text to Transform End ---`,
+		},
 	];
 
 	let response: RequestUrlResponse;

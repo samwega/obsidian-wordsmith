@@ -190,7 +190,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const textInput = form.appendChild(document.createElement("textarea"));
 		textInput.placeholder = "Prompt text";
 		textInput.value =
-			"[AIROLE]: Professional editor.\n[TASK]: You will receive a text selection. [replace this with your prompt; replace the role too if you want].\nIf more context is provided, it should inform the response. Output only the revised text and nothing else. The text is:";
+			"[AI ROLE]: Professional editor.\n[TASK]: You will receive a text selection. [replace this with your prompt; replace the role too if you want].";
 		textInput.classList.add("tt-prompt-form-textarea");
 
 		const buttonRow = form.appendChild(document.createElement("div"));
