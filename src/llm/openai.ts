@@ -31,36 +31,52 @@ export async function openAiRequest(
 	// REFERENCED_NOTES_START/END are part of assembledContext.referencedNotesContent if it exists
 	// CURRENT_NOTE_CONTEXT_START/END are part of assembledContext.editorContextContent if it exists
 
-	let systemMessageContent =
-		"You are an AI assistant embedded in Obsidian helping with text tasks. Your primary instruction is to fulfill the user's ad-hoc prompt or transformation instruction. ";
+	const systemInstructionBuilder: string[] = [
+		"--- BEGIN SYSTEM INSTRUCTIONS ---",
+		"You are an AI assistant embedded in Obsidian helping with text tasks. Your primary instruction is to fulfill the user's ad-hoc prompt or transformation instruction.",
+	];
 
 	// Instructions about context blocks
 	if (assembledContext?.customContext) {
-		systemMessageContent += `You will be given 'Custom Context' (marked as '${customContextStart}' and '${customContextEnd}'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed. `;
+		systemInstructionBuilder.push(
+			`You will be given 'Custom Context' (marked as '${customContextStart}' and '${customContextEnd}'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed.`,
+		);
 	}
 	if (assembledContext?.referencedNotesContent) {
-		systemMessageContent += `You may also be given 'Referenced Notes' (typically marked with '--- BEGIN REFERENCED NOTES ---' and '--- END REFERENCED NOTES ---'). Treat this as supplementary background information unless instructed otherwise in the 'Custom Context'. `;
+		systemInstructionBuilder.push(
+			`You may also be given 'Referenced Notes' (typically marked with '--- BEGIN REFERENCED NOTES ---' and '--- END REFERENCED NOTES ---'). Treat this as supplementary background information unless instructed otherwise in the 'Custom Context'.`,
+		);
 	}
 	if (assembledContext?.editorContextContent) {
-		systemMessageContent += `Additionally, you will see 'Current Note Context' (typically marked with '--- Current Note Context Start ---' and '--- Current Note Context End ---') which represents content from the current editor. `;
+		systemInstructionBuilder.push(
+			`Additionally, you will see 'Current Note Context' (typically marked with '--- Current Note Context Start ---' and '--- Current Note Context End ---') which represents content from the current editor.`,
+		);
 		if (
 			oldText === "" &&
 			assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)
 		) {
 			// Generation task
-			systemMessageContent += `This 'Current Note Context' contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted. `;
+			systemInstructionBuilder.push(
+				`This 'Current Note Context' contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted.`,
+			);
 		}
 	}
 
 	if (oldText === "") {
 		// Further instructions specific to Generation tasks
-		systemMessageContent +=
-			"Output ONLY the generated text, without any preambles or explanatory sentences. ";
+		systemInstructionBuilder.push(
+			"Output ONLY the generated text, without any preambles or explanatory sentences.",
+		);
 	} else {
 		// Further instructions specific to Transformation tasks
-		systemMessageContent +=
-			"Apply instructions ONLY to the 'Text to Transform' (which will be provided as the user message). Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context). ";
+		systemInstructionBuilder.push(
+			"Apply instructions ONLY to the 'Text to Transform' (which will be provided as the user message). Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context).",
+		);
 	}
+
+	systemInstructionBuilder.push("--- END SYSTEM INSTRUCTIONS ---");
+
+	let systemMessageContent = systemInstructionBuilder.join(" ");
 
 	// Append actual context blocks
 	if (assembledContext?.customContext) {
