@@ -18,9 +18,10 @@
 				"useTopLevelRegex": "off" // often not needed
 			},
 			"suspicious": {
+				"noConsoleLog": "off",
 				"noConsole": {
-					"level": "info",
-					"options": { "allow": ["assert", "error", "info", "warn", "debug", "log"] } // only disallow `.log`
+					"level": "off",
+					"options": { "allow": ["assert", "error", "info", "warn", "debug"] } // only disallow `.log`
 				},
 				"noDebugger": "off" // dropped automatically by `esbuild`
 			},
