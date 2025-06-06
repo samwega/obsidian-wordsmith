@@ -62,6 +62,20 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
+	"gpt-4o": {
+		displayText: "GPT-4o",
+		apiId: "openai/gpt-4o-2024-11-20",
+		maxOutputTokens: 4096,
+		costPerMillionTokens: { input: 5.0, output: 15.0 },
+		info: {
+			intelligence: 5,
+			speed: 5,
+			url: "https://platform.openai.com/docs/models/gpt-4o",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
 	// Gemini models
 	"gemini-2.5-flash-preview-05-20": {
 		displayText: "Gemini 2.5 Flash",
@@ -92,6 +106,120 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		defaultModelTemperature: 1.0,
 	},
 	// OpenRouter Models
+	"gpt-4.1-openrouter": {
+		displayText: "GPT-4.1 (OR)",
+		apiId: "openai/gpt-4.1",
+		maxOutputTokens: 33792,
+		costPerMillionTokens: { input: 2.0, output: 8.0 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/openai/gpt-4.1",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gpt-4.1-mini-openrouter": {
+		displayText: "GPT-4.1 Mini (OR)",
+		apiId: "openai/gpt-4.1-mini",
+		maxOutputTokens: 33792,
+		costPerMillionTokens: { input: 0.4, output: 1.6 },
+		info: {
+			intelligence: 3,
+			speed: 5,
+			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gpt-4.1-nano-openrouter": {
+		displayText: "GPT-4.1 Nano (OR)",
+		apiId: "openai/gpt-4.1-nano",
+		maxOutputTokens: 33792,
+		costPerMillionTokens: { input: 0.1, output: 0.4 },
+		info: {
+			intelligence: 2,
+			speed: 5,
+			url: "https://openrouter.ai/models/openai/gpt-4.1-nano",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gpt-4o-openrouter": {
+		displayText: "GPT-4o (OR)",
+		apiId: "openai/gpt-4o-2024-11-20",
+		maxOutputTokens: 16384,
+		costPerMillionTokens: { input: 2.5, output: 10.0 },
+		info: {
+			intelligence: 5,
+			speed: 5,
+			url: "https://openrouter.ai/openai/gpt-4o-2024-11-20",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.5-flash-openrouter": {
+		displayText: "Gemini 2.5 Flash (OR)",
+		apiId: "google/gemini-2.5-flash-preview-05-20",
+		maxOutputTokens: 67584,
+		costPerMillionTokens: { input: 0.15, output: 0.6 },
+		info: {
+			intelligence: 3,
+			speed: 5,
+			url: "https://openrouter.ai/models/google/gemini-2.5-flash-preview-05-20",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.5-pro-openrouter": {
+		displayText: "Gemini 2.5 Pro (OR)",
+		apiId: "google/gemini-2.5-pro-preview-06-05",
+		maxOutputTokens: 67584,
+		costPerMillionTokens: { input: 1.25, output: 10.0 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/google/gemini-2.5-pro-preview-06-05",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"anthropic-claude-3.5-sonnet": {
+		// A unique key for use within the plugin
+		displayText: "3.5 Sonnet (OR)",
+		apiId: "anthropic/claude-3.5-sonnet", // The EXACT ID from OpenRouter
+		maxOutputTokens: 8192, // Please verify this value
+		costPerMillionTokens: { input: 3.0, output: 15.0 },
+		info: {
+			intelligence: 4, // Your rating
+			speed: 4, // Your rating
+			url: "https://openrouter.ai/models/anthropic/claude-3.5-sonnet",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0, // Some models have different ranges
+		defaultModelTemperature: 1.0,
+	},
+	// With this one:
+	"claude-3.7-sonnet": {
+		displayText: "3.7 Sonnet (OR)",
+		apiId: "anthropic/claude-3.7-sonnet",
+		maxOutputTokens: 65_536,
+		costPerMillionTokens: { input: 3.0, output: 15.0 },
+		info: {
+			intelligence: 5,
+			speed: 5,
+			url: "https://openrouter.ai/models/anthropic/claude-3.7-sonnet",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 1.0,
+	},
 	"deepseek-chat-v3": {
 		displayText: "DeepSeek v3",
 		apiId: "deepseek/deepseek-chat-v3-0324",
@@ -106,26 +234,127 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"anthropic-claude-3.5-sonnet": {
-		// A unique key for use within the plugin
-		displayText: "3.5 Sonnet",
-		apiId: "anthropic/claude-3.5-sonnet", // The EXACT ID from OpenRouter
-		maxOutputTokens: 8192, // Please verify this value
-		costPerMillionTokens: { input: 3.0, output: 15.0 },
+	"deepseek-r1": {
+		displayText: "DeepSeek R1 (OR)",
+		apiId: "deepseek/deepseek-r1-0528",
+		maxOutputTokens: 163_840, // 164K
+		costPerMillionTokens: { input: 0.5, output: 2.15 },
 		info: {
-			intelligence: 4, // Your rating
-			speed: 4, // Your rating
-			url: "https://openrouter.ai/models/anthropic/claude-3.5-sonnet",
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/deepseek/deepseek-r1-0528",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0, // Some models have different ranges
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"goliath-120b": {
+		displayText: "Goliath 120B (OR)",
+		apiId: "alpindale/goliath-120b",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 1.8, output: 1.8 },
+		info: {
+			intelligence: 4,
+			speed: 2,
+			url: "https://openrouter.ai/models/alpindale/goliath-120b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"magnum-72b": {
+		displayText: "Magnum 72B (OR)",
+		apiId: "anthracite-org/magnum-v4-72b",
+		maxOutputTokens: 16_384,
+		costPerMillionTokens: { input: 1.2, output: 1.2 },
+		info: {
+			intelligence: 4,
+			speed: 3,
+			url: "https://openrouter.ai/anthracite-org/magnum-v4-72b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"skyfall-36b-v2": {
+		displayText: "Skyfall 36B V2 (OR)",
+		apiId: "thedrummer/skyfall-36b-v2",
+		maxOutputTokens: 16_384,
+		costPerMillionTokens: { input: 0.9, output: 0.9 },
+		info: {
+			intelligence: 3,
+			speed: 4,
+			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"hermes-3-70b": {
+		displayText: "Hermes 3 70B (OR)",
+		apiId: "nousresearch/hermes-3-llama-3.1-70b",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.12, output: 0.3 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/nousresearch/hermes-3-llama-3.1-70b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"lumimaid-v0.2-70b": {
+		displayText: "Lumimaid v0.2 70B (OR)",
+		apiId: "neversleep/llama-3.1-lumimaid-70b",
+		maxOutputTokens: 2048,
+		costPerMillionTokens: { input: 2.5, output: 3.0 },
+		info: {
+			intelligence: 4,
+			speed: 3,
+			url: "https://openrouter.ai/models/neversleep/llama-3.1-lumimaid-70b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"gemma-3-27b": {
+		displayText: "Gemma 3 27B (OR)",
+		apiId: "google/gemma-3-27b-it",
+		maxOutputTokens: 16_384,
+		costPerMillionTokens: { input: 0.1, output: 0.2 },
+		info: {
+			intelligence: 3,
+			speed: 4,
+			url: "https://openrouter.ai/models/google/gemma-3-27b-it",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
 		defaultModelTemperature: 1.0,
 	},
 };
 
-export type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
+export type OpenAiModels = "gpt-4o" | "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
+
 export type GeminiModels = "gemini-2.5-pro-preview-06-05" | "gemini-2.5-flash-preview-05-20";
-export type OpenRouterModels = "deepseek-chat-v3" | "anthropic-claude-3.5-sonnet";
+
+export type OpenRouterModels =
+	| "gpt-4o-openrouter"
+	| "gpt-4.1-openrouter"
+	| "gpt-4.1-mini-openrouter"
+	| "gpt-4.1-nano-openrouter"
+	| "gemini-2.5-flash-openrouter"
+	| "gemini-2.5-pro-openrouter"
+	| "claude-3.5-sonnet"
+	| "claude-3.7-sonnet"
+	| "deepseek-chat-v3"
+	| "deepseek-r1"
+	| "hermes-3-70b"
+	| "goliath-120b"
+	| "magnum-72b"
+	| "skyfall-36b-v2"
+	| "lumimaid-v0.2-70b"
+	| "gemma-3-27b";
 
 export type SupportedModels = OpenAiModels | GeminiModels | OpenRouterModels;
 
