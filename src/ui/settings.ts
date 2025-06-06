@@ -154,11 +154,14 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 			{ type: "strong", text: "GPT 4.1 nano" },
 			{ type: "text", text: " - intelligence = 2, speed = 5. Price = $0.0005" },
 			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Flash" },
-			{ type: "text", text: " - intelligence = 3, speed = 5. Price = $0.0005" },
+			{ type: "strong", text: "Gemini 2.5 Flash (05-20)" },
+			{
+				type: "text",
+				text: " - intelligence = 3, speed = 5. Price = $0.0005 (500 free requests per day!)",
+			},
 			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Pro" },
-			{ type: "text", text: " - intelligence = 4, speed = thinking. Price = $0.011" },
+			{ type: "strong", text: "Gemini 2.5 Pro (06-05)" },
+			{ type: "text", text: " - intelligence = 4, speed = thinking. Price = $0.01" },
 			{ type: "br" },
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });

@@ -156,6 +156,9 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 * **Temperature Sliders**—now included in both the Context Side Pane and the settings panel. Previously, the temperature was hard coded at 0.7. Now, it will defaut to 1.0 for enhanced creativity. I've seen pretty good compliance with temperatures as high as 1.8 (not thoroughly tested yet).
 * **Console Debug Logging**—You now have a toggle which will log all WordSmith activity in the developer console. This will include the prompt sent to the model, so you can verify that it is sending the intended, properly constructed prompt. Temperature is also included.
+* **Upgrade Gemini models to latest versions:**
+  * Upgrades `gemini-2.5-flash-preview-04-17` to `gemini-2.5-flash-preview-05-20`.
+  * Upgrades `gemini-2.5-pro-preview-05-06` to `gemini-2.5-pro-preview-06-05`.
 
 ### ✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨
 

@@ -40,10 +40,10 @@ export const MODEL_SPECS = {
 		defaultModelTemperature: 1.0,
 	},
 	// Gemini models
-	"gemini-2.5-flash-preview-04-17": {
+	"gemini-2.5-flash-preview-05-20": {
 		displayText: "Gemini 2.5 Flash",
 		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.5, output: 1.5 },
+		costPerMillionTokens: { input: 0.15, output: 0.6 },
 		info: {
 			intelligence: 3,
 			speed: 5,
@@ -53,10 +53,10 @@ export const MODEL_SPECS = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gemini-2.5-pro-preview-05-06": {
+	"gemini-2.5-pro-preview-06-05": {
 		displayText: "Gemini 2.5 Pro",
 		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 3.5, output: 10.5 },
+		costPerMillionTokens: { input: 1.25, output: 10.0 },
 		info: {
 			intelligence: 4,
 			speed: 4,
@@ -64,20 +64,20 @@ export const MODEL_SPECS = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0, // As per instruction, 1.0 is fine for all to start
+		defaultModelTemperature: 1.0,
 	},
 };
 
 export type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
-export type GeminiModels = "gemini-2.5-pro-preview-05-06" | "gemini-2.5-flash-preview-04-17";
+export type GeminiModels = "gemini-2.5-pro-preview-06-05" | "gemini-2.5-flash-preview-05-20";
 
 export type SupportedModels = OpenAiModels | GeminiModels;
 
 export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
-	"gemini-2.5-pro": "gemini-2.5-pro-preview-05-06",
-	"gemini-2.5-flash": "gemini-2.5-flash-preview-04-17",
-	"gemini-2.5-pro-preview-05-06": "gemini-2.5-pro-preview-05-06",
-	"gemini-2.5-flash-preview-04-17": "gemini-2.5-flash-preview-04-17",
+	"gemini-2.5-pro": "gemini-2.5-pro-preview-06-05",
+	"gemini-2.5-flash": "gemini-2.5-flash-preview-05-20",
+	"gemini-2.5-pro-preview-06-05": "gemini-2.5-pro-preview-06-05",
+	"gemini-2.5-flash-preview-05-20": "gemini-2.5-flash-preview-05-20",
 };
 //──────────────────────────────────────────────────────────────────────────────
 
