@@ -393,7 +393,7 @@ export default class TextTransformer extends Plugin {
 			});
 		}
 
-		const { prompts, defaultPromptId, ...defaultKeysForLoop } = DEFAULT_SETTINGS;
+		const { prompts, ...defaultKeysForLoop } = DEFAULT_SETTINGS;
 		for (const key of Object.keys(defaultKeysForLoop) as Array<keyof typeof defaultKeysForLoop>) {
 			const typedKey = key as keyof Omit<TextTransformerSettings, "prompts" | "defaultPromptId">;
 			if (

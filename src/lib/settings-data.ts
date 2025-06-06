@@ -1,8 +1,29 @@
 // src/lib/settings-data.ts
-export const MODEL_SPECS = {
+
+/**
+ * Represents the specification for a supported AI model.
+ */
+export interface ModelSpec {
+	displayText: string;
+	/** The unique ID required by the API provider. For OpenAI/Gemini, this matches the object key. For OpenRouter, it's their specific string. */
+	apiId: string;
+	maxOutputTokens: number;
+	costPerMillionTokens: { input: number; output: number };
+	info: {
+		intelligence: number;
+		speed: number;
+		url: string;
+	};
+	minTemperature: number;
+	maxTemperature: number;
+	defaultModelTemperature: number;
+}
+
+export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gpt-4.1": {
 		displayText: "GPT 4.1",
-		maxOutputTokens: 32_768,
+		apiId: "gpt-4.1",
+		maxOutputTokens: 32_768, // Please verify this value
 		costPerMillionTokens: { input: 2.0, output: 8.0 },
 		info: {
 			intelligence: 4,
@@ -15,7 +36,8 @@ export const MODEL_SPECS = {
 	},
 	"gpt-4.1-mini": {
 		displayText: "GPT 4.1 mini",
-		maxOutputTokens: 32_768,
+		apiId: "gpt-4.1-mini",
+		maxOutputTokens: 32_768, // Please verify this value
 		costPerMillionTokens: { input: 0.4, output: 1.6 },
 		info: {
 			intelligence: 3,
@@ -28,7 +50,8 @@ export const MODEL_SPECS = {
 	},
 	"gpt-4.1-nano": {
 		displayText: "GPT 4.1 nano",
-		maxOutputTokens: 32_768,
+		apiId: "gpt-4.1-nano",
+		maxOutputTokens: 32_768, // Please verify this value
 		costPerMillionTokens: { input: 0.1, output: 0.4 },
 		info: {
 			intelligence: 2,
@@ -42,7 +65,8 @@ export const MODEL_SPECS = {
 	// Gemini models
 	"gemini-2.5-flash-preview-05-20": {
 		displayText: "Gemini 2.5 Flash",
-		maxOutputTokens: 8192,
+		apiId: "gemini-2.5-flash-preview-05-20",
+		maxOutputTokens: 8192, // Please verify this value
 		costPerMillionTokens: { input: 0.15, output: 0.6 },
 		info: {
 			intelligence: 3,
@@ -55,7 +79,8 @@ export const MODEL_SPECS = {
 	},
 	"gemini-2.5-pro-preview-06-05": {
 		displayText: "Gemini 2.5 Pro",
-		maxOutputTokens: 8192,
+		apiId: "gemini-2.5-pro-preview-06-05",
+		maxOutputTokens: 8192, // Please verify this value
 		costPerMillionTokens: { input: 1.25, output: 10.0 },
 		info: {
 			intelligence: 4,
@@ -66,12 +91,43 @@ export const MODEL_SPECS = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
+	// OpenRouter Models
+	"deepseek-chat-v3": {
+		displayText: "DeepSeek v3",
+		apiId: "deepseek/deepseek-chat-v3-0324",
+		maxOutputTokens: 32_768, // Please verify this value
+		costPerMillionTokens: { input: 0.3, output: 0.88 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/deepseek/deepseek-chat-v3-0324",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"anthropic-claude-3.5-sonnet": {
+		// A unique key for use within the plugin
+		displayText: "3.5 Sonnet",
+		apiId: "anthropic/claude-3.5-sonnet", // The EXACT ID from OpenRouter
+		maxOutputTokens: 8192, // Please verify this value
+		costPerMillionTokens: { input: 3.0, output: 15.0 },
+		info: {
+			intelligence: 4, // Your rating
+			speed: 4, // Your rating
+			url: "https://openrouter.ai/models/anthropic/claude-3.5-sonnet",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0, // Some models have different ranges
+		defaultModelTemperature: 1.0,
+	},
 };
 
 export type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano";
 export type GeminiModels = "gemini-2.5-pro-preview-06-05" | "gemini-2.5-flash-preview-05-20";
+export type OpenRouterModels = "deepseek-chat-v3" | "anthropic-claude-3.5-sonnet";
 
-export type SupportedModels = OpenAiModels | GeminiModels;
+export type SupportedModels = OpenAiModels | GeminiModels | OpenRouterModels;
 
 export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
 	"gemini-2.5-pro": "gemini-2.5-pro-preview-06-05",
@@ -100,6 +156,7 @@ export interface TextTransformerPrompt {
 export interface TextTransformerSettings {
 	openAiApiKey: string;
 	geminiApiKey: string;
+	openRouterApiKey: string; // New API key
 	model: SupportedModels;
 	prompts: TextTransformerPrompt[];
 	alwaysShowPromptSelection: boolean;
@@ -115,14 +172,12 @@ export interface TextTransformerSettings {
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
 	saveToClipboard: boolean;
-	// debugMode: boolean; // Removed, will be a runtime property
 }
 
-export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> & {
-	defaultPromptId?: string | null | undefined;
-} = {
+export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> = {
 	openAiApiKey: "",
 	geminiApiKey: "",
+	openRouterApiKey: "", // New default
 	model: "gpt-4.1-nano",
 	prompts: [],
 	alwaysShowPromptSelection: false,
@@ -138,8 +193,8 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" |
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: 2048,
 	saveToClipboard: false,
-	// debugMode: false, // Removed, will be a runtime property
 };
+
 // Note: defaultPromptId and debugMode were removed from DEFAULT_SETTINGS structure
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [

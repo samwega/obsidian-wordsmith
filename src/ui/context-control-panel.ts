@@ -95,7 +95,7 @@ export class ContextControlPanel extends ItemView {
 
 	private _renderHeader(container: HTMLElement): void {
 		const headerContainer = container.createDiv({ cls: "ccp-header-container" });
-		headerContainer.createEl("div", { text: "WS Model", cls: "ccp-title" });
+		headerContainer.createEl("div", { text: "AI", cls: "ccp-title" });
 
 		const modelSelectorContainer = headerContainer.createDiv();
 		this.modelDropdown = new DropdownComponent(modelSelectorContainer);

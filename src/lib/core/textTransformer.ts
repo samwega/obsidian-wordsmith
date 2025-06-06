@@ -6,9 +6,10 @@ import { Editor, Notice, TFile } from "obsidian";
 
 import { geminiRequest } from "../../llm/gemini";
 import { openAiRequest } from "../../llm/openai";
+import { openRouterRequest } from "../../llm/openrouter";
 import type TextTransformer from "../../main";
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context-control-panel";
-import type { TextTransformerPrompt } from "../settings-data";
+import { MODEL_SPECS, type TextTransformerPrompt } from "../settings-data";
 
 import { GENERATION_TARGET_CURSOR_MARKER, NEWLINE_REMOVE_SYMBOL } from "../constants";
 import {
@@ -189,16 +190,39 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	let response: { newText: string; isOverlength: boolean; cost: number } | undefined;
 	try {
 		const oldTextForAI = "";
-		response = settings.model.startsWith("gemini-")
-			? await geminiRequest(
-					plugin,
-					settings,
-					oldTextForAI,
-					adHocPrompt,
-					additionalContextForAI,
-					true,
-				)
-			: await openAiRequest(plugin, settings, oldTextForAI, adHocPrompt, additionalContextForAI);
+		const modelSpec = MODEL_SPECS[settings.model];
+
+		if (modelSpec.apiId.includes("/")) {
+			// OpenRouter model
+			response = await openRouterRequest(
+				plugin,
+				settings,
+				oldTextForAI,
+				adHocPrompt,
+				additionalContextForAI,
+				true,
+			);
+		} else if (settings.model.startsWith("gemini-")) {
+			// Gemini model
+			response = await geminiRequest(
+				plugin,
+				settings,
+				oldTextForAI,
+				adHocPrompt,
+				additionalContextForAI,
+				true,
+			);
+		} else {
+			// OpenAI model
+			response = await openAiRequest(
+				plugin,
+				settings,
+				oldTextForAI,
+				adHocPrompt,
+				additionalContextForAI,
+				true,
+			);
+		}
 	} catch (error) {
 		new Notice(
 			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -339,22 +363,39 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 	type ResponseType = Awaited<ReturnType<typeof geminiRequest>>;
 	let response: ResponseType;
 	try {
-		response = settings.model.startsWith("gemini-")
-			? await geminiRequest(
-					plugin,
-					settings,
-					originalText,
-					currentPrompt,
-					additionalContextForAI,
-					false,
-				)
-			: await openAiRequest(
-					plugin,
-					settings,
-					originalText,
-					currentPrompt,
-					additionalContextForAI,
-				);
+		const modelSpec = MODEL_SPECS[settings.model];
+
+		if (modelSpec.apiId.includes("/")) {
+			// OpenRouter model
+			response = await openRouterRequest(
+				plugin,
+				settings,
+				originalText,
+				currentPrompt,
+				additionalContextForAI,
+				false,
+			);
+		} else if (settings.model.startsWith("gemini-")) {
+			// Gemini model
+			response = await geminiRequest(
+				plugin,
+				settings,
+				originalText,
+				currentPrompt,
+				additionalContextForAI,
+				false,
+			);
+		} else {
+			// OpenAI model
+			response = await openAiRequest(
+				plugin,
+				settings,
+				originalText,
+				currentPrompt,
+				additionalContextForAI,
+				false,
+			);
+		}
 	} catch (error) {
 		new Notice(
 			`AI request failed: ${error instanceof Error ? error.message : String(error)}`,

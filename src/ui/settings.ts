@@ -93,6 +93,19 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			})
 			.settingEl.classList.add("api-key-setting-el");
 
+		new Setting(apiModelSectionContents)
+			.setName("OpenRouter API key")
+			.setDesc("API key for OpenRouter models. See openrouter.ai for details.")
+			.addText((input) => {
+				input.inputEl.type = "password";
+				input.inputEl.setCssProps({ width: "100%" });
+				input.setValue(this.plugin.settings.openRouterApiKey || "").onChange(async (value) => {
+					this.plugin.settings.openRouterApiKey = value.trim();
+					await this.plugin.saveSettings();
+				});
+			})
+			.settingEl.classList.add("api-key-setting-el");
+
 		// Temperature Setting
 		new Setting(apiModelSectionContents)
 			.setName("Temperature")
@@ -142,6 +155,11 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 				text: "Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).",
 			},
 			{ type: "br" },
+			{
+				type: "text",
+				text: "OpenRouter offers free access to many models, like DeepSeek, that are rate-limited but powerful.",
+			},
+			{ type: "br" },
 			{ type: "br" },
 			{ type: "strong", text: "Prices are estimates per 1000 tokens or 750 words:" },
 			{ type: "br" },
@@ -162,6 +180,12 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 			{ type: "br" },
 			{ type: "strong", text: "Gemini 2.5 Pro (06-05)" },
 			{ type: "text", text: " - intelligence = 4, speed = thinking. Price = $0.01" },
+			{ type: "br" },
+			{ type: "strong", text: "DeepSeek Chat v3 (OpenRouter)" },
+			{ type: "text", text: " - intelligence = 4, speed = 4. Price = FREE (rate-limited)" },
+			{ type: "br" },
+			{ type: "strong", text: "Claude 3.5 Sonnet (OpenRouter)" },
+			{ type: "text", text: " - intelligence = 5, speed = 4. Price = $0.018" },
 			{ type: "br" },
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });
