@@ -69,7 +69,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(apiModelSectionContents)
 			.setName("OpenAI API key")
-			.setDesc("API key for OpenAI models.")
+			.setDesc("API key for OpenAI models.       ")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -95,7 +95,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(apiModelSectionContents)
 			.setName("OpenRouter API key")
-			.setDesc("API key for OpenRouter models. See openrouter.ai for details.")
+			.setDesc("API key for OpenRouter models.     ")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -107,14 +107,48 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			.settingEl.classList.add("api-key-setting-el");
 
 		// Temperature Setting
-		new Setting(apiModelSectionContents)
-			.setName("Temperature")
-			.setDesc(
-				`0.0 - 0.6: More focused, deterministic, and predictable output. Ideal for factual recall or consistent styling.
-0.7 - 1.2: A balance between coherence and creativity. Good for general writing and drafting. (Default: 1.0)
-1.3 - 1.8: Increased creativity, novelty, and exploration of diverse ideas. Useful for brainstorming or unique content generation, but may be more prone to errors.
-Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
-			)
+		const temperatureSetting = new Setting(apiModelSectionContents).setName("Temperature");
+
+		const temperatureContentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> =
+			[
+				{ type: "strong", text: "GPT & Gemini models (Default: 1.0):" },
+				{ type: "br" },
+				{
+					type: "text",
+					text: "0.0 - 0.6: More focused, deterministic, and predictable output.",
+				},
+				{ type: "br" },
+				{ type: "text", text: "0.7 - 1.2: A balance between coherence and creativity." },
+				{ type: "br" },
+				{
+					type: "text",
+					text: "1.3 - 1.8: Increased creativity, novelty, and exploration of diverse ideas. May be prone to errors.",
+				},
+				{ type: "br" },
+				{
+					type: "text",
+					text: "Above 1.8: Highly experimental. Incoherence and hallucination become the norm.",
+				},
+				{ type: "br" },
+				{ type: "strong", text: "Anthropic models " },
+				{ type: "text", text: "only go from 0.0 to 1.0 and most of them default to 1.0." },
+			];
+
+		const tempDescContainer = document.createDocumentFragment();
+		temperatureContentStructure.forEach((item) => {
+			if (item.type === "text" && typeof item.text === "string") {
+				tempDescContainer.appendChild(document.createTextNode(item.text));
+			} else if (item.type === "strong" && typeof item.text === "string") {
+				const strongEl = document.createElement("strong");
+				strongEl.textContent = item.text;
+				tempDescContainer.appendChild(strongEl);
+			} else if (item.type === "br") {
+				tempDescContainer.appendChild(document.createElement("br"));
+			}
+		});
+
+		temperatureSetting
+			.setDesc(tempDescContainer) // Pass the constructed DocumentFragment as the description
 			.addSlider((slider) => {
 				slider
 					.setLimits(0.0, 2.0, 0.1) // Changed step to 0.1
@@ -145,102 +179,129 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 			});
 
 		const contentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> = [
+			{ type: "strong", text: "MODEL INFO" },
+			{ type: "br" },
+			{ type: "br" },
 			{
 				type: "text",
-				text: "GPT 4.1 for the best literary results. Nano and Mini should be sufficient for basic text proofreading.",
+				text: "GPT 4.1, GPT 4o, Claude Models, DeepSeek V3, Some Gemini models may excel at writing higher quality literature. Small models like GPT 4.1 Nano and Mini, and so on, should be sufficient for basic text proofreading and processing.",
 			},
 			{ type: "br" },
 			{
 				type: "text",
-				text: "Gemini 2.5 Flash is very fast and powerful. Gemini 2.5 Pro is a thinking model (slooow and powerful).",
+				text: "Large state of the art reasoning models, like Gemini 2.5 Pro, DeepSeek R1, etc. may be too slow for normal text editing tasks, but may prove useful for ad-hoc generation.",
 			},
 			{ type: "br" },
+			{ type: "strong", text: "OpenRouter (marked ⓡ)" },
 			{
 				type: "text",
-				text: "OpenRouter offers access to many models via a single API key, including some exotic ones which specialize in literary writing. Some of the ones I've included are also able to generate NSFW and other uncensored content. Some of them are also significantly slower.",
+				text: " - offers access to many models via a single API key. I've included some exotic ones which specialize in literary writing. Some may be significantly slower.",
 			},
 			{ type: "br" },
 			{ type: "br" },
 			{ type: "strong", text: "PRICES ARE ESTIMATES PER 1000 TOKENS OR 750 WORDS." },
 			{ type: "br" },
-			{ type: "strong", text: " ⮞ OpenAI API Models" },
+			{ type: "strong", text: " ⮞ OpenAI API Models & ⓡ Counterparts" },
 			{ type: "br" },
-			{ type: "strong", text: "GPT 4.1" },
-			{ type: "text", text: " - intelligence = 4, speed = 3. Price = $0.01" },
+			{ type: "strong", text: "GPT 4.1 & ⓡ GPT 4.1" },
+			{ type: "text", text: " - Intelligence = 4, Speed = 58, Price = $0.008" },
 			{ type: "br" },
-			{ type: "strong", text: "GPT 4.1 mini" },
-			{ type: "text", text: " - intelligence = 3, speed = 4. Price = $0.002" },
+			{ type: "strong", text: "GPT 4.1 mini & ⓡ GPT 4.1 mini" },
+			{ type: "text", text: " - Intelligence = 3, Speed = 66 tps, Price = $0.0016" },
 			{ type: "br" },
-			{ type: "strong", text: "GPT 4.1 nano" },
-			{ type: "text", text: " - intelligence = 2, speed = 5. Price = $0.0005" },
+			{ type: "strong", text: "GPT 4.1 nano & ⓡ GPT 4.1 nano" },
+			{ type: "text", text: " - Intelligence = 2, Speed = 90 tps, Price = $0.0004" },
 			{ type: "br" },
-			{ type: "strong", text: "GPT o4" },
-			{ type: "text", text: " - intelligence = 4, speed = 3. Price = $0.01" },
+			{ type: "strong", text: "GPT 4o & ⓡ GPT 4o" },
+			{ type: "text", text: " - Intelligence = 4, Speed = 57-127 tps, Price = $0.015" },
 			{ type: "br" },
-			{ type: "strong", text: " ⮞ Google Gemini API Models" },
-			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Flash (05-20)" },
+			{ type: "strong", text: "GPT o4-mini & ⓡ GPT o4-mini" },
 			{
 				type: "text",
-				text: " - intelligence = 3, speed = 5. Price = $0.0005 (500 free requests per day!)",
+				text: " - Intelligence = 3 (reasoning), Speed = 244 tps, Price = $0.0055",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Pro (06-05)" },
-			{ type: "text", text: " - intelligence = 5, speed = thinking. Price = $0.01" },
+			{ type: "strong", text: " ⮞ Google Gemini API Models & ⓡ Counterparts" },
 			{ type: "br" },
-			{ type: "strong", text: " ⮞ OpenRouter API Models marked (OR)" },
-			{ type: "br" },
-			{ type: "strong", text: "GPT-4.1, GPT-4.1 Mini, GPT-4.1 Nano & GPT-4o (OR)" },
-			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Flash & Pro (OR)" },
-			{ type: "br" },
-			{ type: "strong", text: "Claude 3.5 Sonnet (OR)" },
-			{ type: "text", text: " - intelligence = 5, speed = 4. Price = $0.018" }, // Please verify this value
-			{ type: "br" },
-			{ type: "strong", text: "Claude 3.7 Sonnet (OR)" },
-			{ type: "text", text: " - intelligence = 5, speed = 5, Price = ???" }, // Please verify this value
-			{ type: "br" },
-			{ type: "strong", text: "DeepSeek Chat v3 (OR)" },
-			{ type: "text", text: " - intelligence = 4, speed = 4. Price = ???" }, // Please verify this value
-			{ type: "br" },
-			{ type: "strong", text: "DeepSeek Chat R1 (OR)" },
-			{ type: "text", text: " - intelligence = 4, speed = 4. Price = ???" }, // Please verify this value
-			{ type: "br" },
-			{ type: "strong", text: "Hermes 3 70B (OR)" },
-			{ type: "text", text: " - seems very high quality; NSFW: yes" },
-			{ type: "strong", text: "Hermes 3 405B (OR)" },
+			{ type: "strong", text: "Gemini 2.5 Flash (05-20) & ⓡ Gemini 2.5 Flash (05-20)" },
 			{
 				type: "text",
-				text: " - Philosophically complex narratives. Great context window; NSFW: yes",
+				text: " - Intelligence = 3, Speed = 100-125 tps. Price = $0.0005 (500 free requests per day)",
 			},
 			{ type: "br" },
-			{ type: "br" },
-			{ type: "strong", text: "Magnum 72B (OR)" },
+			{ type: "strong", text: "Gemini 2.5 Pro (06-05) & ⓡ Gemini 2.5 Pro (06-05)" },
 			{
 				type: "text",
-				text: " - Polished and nuanced literary prose, dialogue, pacing. Might refuse NSFW generation from scratch but will transform if given one",
+				text: " - Intelligence = 5 (reasoning), Speed = 60-100 tps, Price = $0.01",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Goliath 120B (OR)" },
+			{ type: "strong", text: " ⮞ Other ⓡ API Models" },
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Claude 3.5 Sonnet" },
+			{ type: "text", text: " - Intelligence = 5, Speed = 40-60 tps, Price = $0.015" },
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Claude 3.7 Sonnet" },
+			{ type: "text", text: " - Intelligence = 5, Speed = 55-62 tps, Price = $0.015" },
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ DeepSeek Chat v3" },
+			{ type: "text", text: " - Intelligence = 4, Speed = 37 tps, Price = $0.00088" }, // Please verify this value
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ DeepSeek Chat R1" },
 			{
 				type: "text",
-				text: " - Novel writing, complex roleplay, immersive world-building. Best for epic fantasy/saga. Small context, expensive; NSFW: yes",
-			},
+				text: " - Intelligence = 4 (reasoning), Speed = 50-140 tps, Price = $0.002",
+			}, // Please verify this value
 			{ type: "br" },
-			{ type: "strong", text: "Lumimaid v0.2 70B (OR)" },
+			{ type: "strong", text: "ⓡ Hermes 3 70B" },
 			{
 				type: "text",
-				text: " - Modern, blended genres, technical, research integration. Best for speculative fiction; NSFW: yes",
+				text: " - very high quality. Most uncensored model I've tested, 131k context & output! Speed = 40-50 tps, Price = $0.0003, NSFW: yes",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Skyfall 36B V2 (OR)" },
+			{ type: "strong", text: "ⓡ Hermes 3 405B" },
 			{
 				type: "text",
-				text: " - Detailed description, lively RP, humor. Large context; NSFW: yes",
+				text: " - Philosophically complex narratives. 131k context & output! Speed = 11-35 tps, Price = $0.0008, NSFW: yes",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Gemma 3 27B (OR)" },
-			{ type: "text", text: " - small fast model from Google. Free!" },
+			{ type: "strong", text: "ⓡ Goliath 120B" },
+			{
+				type: "text",
+				text: " - Novel writing, complex roleplay, immersive world-building. Best for epic fantasy/saga. Only 6k context, 512 tokens output; Speed = 21 tps, Price = $0.0125; NSFW: yes",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Magnum 72B" },
+			{
+				type: "text",
+				text: " - Polished, nuanced literary prose, dialogue, pacing. Speed = 16 tps, Price = $0.003; NSFW: partial",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Skyfall 36B V2" },
+			{
+				type: "text",
+				text: " - From TheDrummer. Detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "Anubis Pro 105b v1" },
+			{
+				type: "text",
+				text: " - TheDrummer's largest model, demonstrates enhanced emotional intelligence, creativity, nuanced character portrayal. Context: 131k, Speed: 28 tps, NSFW: partial",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "Valkyrie 49B v1" },
+			{
+				type: "text",
+				text: " - TheDrummer's newest model drop for creative writing. Context: 131k, Speed: 56 tps, NSFW: Yes",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Lumimaid v0.2 70B" },
+			{
+				type: "text",
+				text: " - Modern, blended genres, technical, research integration, speculative fiction, Speed = 16 tps, Context 16k, Price: $0.003, NSFW: partial",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "Gemma 3 27B & ⓡ Gemma 3 27B" },
+			{ type: "text", text: " - small fast model from Google. Speed = 20?-50 tps, Free!" },
 			{ type: "br" },
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });
