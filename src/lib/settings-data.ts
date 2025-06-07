@@ -333,14 +333,14 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		defaultModelTemperature: 1.0,
 	},
 	"gemma-3-27b": {
-		displayText: "Gemma 3 27B (OR)",
-		apiId: "google/gemma-3-27b-it",
-		maxOutputTokens: 16_384,
-		costPerMillionTokens: { input: 0.1, output: 0.2 },
+		displayText: "Gemma 3 27B Free (OR)",
+		apiId: "google/gemma-3-27b-it:free",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 0.0, output: 0.0 },
 		info: {
 			intelligence: 3,
 			speed: 4,
-			url: "https://openrouter.ai/models/google/gemma-3-27b-it",
+			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0, // Please verify this value

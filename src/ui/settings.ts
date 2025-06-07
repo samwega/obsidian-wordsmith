@@ -240,7 +240,7 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 			},
 			{ type: "br" },
 			{ type: "strong", text: "Gemma 3 27B (OR)" },
-			{ type: "text", text: " - small fast model from Google" },
+			{ type: "text", text: " - small fast model from Google. Free!" },
 			{ type: "br" },
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });
