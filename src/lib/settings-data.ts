@@ -248,6 +248,34 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
+	"hermes-3-70b": {
+		displayText: "Hermes 3 70B (OR)",
+		apiId: "nousresearch/hermes-3-llama-3.1-70b",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.12, output: 0.3 },
+		info: {
+			intelligence: 4,
+			speed: 4,
+			url: "https://openrouter.ai/models/nousresearch/hermes-3-llama-3.1-70b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Please verify this value
+		defaultModelTemperature: 1.0,
+	},
+	"hermes-3-405b": {
+		displayText: "Hermes 3 405B (OR)",
+		apiId: "nousresearch/hermes-3-llama-3.1-405b",
+		maxOutputTokens: 16384,
+		costPerMillionTokens: { input: 0.7, output: 0.8 },
+		info: {
+			intelligence: 5,
+			speed: 2,
+			url: "https://openrouter.ai/nousresearch/hermes-3-llama-3.1-405b",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
 	"goliath-120b": {
 		displayText: "Goliath 120B (OR)",
 		apiId: "alpindale/goliath-120b",
@@ -285,20 +313,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			intelligence: 3,
 			speed: 4,
 			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
-	},
-	"hermes-3-70b": {
-		displayText: "Hermes 3 70B (OR)",
-		apiId: "nousresearch/hermes-3-llama-3.1-70b",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.12, output: 0.3 },
-		info: {
-			intelligence: 4,
-			speed: 4,
-			url: "https://openrouter.ai/models/nousresearch/hermes-3-llama-3.1-70b",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0, // Please verify this value
@@ -350,10 +364,11 @@ export type OpenRouterModels =
 	| "deepseek-chat-v3"
 	| "deepseek-r1"
 	| "hermes-3-70b"
+	| "hermes-3-405b"
 	| "goliath-120b"
 	| "magnum-72b"
-	| "skyfall-36b-v2"
 	| "lumimaid-v0.2-70b"
+	| "skyfall-36b-v2"
 	| "gemma-3-27b";
 
 export type SupportedModels = OpenAiModels | GeminiModels | OpenRouterModels;

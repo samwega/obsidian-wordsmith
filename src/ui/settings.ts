@@ -207,18 +207,22 @@ Above 1.8: Highly experimental. Incoherence and hallucination become the norm.`,
 			{ type: "text", text: " - intelligence = 4, speed = 4. Price = ???" }, // Please verify this value
 			{ type: "br" },
 			{ type: "strong", text: "Hermes 3 70B (OR)" },
+			{ type: "text", text: " - seems very high quality; NSFW: yes" },
+			{ type: "strong", text: "Hermes 3 405B (OR)" },
+			{ type: "text", text: " - Philosophically complex narratives. Great context window; NSFW: yes", },
 			{ type: "br" },
-			{ type: "strong", text: "Goliath 120B (OR)" },
-			{ type: "text", text: " - i:4, s:2, $: 1.8/1.8" }, // Please verify this value
 			{ type: "br" },
 			{ type: "strong", text: "Magnum 72B (OR)" },
-			{ type: "text", text: " - i:4, s:3, $: 1.2/1.2" }, // Please verify this value
+			{ type: "text",	text: " - Polished and nuanced literary prose, dialogue, pacing. Might refuse NSFW generation from scratch but will transform if given one",},
 			{ type: "br" },
-			{ type: "strong", text: "Skyfall 36B V2 (OR)" },
-			{ type: "text", text: " - i:3, s:4, $: 0.9/0.9" }, // Please verify this value
+			{ type: "strong", text: "Goliath 120B (OR)" },
+			{type: "text", text: " - Novel writing, complex roleplay, immersive world-building. Best for epic fantasy/saga. Small context, expensive; NSFW: yes", },
 			{ type: "br" },
 			{ type: "strong", text: "Lumimaid v0.2 70B (OR)" },
-			{ type: "text", text: " - i:4, s:3, $: 2.5/3" }, // Please verify this value
+			{type: "text", text: " - Modern, blended genres, technical, research integration. Best for speculative fiction; NSFW: yes",},
+			{ type: "br" },
+			{ type: "strong", text: "Skyfall 36B V2 (OR)" },
+			{type: "text", text: " - Detailed description, lively RP, humor. Large context; NSFW: yes",},
 			{ type: "br" },
 			{ type: "strong", text: "Gemma 3 27B (OR)" },
 			{ type: "text", text: " - small fast model from Google" },
