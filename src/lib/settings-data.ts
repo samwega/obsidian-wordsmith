@@ -35,15 +35,15 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gpt-4.1-openrouter": {
-		displayText: "ⓡGPT-4.1",
-		apiId: "openai/gpt-4.1",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 2.0, output: 8.0 },
+	"gpt-4o": {
+		displayText: "GPT-4o",
+		apiId: "gpt-4o",
+		maxOutputTokens: 16_384,
+		costPerMillionTokens: { input: 5.0, output: 15.0 },
 		info: {
-			intelligence: 4,
-			speed: 3,
-			url: "https://openrouter.ai/models/openai/gpt-4.1",
+			intelligence: 5,
+			speed: 4,
+			url: "https://platform.openai.com/docs/models/gpt-4o",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
@@ -63,20 +63,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gpt-4.1-mini-openrouter": {
-		displayText: "ⓡGPT-4.1 Mini",
-		apiId: "openai/gpt-4.1-mini",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.4, output: 1.6 },
-		info: {
-			intelligence: 3,
-			speed: 3,
-			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
 	"gpt-4.1-nano": {
 		displayText: "GPT 4.1 nano",
 		apiId: "gpt-4.1-nano",
@@ -91,29 +77,115 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gpt-4.1-nano-openrouter": {
-		displayText: "ⓡGPT-4.1 nano",
-		apiId: "openai/gpt-4.1-nano",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.1, output: 0.4 },
+	"o4-mini": {
+		displayText: "OpenAI o4-mini",
+		apiId: "o4-mini-2025-04-16",
+		maxOutputTokens: 100_000,
+		costPerMillionTokens: { input: 1.1, output: 4.4 },
 		info: {
-			intelligence: 2,
-			speed: 4,
-			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
+			intelligence: 4,
+			speed: 5,
+			url: "https://platform.openai.com/docs/models/o4-mini",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gpt-4o": {
-		displayText: "GPT-4o",
-		apiId: "gpt-4o",
-		maxOutputTokens: 16_384,
-		costPerMillionTokens: { input: 5.0, output: 15.0 },
+	"o3-2025-04-16": {
+		displayText: "OpenAI o3",
+		apiId: "o3-2025-04-16",
+		maxOutputTokens: 100_000, // Please verify this value
+		costPerMillionTokens: { input: 10.0, output: 40.0 },
 		info: {
 			intelligence: 5,
+			speed: 3,
+			url: "https://platform.openai.com/docs/models/o3",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, // Verified
+	},
+	"gpt-4.5-preview-2025-02-27": {
+		displayText: "GPT 4.5 Preview",
+		apiId: "gpt-4.5-preview-2025-02-27",
+		maxOutputTokens: 16_000, // Please verify this value
+		costPerMillionTokens: { input: 75.0, output: 150.0 },
+		info: {
+			intelligence: 5,
+			speed: 2,
+			url: "https://platform.openai.com/docs/models/gpt-4.5-preview",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, // Verified
+	},
+	// Gemini models
+	"gemini-2.5-flash-preview-05-20": {
+		displayText: "Gemini 2.5 Flash",
+		apiId: "gemini-2.5-flash-preview-05-20",
+		maxOutputTokens: 67584,
+		costPerMillionTokens: { input: 0.15, output: 0.6 },
+		info: {
+			intelligence: 3,
 			speed: 4,
-			url: "https://platform.openai.com/docs/models/gpt-4o",
+			url: "https://ai.google.dev/models/gemini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.5-pro-preview-06-05": {
+		displayText: "Gemini 2.5 Pro",
+		apiId: "gemini-2.5-pro-preview-06-05",
+		maxOutputTokens: 8192, // Please verify this value
+		costPerMillionTokens: { input: 1.25, output: 10.0 },
+		info: {
+			intelligence: 5,
+			speed: 3,
+			url: "https://ai.google.dev/models/gemini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.0-flash-lite": {
+		displayText: "Gemini 2.0 Flash-Lite",
+		apiId: "gemini-2.0-flash-lite-001",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 0.075, output: 0.3 },
+		info: {
+			intelligence: 2,
+			speed: 5,
+			url: "https://ai.google.dev/models/gemini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemma-3-27b": {
+		displayText: "Gemma 3 27B Free",
+		apiId: "gemma-3-27b-it",
+		maxOutputTokens: 8192, // Please verify this value
+		costPerMillionTokens: { input: 0.15, output: 0.6 },
+		info: {
+			intelligence: 1,
+			speed: 1,
+			url: "https://ai.google.dev/models/gemini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	// OpenRouter Models
+	"gpt-4.1-openrouter": {
+		displayText: "ⓡGPT-4.1",
+		apiId: "openai/gpt-4.1",
+		maxOutputTokens: 32_768,
+		costPerMillionTokens: { input: 2.0, output: 8.0 },
+		info: {
+			intelligence: 4,
+			speed: 3,
+			url: "https://openrouter.ai/models/openai/gpt-4.1",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
@@ -133,22 +205,36 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"o4-mini": {
-		displayText: "o4-mini",
-		apiId: "o4-mini-2025-04-16",
-		maxOutputTokens: 100_000,
-		costPerMillionTokens: { input: 1.1, output: 4.4 },
+	"gpt-4.1-mini-openrouter": {
+		displayText: "ⓡGPT-4.1 Mini",
+		apiId: "openai/gpt-4.1-mini",
+		maxOutputTokens: 32_768,
+		costPerMillionTokens: { input: 0.4, output: 1.6 },
 		info: {
-			intelligence: 4,
-			speed: 5,
-			url: "https://platform.openai.com/docs/models/o4",
+			intelligence: 3,
+			speed: 3,
+			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gpt-4.1-nano-openrouter": {
+		displayText: "ⓡGPT-4.1 nano",
+		apiId: "openai/gpt-4.1-nano",
+		maxOutputTokens: 32_768,
+		costPerMillionTokens: { input: 0.1, output: 0.4 },
+		info: {
+			intelligence: 2,
+			speed: 4,
+			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
 	"o4-mini-openrouter": {
-		displayText: "ⓡo4-mini",
+		displayText: "ⓡGPT o4-mini",
 		apiId: "openai/o4-mini",
 		maxOutputTokens: 100_000,
 		costPerMillionTokens: { input: 1.1, output: 4.4 },
@@ -156,21 +242,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			intelligence: 4,
 			speed: 5,
 			url: "https://openrouter.ai/models/openai/o4-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	// Gemini models
-	"gemini-2.5-flash-preview-05-20": {
-		displayText: "Gemini 2.5 Flash",
-		apiId: "gemini-2.5-flash-preview-05-20",
-		maxOutputTokens: 67584,
-		costPerMillionTokens: { input: 0.15, output: 0.6 },
-		info: {
-			intelligence: 3,
-			speed: 4,
-			url: "https://ai.google.dev/models/gemini",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
@@ -185,20 +256,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			intelligence: 3,
 			speed: 4,
 			url: "https://openrouter.ai/models/google/gemini-2.5-flash-preview-05-20",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.5-pro-preview-06-05": {
-		displayText: "Gemini 2.5 Pro",
-		apiId: "gemini-2.5-pro-preview-06-05",
-		maxOutputTokens: 8192, // Please verify this value
-		costPerMillionTokens: { input: 1.25, output: 10.0 },
-		info: {
-			intelligence: 5,
-			speed: 3,
-			url: "https://ai.google.dev/models/gemini",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
@@ -232,21 +289,20 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"gemini-2.0-flash-lite": {
-		displayText: "Gemini 2.0 Flash-Lite",
-		apiId: "gemini-2.0-flash-lite-001",
+	"gemma-3-27b-openrouter": {
+		displayText: "ⓡGemma 3 27B Free",
+		apiId: "google/gemma-3-27b-it:free",
 		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.075, output: 0.3 },
+		costPerMillionTokens: { input: 0.0, output: 0.0 },
 		info: {
-			intelligence: 2,
-			speed: 5,
-			url: "https://ai.google.dev/models/gemini",
+			intelligence: 3,
+			speed: 3,
+			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0,
+		maxTemperature: 1.0, // Please verify this value
 		defaultModelTemperature: 1.0,
 	},
-	// More OpenRouter Models
 	"claude-3.5-sonnet-openrouter": {
 		// A unique key for use within the plugin
 		displayText: "ⓡClaude 3.5 Sonnet",
@@ -277,6 +333,20 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 1.0,
 		defaultModelTemperature: 1.0,
 	},
+	"grok-3-beta-openrouter": {
+		displayText: "ⓡGrok 3",
+		apiId: "x-ai/grok-3-beta",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 3.0, output: 15.0 },
+		info: {
+			intelligence: 4,
+			speed: 2,
+			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, // Checked
+	},
 	"deepseek-chat-v3-openrouter": {
 		displayText: "ⓡDeepSeek v3",
 		apiId: "deepseek/deepseek-chat-v3-0324",
@@ -305,7 +375,77 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
-	"hermes-3-70b": {
+	"qwen3-235b-a22b-openrouter": {
+		displayText: "ⓡQwen 3 235B",
+		apiId: "qwen/qwen3-235b-a22b",
+		maxOutputTokens: 41_072,
+		costPerMillionTokens: { input: 0.14, output: 1.0 },
+		info: {
+			intelligence: 3,
+			speed: 2,
+			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, // Checked
+	},
+	"qwen3-32b-openrouter": {
+		displayText: "ⓡQwen 3 32B",
+		apiId: "qwen/qwen3-32b",
+		maxOutputTokens: 41_072,
+		costPerMillionTokens: { input: 0.1, output: 0.3 },
+		info: {
+			intelligence: 2,
+			speed: 2,
+			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, // Checked
+	},
+	"llama-3.3-70b-instruct-openrouter": {
+		displayText: "ⓡLlama 3.3 70B",
+		apiId: "meta-llama/llama-3.3-70b-instruct",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.1, output: 0.3 },
+		info: {
+			intelligence: 3,
+			speed: 2,
+			url: "https://openrouter.ai/meta-llama/llama-3.3-70b-instruct",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 5.0,
+		defaultModelTemperature: 0.7, // Checked
+	},
+	"llama-3.1-405b-instruct-openrouter": {
+		displayText: "ⓡLlama 3.1 405B",
+		apiId: "meta-llama/llama-3.1-405b-instruct",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.8, output: 0.8 },
+		info: {
+			intelligence: 4,
+			speed: 1,
+			url: "https://openrouter.ai/meta-llama/llama-3.1-405b-instruct",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.7, // Checked
+	},
+	"llama-3.1-nemotron-ultra-253b-v1": {
+		displayText: "ⓡLlama 3.1 NU 253B",
+		apiId: "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.6, output: 1.8 },
+		info: {
+			intelligence: 4,
+			speed: 2,
+			url: "https://openrouter.ai/meta-llama/llama-3.1-405b-instruct",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.0, // Checked
+	},
+	"hermes-3-70b-openrouter": {
 		displayText: "ⓡHermes 3 70B",
 		apiId: "nousresearch/hermes-3-llama-3.1-70b",
 		maxOutputTokens: 131_072,
@@ -316,10 +456,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/models/nousresearch/hermes-3-llama-3.1-70b",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"hermes-3-405b": {
+	"hermes-3-405b-openrouter": {
 		displayText: "ⓡHermes 3 405B",
 		apiId: "nousresearch/hermes-3-llama-3.1-405b",
 		maxOutputTokens: 16384,
@@ -330,10 +470,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/nousresearch/hermes-3-llama-3.1-405b",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"goliath-120b": {
+	"goliath-120b-openrouter": {
 		displayText: "ⓡGoliath 120B",
 		apiId: "alpindale/goliath-120b",
 		maxOutputTokens: 8192,
@@ -344,10 +484,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/models/alpindale/goliath-120b",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"magnum-72b": {
+	"magnum-72b-openrouter": {
 		displayText: "ⓡMagnum 72B",
 		apiId: "anthracite-org/magnum-v4-72b",
 		maxOutputTokens: 16_384,
@@ -358,10 +498,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/anthracite-org/magnum-v4-72b",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"skyfall-36b-v2": {
+	"skyfall-36b-v2-openrouter": {
 		displayText: "ⓡSkyfall 36B V2",
 		apiId: "thedrummer/skyfall-36b-v2",
 		maxOutputTokens: 32_768,
@@ -372,10 +512,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"anubis-pro-105b-v1": {
+	"anubis-pro-105b-v1-openrouter": {
 		displayText: "ⓡAnubis 105B",
 		apiId: "thedrummer/anubis-pro-105b-v1",
 		maxOutputTokens: 131_072,
@@ -386,10 +526,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/thedrummer/anubis-pro-105b-v1",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"valkyrie-49b-v1": {
+	"valkyrie-49b-v1-openrouter": {
 		displayText: "ⓡValkyrie 49B",
 		apiId: "thedrummer/valkyrie-49b-v1",
 		maxOutputTokens: 131_072,
@@ -400,10 +540,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"lumimaid-v0.2-70b": {
+	"lumimaid-v0.2-70b-openrouter": {
 		displayText: "ⓡLumimaid 70B",
 		apiId: "neversleep/llama-3.1-lumimaid-70b",
 		maxOutputTokens: 2048,
@@ -414,36 +554,36 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/models/neversleep/llama-3.1-lumimaid-70b",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Please verify this value
-		defaultModelTemperature: 1.0,
-	},
-	"gemma-3-27b": {
-		displayText: "Gemma 3 27B Free",
-		apiId: "gemma-3-27b-it",
-		maxOutputTokens: 8192, // Please verify this value
-		costPerMillionTokens: { input: 0.15, output: 0.6 },
-		info: {
-			intelligence: 1,
-			speed: 1,
-			url: "https://ai.google.dev/models/gemini",
-		},
-		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
+		defaultModelTemperature: 0.7, //verified
 	},
-	"gemma-3-27b-openrouter": {
-		displayText: "ⓡGemma 3 27B Free",
-		apiId: "google/gemma-3-27b-it:free",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.0, output: 0.0 },
+	"command-a-openrouter": {
+		displayText: "ⓡCommand A",
+		apiId: "cohere/command-a",
+		maxOutputTokens: 8048,
+		costPerMillionTokens: { input: 2.5, output: 10.0 },
 		info: {
 			intelligence: 3,
 			speed: 3,
-			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
+			url: "https://openrouter.ai/cohere/command-a",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0, // Please verify this value
-		defaultModelTemperature: 1.0,
+		maxTemperature: 1.0, // Verified
+		defaultModelTemperature: 0.3,
+	},
+	"mistral-large-2411": {
+		displayText: "ⓡMistral Large 2411",
+		apiId: "mistralai/mistral-large-2411",
+		maxOutputTokens: 131_000,
+		costPerMillionTokens: { input: 2.0, output: 6.0 },
+		info: {
+			intelligence: 3,
+			speed: 2,
+			url: "https://openrouter.ai/mistralai/mistral-large-2411",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0, // Verified
+		defaultModelTemperature: 0.7,
 	},
 };
 
@@ -453,12 +593,15 @@ export const OPENAI_MODELS = [
 	"gpt-4.1-nano",
 	"gpt-4o",
 	"o4-mini",
+	"o3-2025-04-16",
+	"gpt-4.5-preview-2025-02-27",
 ] as const;
 export type OpenAiModels = (typeof OPENAI_MODELS)[number];
 
 export const GEMINI_MODELS = [
 	"gemini-2.5-flash-preview-05-20",
 	"gemini-2.5-pro-preview-06-05",
+	"gemini-2.0-flash-lite",
 	"gemma-3-27b",
 ] as const;
 export type GeminiModels = (typeof GEMINI_MODELS)[number];
@@ -473,19 +616,27 @@ export const OPENROUTER_MODELS = [
 	"gemini-2.5-pro-openrouter",
 	"gemini-2.0-flash-lite",
 	"gemini-2.0-flash-lite-openrouter",
+	"gemma-3-27b-openrouter",
 	"claude-3.5-sonnet-openrouter",
 	"claude-3.7-sonnet-openrouter",
+	"grok-3-beta-openrouter",
 	"deepseek-chat-v3-openrouter",
 	"deepseek-r1-openrouter",
-	"hermes-3-70b",
-	"hermes-3-405b",
-	"goliath-120b",
-	"magnum-72b",
-	"skyfall-36b-v2",
-	"anubis-pro-105b-v1",
-	"valkyrie-49b-v1",
-	"lumimaid-v0.2-70b",
-	"gemma-3-27b-openrouter",
+	"qwen3-235b-a22b",
+	"qwen3-32b-openrouter",
+	"llama-3.3-70b-instruct-openrouter",
+	"llama-3.1-405b-instruct-openrouter",
+	"llama-3.1-nemotron-ultra-253b-v1",
+	"hermes-3-70b-openrouter",
+	"hermes-3-405b-openrouter",
+	"goliath-120b-openrouter",
+	"magnum-72b-openrouter",
+	"skyfall-36b-v2-openrouter",
+	"anubis-pro-105b-v1-openrouter",
+	"valkyrie-49b-v1-openrouter",
+	"lumimaid-v0.2-70b-openrouter",
+	"command-a-openrouter",
+	"mistral-large-2411",
 ] as const;
 export type OpenRouterModels = (typeof OPENROUTER_MODELS)[number];
 
