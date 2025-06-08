@@ -244,18 +244,18 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "text", text: " - Intelligence = 5, Speed = 55-62 tps, Price = $0.015" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ DeepSeek Chat v3" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 37 tps, Price = $0.00088" }, // Please verify this value
+			{ type: "text", text: " - Intelligence = 4, Speed = 37 tps, Price = $0.00088" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ DeepSeek Chat R1" },
 			{
 				type: "text",
 				text: " - Intelligence = 4 (reasoning), Speed = 50-140 tps, Price = $0.002",
-			}, // Please verify this value
+			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Hermes 3 70B" },
 			{
 				type: "text",
-				text: " - very high quality. Most uncensored model I've tested, 131k context & output! Speed = 40-50 tps, Price = $0.0003, NSFW: yes",
+				text: " - very high quality. Highly uncensored, 131k context & output! Speed = 40-50 tps, Price = $0.0003, NSFW: yes",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Hermes 3 405B" },
@@ -279,7 +279,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "strong", text: "ⓡ Skyfall 36B V2" },
 			{
 				type: "text",
-				text: " - From TheDrummer. Detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
+				text: " - TheDrummer's. Detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "Anubis Pro 105b v1" },

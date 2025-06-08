@@ -437,25 +437,3 @@ body.theme-light .text-transformer-removed-active {
 	min-height: 80px;
 	resize: vertical;
 }
-
-/* --- Scroll Comfort Zone --- */
-/*
- * The scroll-padding CSS property on .cm-scroller was found to be ineffective
- * for adjusting the scroll target of CodeMirror's programmatic scrollIntoView
- * with the {y: "nearest"} option.
- * The "comfort zone" is now handled programmatically by using the `yMargin`
- * option in the `EditorView.scrollIntoView` effect within suggestion-handler.ts.
- *
- * `scroll-behavior: smooth !important;` is kept for general smooth scrolling.
- */
-.markdown-source-view.mod-cm6 .cm-scroller {
-	/* scroll-padding-top: 200px !important; /* Removed; handled by yMargin in JS */
-	/* scroll-padding-bottom: 200px !important; /* Removed; handled by yMargin in JS */
-	scroll-behavior: smooth !important;
-}
-
-.markdown-preview-view {
-	/* scroll-padding-top: 200px !important; /* Removed; handled by yMargin in JS (if applicable to preview) */
-	/* scroll-padding-bottom: 200px !important; /* Removed; handled by yMargin in JS (if applicable to preview) */
-	scroll-behavior: smooth !important;
-}
