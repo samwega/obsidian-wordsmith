@@ -107,7 +107,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	},
 	"gpt-4o": {
 		displayText: "GPT-4o",
-		apiId: "openai/gpt-4o-2024-11-20",
+		apiId: "gpt-4o",
 		maxOutputTokens: 16_384,
 		costPerMillionTokens: { input: 5.0, output: 15.0 },
 		info: {
@@ -165,7 +165,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gemini-2.5-flash-preview-05-20": {
 		displayText: "Gemini 2.5 Flash",
 		apiId: "gemini-2.5-flash-preview-05-20",
-		maxOutputTokens: 8192, // Please verify this value
+		maxOutputTokens: 67584,
 		costPerMillionTokens: { input: 0.15, output: 0.6 },
 		info: {
 			intelligence: 3,
@@ -213,6 +213,34 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			intelligence: 5,
 			speed: 3,
 			url: "https://openrouter.ai/models/google/gemini-2.5-pro-preview-06-05",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.0-flash-lite-openrouter": {
+		displayText: "ⓡGemini 2.0 Flash-Lite",
+		apiId: "google/gemini-2.0-flash-lite-001",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 0.075, output: 0.3 },
+		info: {
+			intelligence: 2,
+			speed: 5,
+			url: "https://openrouter.ai/google/gemini-2.0-flash-lite-001",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 1.0,
+	},
+	"gemini-2.0-flash-lite": {
+		displayText: "Gemini 2.0 Flash-Lite",
+		apiId: "gemini-2.0-flash-lite-001",
+		maxOutputTokens: 8192,
+		costPerMillionTokens: { input: 0.075, output: 0.3 },
+		info: {
+			intelligence: 2,
+			speed: 5,
+			url: "https://ai.google.dev/models/gemini",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
@@ -419,41 +447,49 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	},
 };
 
-export type OpenAiModels = "gpt-4.1" | "gpt-4.1-mini" | "gpt-4.1-nano" | "gpt-4o" | "o4-mini";
+export const OPENAI_MODELS = [
+	"gpt-4.1",
+	"gpt-4.1-mini",
+	"gpt-4.1-nano",
+	"gpt-4o",
+	"o4-mini",
+] as const;
+export type OpenAiModels = (typeof OPENAI_MODELS)[number];
 
-export type GeminiModels = "gemini-2.5-flash-preview-05-20" | "gemini-2.5-pro-preview-06-05";
+export const GEMINI_MODELS = [
+	"gemini-2.5-flash-preview-05-20",
+	"gemini-2.5-pro-preview-06-05",
+	"gemma-3-27b",
+] as const;
+export type GeminiModels = (typeof GEMINI_MODELS)[number];
 
-export type OpenRouterModels =
-	| "gpt-4.1-openrouter"
-	| "gpt-4.1-mini-openrouter"
-	| "gpt-4.1-nano-openrouter"
-	| "gpt-4o-openrouter"
-	| "o4-mini-openrouter"
-	| "gemini-2.5-flash-openrouter"
-	| "gemini-2.5-pro-openrouter"
-	| "claude-3.5-sonnet-openrouter"
-	| "claude-3.7-sonnet-openrouter"
-	| "deepseek-chat-v3-openrouter"
-	| "deepseek-r1-openrouter"
-	| "hermes-3-70b"
-	| "hermes-3-405b"
-	| "goliath-120b"
-	| "magnum-72b"
-	| "skyfall-36b-v2"
-	| "anubis-pro-105b-v1"
-	| "valkyrie-49b-v1"
-	| "lumimaid-v0.2-70b"
-	| "gemma-3-27b"
-	| "gemma-3-27b-openrouter";
+export const OPENROUTER_MODELS = [
+	"gpt-4.1-openrouter",
+	"gpt-4.1-mini-openrouter",
+	"gpt-4.1-nano-openrouter",
+	"gpt-4o-openrouter",
+	"o4-mini-openrouter",
+	"gemini-2.5-flash-openrouter",
+	"gemini-2.5-pro-openrouter",
+	"gemini-2.0-flash-lite",
+	"gemini-2.0-flash-lite-openrouter",
+	"claude-3.5-sonnet-openrouter",
+	"claude-3.7-sonnet-openrouter",
+	"deepseek-chat-v3-openrouter",
+	"deepseek-r1-openrouter",
+	"hermes-3-70b",
+	"hermes-3-405b",
+	"goliath-120b",
+	"magnum-72b",
+	"skyfall-36b-v2",
+	"anubis-pro-105b-v1",
+	"valkyrie-49b-v1",
+	"lumimaid-v0.2-70b",
+	"gemma-3-27b-openrouter",
+] as const;
+export type OpenRouterModels = (typeof OPENROUTER_MODELS)[number];
 
 export type SupportedModels = OpenAiModels | GeminiModels | OpenRouterModels;
-
-export const GEMINI_MODEL_ID_MAP: Record<string, string> = {
-	"gemini-2.5-pro": "gemini-2.5-pro-preview-06-05",
-	"gemini-2.5-flash": "gemini-2.5-flash-preview-05-20",
-	"gemini-2.5-pro-preview-06-05": "gemini-2.5-pro-preview-06-05",
-	"gemini-2.5-flash-preview-05-20": "gemini-2.5-flash-preview-05-20",
-};
 //──────────────────────────────────────────────────────────────────────────────
 
 export interface TextTransformerPrompt {

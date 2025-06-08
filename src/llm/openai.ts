@@ -1,7 +1,7 @@
 // src/llm/openai.ts
 import { Notice } from "obsidian";
 import type { AssembledContextForLLM } from "../lib/core/textTransformer";
-import { TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
+import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import type TextTransformer from "../main";
 import { chatCompletionRequest } from "./chat-completion-handler";
 
@@ -30,6 +30,8 @@ export function openAiRequest(
 		return Promise.resolve(undefined);
 	}
 
+	const modelSpec = MODEL_SPECS[settings.model];
+
 	return chatCompletionRequest(
 		plugin,
 		settings,
@@ -40,7 +42,7 @@ export function openAiRequest(
 		{
 			apiUrl: "https://api.openai.com/v1/chat/completions",
 			apiKey: settings.openAiApiKey,
-			modelId: settings.model, // OpenAI uses the setting key directly as model ID
+			modelId: modelSpec.apiId, // Use apiId for consistency
 		},
 	);
 }

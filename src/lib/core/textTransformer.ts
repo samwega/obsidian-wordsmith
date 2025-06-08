@@ -9,7 +9,7 @@ import { openAiRequest } from "../../llm/openai";
 import { openRouterRequest } from "../../llm/openrouter";
 import type TextTransformer from "../../main";
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context-control-panel";
-import { MODEL_SPECS, type TextTransformerPrompt } from "../settings-data";
+import { GEMINI_MODELS, MODEL_SPECS, type TextTransformerPrompt } from "../settings-data";
 
 import { GENERATION_TARGET_CURSOR_MARKER, NEWLINE_REMOVE_SYMBOL } from "../constants";
 import {
@@ -202,7 +202,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 				additionalContextForAI,
 				true,
 			);
-		} else if (settings.model.startsWith("gemini-")) {
+		} else if ((GEMINI_MODELS as readonly string[]).includes(settings.model)) {
 			// Gemini model
 			response = await geminiRequest(
 				plugin,
@@ -375,7 +375,7 @@ Large text, this may take a moment.${veryLongInput ? " (A minute or longer.)" : 
 				additionalContextForAI,
 				false,
 			);
-		} else if (settings.model.startsWith("gemini-")) {
+		} else if ((GEMINI_MODELS as readonly string[]).includes(settings.model)) {
 			// Gemini model
 			response = await geminiRequest(
 				plugin,

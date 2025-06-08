@@ -195,7 +195,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "strong", text: "OpenRouter (marked ⓡ)" },
 			{
 				type: "text",
-				text: " - offers access to many models via a single API key. I've included some exotic ones which specialize in literary writing. Some may be significantly slower.",
+				text: " - offers access to many models via a single API key. I've included some exotic ones which specialize in literary writing. Models cost 5% more through OpenRouter. Ai Studio offers 500 free API calls per day on Gemini 2.5 Flash and 1500 for 2.0 Flash-Lite, so even if you have an OpenRouter account, it's better to use up the free calls with AI Studio, even if you don't pay at all. You may also bring your own keys to OpenRouter to make use of the free calls directly.",
 			},
 			{ type: "br" },
 			{ type: "br" },
@@ -223,16 +223,28 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "br" },
 			{ type: "strong", text: " ⮞ Google Gemini API Models & ⓡ Counterparts" },
 			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Flash (05-20) & ⓡ Gemini 2.5 Flash (05-20)" },
+			{
+				type: "strong",
+				text: "Gemini 2.5 Flash Preview (05-20) & ⓡ Gemini 2.5 Flash Preview (05-20)",
+			},
 			{
 				type: "text",
-				text: " - Intelligence = 3, Speed = 100-125 tps. Price = $0.0005 (500 free requests per day)",
+				text: " - Intelligence = 3, Speed = 100-125 tps. Price = $0.0005 (500 free req/day)",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Gemini 2.5 Pro (06-05) & ⓡ Gemini 2.5 Pro (06-05)" },
+			{
+				type: "strong",
+				text: "Gemini 2.5 Pro Preview (06-05) & ⓡ Gemini 2.5 Pro Preview (06-05)",
+			},
 			{
 				type: "text",
 				text: " - Intelligence = 5 (reasoning), Speed = 60-100 tps, Price = $0.01",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "Gemini 2.0 Flash-Lite & ⓡGemini 2.0 Flash-Lite" },
+			{
+				type: "text",
+				text: " - Intelligence = 1, Speed = 190-210 tps. Price = $0.0003",
 			},
 			{ type: "br" },
 			{ type: "strong", text: " ⮞ Other ⓡ API Models" },
@@ -276,22 +288,22 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				text: " - Polished, nuanced literary prose, dialogue, pacing. Speed = 16 tps, Price = $0.003; NSFW: partial",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "ⓡ Skyfall 36B V2" },
+			{ type: "strong", text: "ⓡ TheDrummer's Skyfall 36B V2" },
 			{
 				type: "text",
-				text: " - TheDrummer's. Detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
+				text: " - detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Anubis Pro 105b v1" },
+			{ type: "strong", text: "ⓡ TheDrummer's Valkyrie 49B v1" },
 			{
 				type: "text",
-				text: " - TheDrummer's largest model, demonstrates enhanced emotional intelligence, creativity, nuanced character portrayal. Context: 131k, Speed: 28 tps, NSFW: partial",
+				text: " - their newest model for creative writing. Context: 131k, Speed: 56 tps, NSFW: Yes",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "Valkyrie 49B v1" },
+			{ type: "strong", text: "ⓡ TheDrummer's Anubis Pro 105b v1" },
 			{
 				type: "text",
-				text: " - TheDrummer's newest model drop for creative writing. Context: 131k, Speed: 56 tps, NSFW: Yes",
+				text: " - their largest model, demonstrates enhanced emotional intelligence, creativity, nuanced character portrayal. Context: 131k, Speed: 28 tps, NSFW: partial",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Lumimaid v0.2 70B" },
@@ -301,7 +313,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			},
 			{ type: "br" },
 			{ type: "strong", text: "Gemma 3 27B & ⓡ Gemma 3 27B" },
-			{ type: "text", text: " - small fast model from Google. Speed = 20?-50 tps, Free!" },
+			{ type: "text", text: " - small model from Google. Speed = 20?-50 tps, Free!" },
 			{ type: "br" },
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });

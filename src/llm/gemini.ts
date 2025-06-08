@@ -2,12 +2,7 @@
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
 import type { AssembledContextForLLM } from "../lib/core/textTransformer";
-import {
-	GEMINI_MODEL_ID_MAP,
-	MODEL_SPECS,
-	TextTransformerPrompt,
-	TextTransformerSettings,
-} from "../lib/settings-data";
+import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
 
 /**
@@ -109,7 +104,9 @@ export async function geminiRequest(
 
 	let response: RequestUrlResponse;
 	try {
-		const actualModelId = GEMINI_MODEL_ID_MAP[settings.model] || settings.model;
+		const modelSpec = MODEL_SPECS[settings.model];
+		const actualModelId = modelSpec.apiId;
+
 		const requestBody: {
 			contents: Array<{ parts: Array<{ text: string }> }>;
 			generationConfig: {
