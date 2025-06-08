@@ -69,7 +69,7 @@ export async function chatCompletionRequest(
 
 	if (isGenerationTask) {
 		systemInstructionBuilder.push(
-			"Output ONLY the generated text, without any preambles or explanatory sentences.",
+			"Output the generated text ONLY, without any preambles, tags or explanatory sentences.",
 		);
 	} else {
 		systemInstructionBuilder.push(
