@@ -316,7 +316,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0, // Some models have different ranges
-		defaultModelTemperature: 1.0,
+		defaultModelTemperature: 0.7,
 	},
 	// With this one:
 	"claude-3.7-sonnet-openrouter": {
@@ -331,7 +331,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
-		defaultModelTemperature: 1.0,
+		defaultModelTemperature: 0.7,
 	},
 	"grok-3-beta-openrouter": {
 		displayText: "ⓡGrok 3",
@@ -359,7 +359,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
+		defaultModelTemperature: 1.0, // Checked
 	},
 	"deepseek-r1-openrouter": {
 		displayText: "ⓡDeepSeek R1",
@@ -373,7 +373,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
+		defaultModelTemperature: 1.0, // Checked
 	},
 	"qwen3-235b-a22b-openrouter": {
 		displayText: "ⓡQwen 3 235B",
@@ -571,7 +571,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 1.0, // Verified
 		defaultModelTemperature: 0.3,
 	},
-	"mistral-large-2411": {
+	"mistral-large-2411-openrouter": {
 		displayText: "ⓡMistral Large 2411",
 		apiId: "mistralai/mistral-large-2411",
 		maxOutputTokens: 131_000,
@@ -636,7 +636,7 @@ export const OPENROUTER_MODELS = [
 	"valkyrie-49b-v1-openrouter",
 	"lumimaid-v0.2-70b-openrouter",
 	"command-a-openrouter",
-	"mistral-large-2411",
+	"mistral-large-2411-openrouter",
 ] as const;
 export type OpenRouterModels = (typeof OPENROUTER_MODELS)[number];
 
