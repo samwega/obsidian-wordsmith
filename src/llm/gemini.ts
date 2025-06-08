@@ -156,6 +156,9 @@ export async function geminiRequest(
 			contentType: "application/json",
 			body: JSON.stringify(requestBody),
 		});
+		if (plugin.runtimeDebugMode) {
+			console.debug("[WordSmith plugin] Gemini Response:", response);
+		}
 	} catch (err) {
 		console.error("Gemini API error:", err);
 		if (err && typeof err === "object" && "response" in err) {
