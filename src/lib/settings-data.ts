@@ -474,7 +474,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		defaultModelTemperature: 0.7,
 	},
 	"magnum-72b-openrouter": {
-		displayText: "ⓡMagnum 72B",
+		displayText: "ⓡMagnum v4 72B",
 		apiId: "anthracite-org/magnum-v4-72b",
 		maxOutputTokens: 16_384,
 		costPerMillionTokens: { input: 2.5, output: 3.0 },
@@ -544,7 +544,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		defaultModelTemperature: 0.7,
 	},
 	"command-a-openrouter": {
-		displayText: "ⓡCommand A",
+		displayText: "ⓡCommand A (111B)",
 		apiId: "cohere/command-a",
 		maxOutputTokens: 8048,
 		costPerMillionTokens: { input: 2.5, output: 10.0 },
