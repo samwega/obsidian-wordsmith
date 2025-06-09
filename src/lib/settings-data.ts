@@ -24,7 +24,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gpt-4.1": {
 		displayText: "GPT 4.1",
 		apiId: "gpt-4.1",
-		maxOutputTokens: 32_768, // Please verify this value
+		maxOutputTokens: 32_768,
 		costPerMillionTokens: { input: 2.0, output: 8.0 },
 		info: {
 			intelligence: 4,
@@ -52,7 +52,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gpt-4.1-mini": {
 		displayText: "GPT 4.1 mini",
 		apiId: "gpt-4.1-mini",
-		maxOutputTokens: 32_768, // Please verify this value
+		maxOutputTokens: 32_768,
 		costPerMillionTokens: { input: 0.4, output: 1.6 },
 		info: {
 			intelligence: 3,
@@ -66,7 +66,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gpt-4.1-nano": {
 		displayText: "GPT 4.1 nano",
 		apiId: "gpt-4.1-nano",
-		maxOutputTokens: 32_768, // Please verify this value
+		maxOutputTokens: 32_768,
 		costPerMillionTokens: { input: 0.1, output: 0.4 },
 		info: {
 			intelligence: 2,
@@ -94,7 +94,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"o3-2025-04-16": {
 		displayText: "OpenAI o3",
 		apiId: "o3-2025-04-16",
-		maxOutputTokens: 100_000, // Please verify this value
+		maxOutputTokens: 100_000,
 		costPerMillionTokens: { input: 10.0, output: 40.0 },
 		info: {
 			intelligence: 5,
@@ -103,12 +103,12 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, // Verified
+		defaultModelTemperature: 0.7,
 	},
 	"gpt-4.5-preview-2025-02-27": {
 		displayText: "GPT 4.5 Preview",
 		apiId: "gpt-4.5-preview-2025-02-27",
-		maxOutputTokens: 16_000, // Please verify this value
+		maxOutputTokens: 16_000,
 		costPerMillionTokens: { input: 75.0, output: 150.0 },
 		info: {
 			intelligence: 5,
@@ -117,7 +117,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, // Verified
+		defaultModelTemperature: 0.7,
 	},
 	// Gemini models
 	"gemini-2.5-flash-preview-05-20": {
@@ -137,7 +137,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 	"gemini-2.5-pro-preview-06-05": {
 		displayText: "Gemini 2.5 Pro",
 		apiId: "gemini-2.5-pro-preview-06-05",
-		maxOutputTokens: 8192, // Please verify this value
+		maxOutputTokens: 8192,
 		costPerMillionTokens: { input: 1.25, output: 10.0 },
 		info: {
 			intelligence: 5,
@@ -300,22 +300,22 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0, // Please verify this value
+		maxTemperature: 1.0,
 		defaultModelTemperature: 1.0,
 	},
 	"claude-3.5-sonnet-openrouter": {
 		// A unique key for use within the plugin
 		displayText: "ⓡClaude 3.5 Sonnet",
-		apiId: "anthropic/claude-3.5-sonnet", // The EXACT ID from OpenRouter
-		maxOutputTokens: 8192, // Please verify this value
+		apiId: "anthropic/claude-3.5-sonnet",
+		maxOutputTokens: 8192,
 		costPerMillionTokens: { input: 3.0, output: 15.0 },
 		info: {
-			intelligence: 4, // Your rating
-			speed: 2, // Your rating
+			intelligence: 4,
+			speed: 2,
 			url: "https://openrouter.ai/models/anthropic/claude-3.5-sonnet",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0, // Some models have different ranges
+		maxTemperature: 1.0,
 		defaultModelTemperature: 0.7,
 	},
 	// With this one:
@@ -345,7 +345,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, // Checked
+		defaultModelTemperature: 0.7,
 	},
 	"deepseek-chat-v3-openrouter": {
 		displayText: "ⓡDeepSeek v3",
@@ -359,7 +359,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0, // Checked
+		defaultModelTemperature: 1.0,
 	},
 	"deepseek-r1-openrouter": {
 		displayText: "ⓡDeepSeek R1",
@@ -373,7 +373,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0, // Checked
+		defaultModelTemperature: 1.0,
 	},
 	"qwen3-235b-a22b-openrouter": {
 		displayText: "ⓡQwen 3 235B",
@@ -387,7 +387,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, // Checked
+		defaultModelTemperature: 0.7,
 	},
 	"qwen3-32b-openrouter": {
 		displayText: "ⓡQwen 3 32B",
@@ -401,7 +401,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, // Checked
+		defaultModelTemperature: 0.7,
 	},
 	"llama-3.3-70b-instruct-openrouter": {
 		displayText: "ⓡLlama 3.3 70B",
@@ -415,7 +415,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 5.0,
-		defaultModelTemperature: 0.7, // Checked
+		defaultModelTemperature: 0.7,
 	},
 	"llama-3.1-405b-instruct-openrouter": {
 		displayText: "ⓡLlama 3.1 405B",
@@ -429,7 +429,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7, // Checked
+		defaultModelTemperature: 0.7,
 	},
 	"llama-3.1-nemotron-ultra-253b-v1": {
 		displayText: "ⓡLlama 3.1 NU 253B",
@@ -443,7 +443,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
-		defaultModelTemperature: 0.0, // Checked
+		defaultModelTemperature: 0.0,
 	},
 	"hermes-3-70b-openrouter": {
 		displayText: "ⓡHermes 3 70B",
@@ -457,7 +457,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"hermes-3-405b-openrouter": {
 		displayText: "ⓡHermes 3 405B",
@@ -471,7 +471,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"goliath-120b-openrouter": {
 		displayText: "ⓡGoliath 120B",
@@ -485,7 +485,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"magnum-72b-openrouter": {
 		displayText: "ⓡMagnum 72B",
@@ -499,7 +499,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"skyfall-36b-v2-openrouter": {
 		displayText: "ⓡSkyfall 36B V2",
@@ -513,7 +513,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"valkyrie-49b-v1-openrouter": {
 		displayText: "ⓡValkyrie 49B",
@@ -527,7 +527,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"anubis-pro-105b-v1-openrouter": {
 		displayText: "ⓡAnubis 105B",
@@ -541,7 +541,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"lumimaid-v0.2-70b-openrouter": {
 		displayText: "ⓡLumimaid 70B",
@@ -555,7 +555,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
+		defaultModelTemperature: 0.7,
 	},
 	"command-a-openrouter": {
 		displayText: "ⓡCommand A",
@@ -568,7 +568,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/cohere/command-a",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0, // Verified
+		maxTemperature: 1.0,
 		defaultModelTemperature: 0.3,
 	},
 	"mistral-large-2411-openrouter": {
@@ -582,7 +582,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/mistralai/mistral-large-2411",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 2.0, // Verified
+		maxTemperature: 2.0,
 		defaultModelTemperature: 0.7,
 	},
 };
