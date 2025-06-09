@@ -47,6 +47,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [Customizing Prompts](#customizing-prompts)
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
+  * [✨ What's New in v2.0.0 - OpenRouter Support - 26 New Models](#-whats-new-in-v200---openrouter-support---26-new-models)
   * [✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging](#-whats-new-in-v1110---temperature-sliders--debug-logging)
   * [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
     * [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
@@ -151,6 +152,33 @@ Tailor WordSmith to your exact needs:
 See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/obsidian-wordsmith/wiki/API-Key-Setup%2C-AI-Providers%2C-Models) entry.
 
 ## Release History
+
+### ✨ What's New in v2.0.0 - OpenRouter Support - 26 New Models
+
+Key features and improvements include:
+
+* **OpenRouter API Integration:** A huge new addition! You can now use your OpenRouter API keys to access dozens of models from various providers.
+* **26 New Models Added to previous existing 5 models list:** Massively expanding your options, this release includes:
+  * **OpenAI:** GPT-4o, GPT-o4-mini, GPT-4.5 & O3
+  * **Google:** Gemini 2.0 Flash-Lite & Gemma 3 27B
+  * **Anthropic:** Claude 3.5 Sonnet & Claude 3.7 Sonnet
+  * **Grok:** Grok 3 beta
+  * **DeepSeek:** DeepSeek Chat v3 & DeepSeek Chat R1
+  * **Qwen:** Qwen 3 235B A22B & Qwen 3 32B
+  * **Llama:** Llama 3.3 70B Instruct, Llama 3.1 405B Instruct, Nvidia/Llama 3.1 Nemotron Ultra 253B v1
+  * **Hermes:** Hermes 3 70B, Hermes 3 405B
+  * **TheDrummer's** Skyfall 36B V2, Valkyrie 49B v1 & Anubis Pro 105B v1
+  * **Cohere's** Command A (111B)
+  * **Mistral** Large 2411
+  * **And more:** Goliath 120B, Magnum 72B, Lumimaid v0.2 70B
+  * *Note:* 13 of these  new models are flagged as "NSFW" due to their ability to comply with NSFW generation requests.
+  * Most of the OpenAI & Google models are accessible both via their API's and OpenRouter's API.
+* **Per-Model Temperature Control:** With so many models, each with different settings, the temperature slider needed to get smarter. It automatically adjusts to the specific minimum and maximum supported values for the selected model and resets to the model's default temperature when you switch, giving you fine-tuned control over creativity with sane defaults.
+* Refactor that makes it much **easier to add new models**.
+* **Improved Model Information:** The model selection dropdown in settings now provides more useful information about each model.
+* **Better Runtime Debug Logging:** Enhanced logging makes it easier to diagnose issues.
+* **Bug Fix:** Fixed a smooth scrolling bug in styles.
+* **Refined System Instructions:** The underlying instructions sent to the models have been improved for better compliance and quality.
 
 ### ✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging
 
