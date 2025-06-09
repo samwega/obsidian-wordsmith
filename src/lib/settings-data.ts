@@ -515,20 +515,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 2.0,
 		defaultModelTemperature: 0.7, //verified
 	},
-	"anubis-pro-105b-v1-openrouter": {
-		displayText: "ⓡAnubis 105B",
-		apiId: "thedrummer/anubis-pro-105b-v1",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.8, output: 1.0 },
-		info: {
-			intelligence: 3,
-			speed: 1,
-			url: "https://openrouter.ai/thedrummer/anubis-pro-105b-v1",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7, //verified
-	},
 	"valkyrie-49b-v1-openrouter": {
 		displayText: "ⓡValkyrie 49B",
 		apiId: "thedrummer/valkyrie-49b-v1",
@@ -538,6 +524,20 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			intelligence: 3,
 			speed: 2,
 			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 2.0,
+		defaultModelTemperature: 0.7, //verified
+	},
+	"anubis-pro-105b-v1-openrouter": {
+		displayText: "ⓡAnubis 105B",
+		apiId: "thedrummer/anubis-pro-105b-v1",
+		maxOutputTokens: 131_072,
+		costPerMillionTokens: { input: 0.8, output: 1.0 },
+		info: {
+			intelligence: 3,
+			speed: 1,
+			url: "https://openrouter.ai/thedrummer/anubis-pro-105b-v1",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 2.0,
