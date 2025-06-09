@@ -230,7 +230,7 @@ export default class TextTransformer extends Plugin {
 			.forEach((leaf: WorkspaceLeaf) => {
 				if (leaf.view instanceof ContextControlPanel) {
 					leaf.view.updateModelSelector();
-					leaf.view.updateTemperatureSliderDisplay(); // Added this line
+					leaf.view.updateTemperatureSlider();
 				}
 			});
 	}

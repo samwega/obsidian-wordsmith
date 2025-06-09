@@ -165,8 +165,8 @@ body.theme-light .text-transformer-removed-active {
 }
 
 /* Styles for TextTransformerSettingsMenu from settings.ts */
-.tt-setting-item.api-model-setting-el {
-	border: none !important; /* Changed from border-top/bottom to all borders none */
+.setting-item.api-model-setting-el {
+	border: none !important;
 	display: flex;
 	align-items: center;
 }
@@ -190,8 +190,8 @@ body.theme-light .text-transformer-removed-active {
 	margin-left: 10px;
 }
 
-.tt-setting-item.api-key-setting-el {
-	border: none !important; /* Changed from border-top to all borders none */
+.setting-item.api-key-setting-el {
+	border: none !important;
 }
 
 .tt-model-description {
@@ -242,6 +242,17 @@ body.theme-light .text-transformer-removed-active {
 
 .tt-add-prompt-button-container .setting-item-info {
 	display: none; /* Hide the (empty) name/description part of this setting */
+}
+
+/* FIX: Placed after the rule above to resolve descending specificity lint error */
+.setting-item.api-key-setting-el .setting-item-info {
+	flex-basis: 300px;
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+.setting-item.api-key-setting-el .setting-item-control {
+	flex-grow: 1;
 }
 
 /* Styles for prompt forms (edit and add) */
@@ -337,7 +348,7 @@ body.theme-light .text-transformer-removed-active {
 /* Styles for ContextControlPanel from context-control-panel.ts */
 .ccp-header-container {
 	display: flex;
-	align-items: center;
+	align-items: baseline;
 	justify-content: space-between;
 	margin-bottom: 2px;
 }
@@ -355,7 +366,7 @@ body.theme-light .text-transformer-removed-active {
 	/* Applied to the <select> element within the dropdown */
 	max-width: 150px;
 	font-size: var(--font-ui-smaller);
-	padding: 0px 18px 0px 2px; /* Note: Obsidian's default dropdown might have specific padding needs */
+	padding: 3px 18px 1px 2px; /* Note: Obsidian's default dropdown might have specific padding needs */
 	height: auto;
 }
 

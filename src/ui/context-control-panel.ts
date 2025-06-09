@@ -74,9 +74,17 @@ export class ContextControlPanel extends ItemView {
 		}
 	}
 
-	updateTemperatureSliderDisplay(): void {
+	updateTemperatureSlider(): void {
 		if (this.temperatureSliderComponent) {
-			this.temperatureSliderComponent.setValue(this.plugin.settings.temperature);
+			const modelSpec = MODEL_SPECS[this.plugin.settings.model];
+			if (modelSpec) {
+				this.temperatureSliderComponent.setLimits(
+					modelSpec.minTemperature,
+					modelSpec.maxTemperature,
+					0.1,
+				);
+				this.temperatureSliderComponent.setValue(this.plugin.settings.temperature);
+			}
 		}
 	}
 
@@ -89,7 +97,7 @@ export class ContextControlPanel extends ItemView {
 		this._renderDescriptionSection(contentEl);
 		this._renderContextToggles(contentEl);
 		this._renderCustomContextArea(contentEl);
-		this.updateTemperatureSliderDisplay(); // Call to initialize slider value
+		this.updateTemperatureSlider(); // Call to initialize slider value and limits
 		return Promise.resolve();
 	}
 
@@ -105,20 +113,31 @@ export class ContextControlPanel extends ItemView {
 			this.modelDropdown.addOption(key, display);
 		}
 		this.modelDropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
-			this.plugin.settings.model = value as SupportedModels;
+			const modelId = value as SupportedModels;
+			const modelSpec = MODEL_SPECS[modelId];
+
+			this.plugin.settings.model = modelId;
+			if (modelSpec) {
+				this.plugin.settings.temperature = modelSpec.defaultModelTemperature;
+			}
 			await this.plugin.saveSettings();
+			// The saveSettings call will trigger the updateTemperatureSlider via main.ts
 		});
 		this.modelDropdown.selectEl.classList.add("ccp-model-dropdown-select");
 	}
 
 	private _renderTemperatureSlider(container: HTMLElement): void {
+		const modelSpec = MODEL_SPECS[this.plugin.settings.model];
+		const minTemp = modelSpec?.minTemperature ?? 0.0;
+		const maxTemp = modelSpec?.maxTemperature ?? 2.0;
+
 		// Temperature Slider
 		new Setting(container)
 			.setName("Temperature") // Name changed
 			.addSlider((slider) => {
 				this.temperatureSliderComponent = slider;
 				slider
-					.setLimits(0.0, 2.0, 0.1) // Step is 0.1
+					.setLimits(minTemp, maxTemp, 0.1) // Step is 0.1
 					.setValue(this.plugin.settings.temperature)
 					.setDynamicTooltip()
 					.onChange(async (value) => {

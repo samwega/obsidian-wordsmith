@@ -1,5 +1,5 @@
 // src/ui/settings.ts
-import { PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab, Setting, SliderComponent } from "obsidian";
 import { MODEL_SPECS, SupportedModels, TextTransformerPrompt } from "../lib/settings-data";
 import type TextTransformer from "../main";
 
@@ -7,6 +7,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
 	private addPromptButtonSettingInstance: Setting | null = null;
+	private temperatureSliderComponent: SliderComponent | null = null;
 
 	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
@@ -19,6 +20,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		this.addPromptForm = null;
 		this.addPromptButtonSettingInstance = null;
+		this.temperatureSliderComponent = null;
 
 		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
@@ -59,7 +61,22 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				dropdown.addOption(key, display);
 			}
 			dropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
-				this.plugin.settings.model = value as SupportedModels;
+				const modelId = value as SupportedModels;
+				const modelSpec = MODEL_SPECS[modelId];
+
+				this.plugin.settings.model = modelId;
+				if (modelSpec) {
+					this.plugin.settings.temperature = modelSpec.defaultModelTemperature;
+
+					if (this.temperatureSliderComponent) {
+						this.temperatureSliderComponent.setLimits(
+							modelSpec.minTemperature,
+							modelSpec.maxTemperature,
+							0.1,
+						);
+						this.temperatureSliderComponent.setValue(this.plugin.settings.temperature);
+					}
+				}
 				await this.plugin.saveSettings();
 			});
 		});
@@ -69,7 +86,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(apiModelSectionContents)
 			.setName("OpenAI API key")
-			.setDesc("API key for OpenAI models.       ")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -82,7 +98,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(apiModelSectionContents)
 			.setName("Gemini API key")
-			.setDesc("API key for Google Gemini models.")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -95,7 +110,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(apiModelSectionContents)
 			.setName("OpenRouter API key")
-			.setDesc("API key for OpenRouter models.     ")
 			.addText((input) => {
 				input.inputEl.type = "password";
 				input.inputEl.setCssProps({ width: "100%" });
@@ -111,27 +125,17 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		const temperatureContentStructure: Array<{ type: "text" | "strong" | "br"; text?: string }> =
 			[
-				{ type: "strong", text: "GPT & Gemini models (Default: 1.0):" },
+				{ type: "strong", text: "Models automatically reset to default on switch." },
 				{ type: "br" },
 				{
 					type: "text",
-					text: "0.0 - 0.6: More focused, deterministic, and predictable output.",
-				},
-				{ type: "br" },
-				{ type: "text", text: "0.7 - 1.2: A balance between coherence and creativity." },
-				{ type: "br" },
-				{
-					type: "text",
-					text: "1.3 - 1.8: Increased creativity, novelty, and exploration of diverse ideas. May be prone to errors.",
+					text: "Lowering temperature below the default: More focused, deterministic, and predictable output.",
 				},
 				{ type: "br" },
 				{
 					type: "text",
-					text: "Above 1.8: Highly experimental. Incoherence and hallucination become the norm.",
+					text: "Increasing it increases creativity, novelty, and exploration of diverse ideas. May be prone to errors the higher you go.",
 				},
-				{ type: "br" },
-				{ type: "strong", text: "Anthropic models " },
-				{ type: "text", text: "only go from 0.0 to 1.0 and most of them default to 1.0." },
 			];
 
 		const tempDescContainer = document.createDocumentFragment();
@@ -147,11 +151,16 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			}
 		});
 
+		const modelSpec = MODEL_SPECS[this.plugin.settings.model];
+		const minTemp = modelSpec?.minTemperature ?? 0.0;
+		const maxTemp = modelSpec?.maxTemperature ?? 2.0;
+
 		temperatureSetting
 			.setDesc(tempDescContainer) // Pass the constructed DocumentFragment as the description
 			.addSlider((slider) => {
+				this.temperatureSliderComponent = slider;
 				slider
-					.setLimits(0.0, 2.0, 0.1) // Changed step to 0.1
+					.setLimits(minTemp, maxTemp, 0.1) // Changed step to 0.1
 					.setValue(this.plugin.settings.temperature)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
@@ -184,18 +193,18 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "br" },
 			{
 				type: "text",
-				text: "GPT 4.1, GPT 4o, Claude Models, DeepSeek V3, Some Gemini models may excel at writing higher quality literature. Small models like GPT 4.1 Nano and Mini, and so on, should be sufficient for basic text proofreading and processing.",
+				text: "GPT 4.1, GPT 4o, Claude Models, DeepSeek V3, Some Gemini models, Grok 3 and others may excel at writing higher quality literature. Small models like GPT 4.1 Nano and Mini, Gemini 2.0 Flash-Lite and so on, should be sufficient for basic text proofreading and processing.",
 			},
 			{ type: "br" },
 			{
 				type: "text",
-				text: "Large state of the art reasoning models, like Gemini 2.5 Pro, DeepSeek R1, etc. may be too slow for normal text editing tasks, but may prove useful for ad-hoc generation.",
+				text: "Large reasoning models, like Gemini 2.5 Pro, DeepSeek R1, etc. may be too slow for normal text editing tasks, but may prove useful for ad-hoc generation.",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "OpenRouter (marked ⓡ)" },
 			{
 				type: "text",
-				text: " - offers access to many models via a single API key. I've included some exotic ones which specialize in literary writing. Models cost 5% more through OpenRouter. Ai Studio offers 500 free API calls per day on Gemini 2.5 Flash and 1500 for 2.0 Flash-Lite, so even if you have an OpenRouter account, it's better to use up the free calls with AI Studio, even if you don't pay at all. You may also bring your own keys to OpenRouter to make use of the free calls directly.",
+				text: " - offers access to many models via a single API key. I've included some exotic ones which specialize in literary writing. Models cost 5% more through OpenRouter. AI Studio offers 500 free API calls per day on Gemini 2.5 Flash and 1500 for 2.0 Flash-Lite, so even if you have an OpenRouter account, it's better to use up the free calls with AI Studio, even if you don't pay at all. I've marked models which will agree to generate not-safe-for-work content as NSFW.",
 			},
 			{ type: "br" },
 			{ type: "br" },
@@ -204,141 +213,145 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "strong", text: " ⮞ OpenAI API Models & ⓡ Counterparts" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT 4.1" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 58, Price = $0.008" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 58 tps, Price: $0.008" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT 4o" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 57-127 tps, Price = $0.015" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 57-127 tps, Price: $0.015" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT 4.1 mini" },
-			{ type: "text", text: " - Intelligence = 3, Speed = 66 tps, Price = $0.0016" },
+			{ type: "text", text: " - Intelligence = 3, Speed: 66 tps, Price: $0.0016" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT 4.1 nano" },
-			{ type: "text", text: " - Intelligence = 2, Speed = 90 tps, Price = $0.0004" },
+			{ type: "text", text: " - Intelligence = 2, Speed: 90 tps, Price: $0.0004" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT o4-mini" },
 			{
 				type: "text",
-				text: " - Intelligence = 3 (reasoning), Speed = 244 tps, Price = $0.0055",
+				text: " - Intelligence = 3 (reasoning), Speed: 244 tps, Price: $0.0055",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "OpenAI o3" },
-			{ type: "text", text: " - Intelligence = 5 (reasoning), Speed = 103 tps, Price = $0.05" },
+			{ type: "text", text: " - Intelligence = 5 (reasoning), Speed: 103 tps, Price: $0.05" },
 			{ type: "br" },
 			{ type: "strong", text: "GPT 4.5" },
-			{ type: "text", text: " - Intelligence = 5, Speed = 30 tps, Price = $0.23" },
+			{ type: "text", text: " - Intelligence = 5, Speed: 30 tps, Price: $0.23" },
 			{ type: "br" },
 			{ type: "strong", text: " ⮞ Google Gemini API Models & ⓡ Counterparts" },
 			{ type: "br" },
 			{ type: "strong", text: "Gemini 2.5 Flash Preview (05-20)" },
 			{
 				type: "text",
-				text: " - Intelligence = 3, Speed = 100-125 tps. Price = $0.0005 (500 free req/day)",
+				text: " - Intelligence = 3, Speed: 100-125 tps. Price: $0.0005 (500 free req/day)",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "Gemini 2.5 Pro Preview (06-05)" },
 			{
 				type: "text",
-				text: " - Intelligence = 5 (reasoning), Speed = 60-100 tps, Price = $0.01",
+				text: " - Intelligence = 5 (reasoning), Speed: 60-100 tps, Price: $0.01",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "Gemini 2.0 Flash-Lite" },
-			{ type: "text", text: " - Intelligence = 1, Speed = 190-210 tps. Price = $0.0003" },
+			{ type: "text", text: " - Intelligence = 2, Speed: 190-210 tps. Price: $0.0003" },
 			{ type: "br" },
 			{ type: "strong", text: "Gemma 3 27B" },
-			{ type: "text", text: " - small model from Google. Speed = 20?-50 tps, Free!" },
+			{ type: "text", text: " - small model from Google. Speed: 20?-50 tps, Free!" },
 			{ type: "br" },
-			{ type: "strong", text: " ⮞ ⓡ OpenRouter API Models" },
+			{
+				type: "strong",
+				text: " ⮞ ⓡ OpenRouter API Models (includes most OpenAI & Gemini models):",
+			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Claude 3.5 Sonnet" },
-			{ type: "text", text: " - Intelligence = 5, Speed = 40-60 tps, Price = $0.015" },
+			{ type: "text", text: " - Intelligence = 5, Speed: 40-60 tps, Price: $0.015" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Claude 3.7 Sonnet" },
-			{ type: "text", text: " - Intelligence = 5, Speed = 55-62 tps, Price = $0.015" },
+			{ type: "text", text: " - Intelligence = 5, Speed: 55-62 tps, Price: $0.015" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Grok 3 beta" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 60 tps, Price = $0.018, NSFW: yes" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 60 tps, Price: $0.018, NSFW" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ DeepSeek Chat v3" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 37 tps, Price = $0.00088" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 37 tps, Price: $0.00088" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ DeepSeek Chat R1" },
 			{
 				type: "text",
-				text: " - Intelligence = 4 (reasoning), Speed = 50-140 tps, Price = $0.002",
+				text: " - Intelligence = 4 (reasoning), Speed: 50-140 tps, Price: $0.002",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Qwen 3 235B A22B" },
-			{ type: "text", text: " - Intelligence = 3, Speed = 30-62 tps, Price = $0.00114" },
+			{ type: "text", text: " - Intelligence = 3, Speed: 30-62 tps, Price: $0.00114" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Qwen 3 32B" },
 			{
 				type: "text",
-				text: " - Intelligence = 2, Speed = 40-55 tps, Price = $0.0004, NSFW: yes",
+				text: " - Intelligence = 2, Speed: 40-55 tps, Price: $0.0004, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Llama 3.3 70B Instruct" },
 			{
 				type: "text",
-				text: " - Intelligence = 3, Speed = 30-76 tps, Price = $0.0004, NSFW: yes",
+				text: " - Intelligence = 3, Speed: 30-76 tps, Price: $0.0004, NSFW",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "ⓡ Nvidia/Llama 3.1 Nemotron Ultra 253B v1" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 42 tps, Price = $0.0024" },
-			{ type: "br" },
 			{ type: "strong", text: "ⓡ Llama 3.1 405B Instruct" },
-			{ type: "text", text: " - Intelligence = 4, Speed = 30-57 tps, Price = $0.0016" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 30-57 tps, Price: $0.0016" },
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Nvidia/Llama 3.1 Nemotron Ultra 253B v1" },
+			{ type: "text", text: " - Intelligence = 4, Speed: 42 tps, Price: $0.0024" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Hermes 3 70B" },
 			{
 				type: "text",
-				text: " - very high quality. Highly uncensored, 131k context & output! Speed = 40-50 tps, Price = $0.0003, NSFW: yes",
+				text: " - very high quality. Highly uncensored, 131k context & output! Speed: 40-50 tps, Price: $0.0003, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Hermes 3 405B" },
 			{
 				type: "text",
-				text: " - Philosophically complex narratives. 131k context & output! Speed = 11-35 tps, Price = $0.0008, NSFW: yes",
+				text: " - Philosophically complex narratives. 131k context & output! Speed: 11-35 tps, Price: $0.0008, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Magnum 72B" },
 			{
 				type: "text",
-				text: " - Polished, nuanced literary prose, dialogue, pacing. Speed = 16 tps, Price = $0.003, NSFW: yes",
+				text: " - Polished, nuanced literary prose, dialogue, pacing. Speed: 16 tps, Price: $0.003, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ TheDrummer's Skyfall 36B V2" },
 			{
 				type: "text",
-				text: " - detailed description, lively RP, humor. Context: 33k, Speed = 57 tps, Price = $0.0008, NSFW: yes",
+				text: " - detailed description, lively RP, humor. Context: 33k, Speed: 57 tps, Price: $0.0008, NSFW",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "ⓡ TheDrummer's Valkyrie 49B v1" },
+			{ type: "strong", text: "ⓡ Valkyrie 49B v1 - TheDrummer's" },
 			{
 				type: "text",
-				text: " - their newest model for creative writing. Context: 131k, Speed: 56 tps, Price = $0.0013, NSFW: Yes",
+				text: " newest model for creative writing. Context: 131k, Speed: 56 tps, Price: $0.0013, NSFW",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "ⓡ TheDrummer's Anubis Pro 105b v1" },
+			{ type: "strong", text: "ⓡ Anubis Pro 105b v1 - TheDrummer's" },
 			{
 				type: "text",
-				text: " - their largest model, demonstrates enhanced emotional intelligence, creativity, nuanced character portrayal. Context: 131k, Speed: 28 tps, Price = $0.0018 NSFW: yes",
+				text: " largest model, demonstrates enhanced emotional intelligence, creativity, nuanced character portrayal, ccoherent storytelling. Context: 131k, Speed: 28 tps, Price: $0.0018, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Lumimaid v0.2 70B" },
 			{
 				type: "text",
-				text: " - Modern, blended genres, technical, research integration, speculative fiction, Speed = 16 tps, Context 16k, Price: $0.003, NSFW: yes",
+				text: " - Modern, blended genres, technical, speculative fiction, Speed: 16 tps, Context 16k, Price: $0.003, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Cohere's Command A" },
-			{ type: "text", text: " - Speed = 84 tps, Context 8k, Price: $0.0125, NSFW: Yes" },
+			{ type: "text", text: " - Speed: 84 tps, Context 8k, Price: $0.0125, NSFW" },
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Mistral Large 2411" },
-			{ type: "text", text: " - Speed = 50 tps, Context 8k, Price: $0.008, NSFW: Yes" },
+			{ type: "text", text: " - Speed: 50 tps, Context 8k, Price: $0.008, NSFW" },
+			{ type: "br" },
 			{ type: "strong", text: "ⓡ Goliath 120B" },
 			{
 				type: "text",
-				text: " - Novel writing, complex roleplay, immersive world-building. Best for epic fantasy/saga. Only 6k context, 512 tokens output; Speed = 21 tps, Price = $0.0125; NSFW: yes",
+				text: " - Novel writing, complex roleplay, immersive world-building. Best for epic fantasy/saga. Only 6k context, 512 tokens output; Speed: 21 tps, Price: $0.0125; NSFW",
 			},
 		];
 		const modelDescDiv = apiModelSectionContents.createEl("div", { cls: "tt-model-description" });
