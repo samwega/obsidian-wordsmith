@@ -11,6 +11,7 @@ interface ChatCompletionOptions {
 	apiKey: string;
 	modelId: string;
 	additionalHeaders?: Record<string, string>;
+	additionalRequestBodyParams?: Record<string, unknown>;
 }
 
 /**
@@ -111,6 +112,7 @@ export async function chatCompletionRequest(
 		presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		max_tokens: prompt.max_tokens ?? settings.max_tokens,
+		...(options.additionalRequestBodyParams || {}),
 	};
 
 	if (plugin.runtimeDebugMode) {

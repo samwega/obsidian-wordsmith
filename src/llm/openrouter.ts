@@ -32,6 +32,34 @@ export function openRouterRequest(
 
 	const modelSpec = MODEL_SPECS[settings.model];
 
+	// Create a base options object for chatCompletionRequest
+	const chatOptions: {
+		apiUrl: string;
+		apiKey: string;
+		modelId: string;
+		additionalHeaders?: Record<string, string>;
+		additionalRequestBodyParams?: Record<string, unknown>; // Explicitly optional to satisfy exactOptionalPropertyTypes
+	} = {
+		apiUrl: "https://openrouter.ai/api/v1/chat/completions",
+		apiKey: settings.openRouterApiKey,
+		modelId: modelSpec.apiId, // OpenRouter uses a specific apiId from the spec
+		additionalHeaders: {
+			"HTTP-Referer": plugin.manifest.id,
+			"X-Title": plugin.manifest.name,
+		},
+	};
+
+	// Conditionally add 'additionalRequestBodyParams' property ONLY if needed
+	if (modelSpec.apiId === "anthropic/claude-opus-4") {
+		chatOptions.additionalRequestBodyParams = {
+			thinking: {
+				enabled: true,
+				// biome-ignore lint/style/useNamingConvention: API requires snake_case
+				budget_tokens: 16000,
+			},
+		};
+	}
+
 	return chatCompletionRequest(
 		plugin,
 		settings,
@@ -39,14 +67,6 @@ export function openRouterRequest(
 		prompt,
 		assembledContext,
 		isGenerationTask,
-		{
-			apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-			apiKey: settings.openRouterApiKey,
-			modelId: modelSpec.apiId, // OpenRouter uses a specific apiId from the spec
-			additionalHeaders: {
-				"HTTP-Referer": plugin.manifest.id,
-				"X-Title": plugin.manifest.name,
-			},
-		},
+		chatOptions, // Pass the constructed options object
 	);
 }

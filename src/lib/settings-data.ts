@@ -304,7 +304,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		defaultModelTemperature: 1.0,
 	},
 	"claude-3.5-sonnet-openrouter": {
-		// A unique key for use within the plugin
 		displayText: "ⓡClaude 3.5 Sonnet",
 		apiId: "anthropic/claude-3.5-sonnet",
 		maxOutputTokens: 8192,
@@ -318,7 +317,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		maxTemperature: 1.0,
 		defaultModelTemperature: 0.7,
 	},
-	// With this one:
 	"claude-3.7-sonnet-openrouter": {
 		displayText: "ⓡClaude 3.7 Sonnet",
 		apiId: "anthropic/claude-3.7-sonnet",
@@ -326,8 +324,36 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 		costPerMillionTokens: { input: 3.0, output: 15.0 },
 		info: {
 			intelligence: 5,
-			speed: 2,
+			speed: 3,
 			url: "https://openrouter.ai/models/anthropic/claude-3.7-sonnet",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.7,
+	},
+	"claude-sonnet-4": {
+		displayText: "ⓡClaude Sonnet 4",
+		apiId: "anthropic/claude-sonnet-4",
+		maxOutputTokens: 64_000,
+		costPerMillionTokens: { input: 3.0, output: 15.0 },
+		info: {
+			intelligence: 5,
+			speed: 1,
+			url: "https://openrouter.ai/anthropic/claude-sonnet-4",
+		},
+		minTemperature: 0.0,
+		maxTemperature: 1.0,
+		defaultModelTemperature: 0.7,
+	},
+	"claude-opus-4": {
+		displayText: "ⓡClaude Opus 4",
+		apiId: "anthropic/claude-opus-4",
+		maxOutputTokens: 32_000,
+		costPerMillionTokens: { input: 15.0, output: 75.0 },
+		info: {
+			intelligence: 5,
+			speed: 2,
+			url: "https://openrouter.ai/models/anthropic/claude-opus-4",
 		},
 		minTemperature: 0.0,
 		maxTemperature: 1.0,
@@ -619,6 +645,8 @@ export const OPENROUTER_MODELS = [
 	"gemma-3-27b-openrouter",
 	"claude-3.5-sonnet-openrouter",
 	"claude-3.7-sonnet-openrouter",
+	"claude-sonnet-4",
+	"claude-opus-4",
 	"grok-3-beta-openrouter",
 	"deepseek-chat-v3-openrouter",
 	"deepseek-r1-openrouter",

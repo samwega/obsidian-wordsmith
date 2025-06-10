@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 2.0.0
+**Current Version:** 2.0.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -47,7 +47,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [Customizing Prompts](#customizing-prompts)
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
-  * [✨ What's New in v2.0.0 - OpenRouter Support - 26 New Models](#-whats-new-in-v200---openrouter-support---26-new-models)
+  * [✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models](#-whats-new-in-v200---openrouter-support---28-new-models)
   * [✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging](#-whats-new-in-v1110---temperature-sliders--debug-logging)
   * [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
     * [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
@@ -153,7 +153,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 ## Release History
 
-### ✨ What's New in v2.0.0 - OpenRouter Support - 26 New Models
+### ✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models
 
 Key features and improvements include:
 
@@ -179,6 +179,12 @@ Key features and improvements include:
 * **Better Runtime Debug Logging:** Enhanced logging makes it easier to diagnose issues.
 * **Bug Fix:** Fixed a smooth scrolling bug in styles.
 * **Refined System Instructions:** The underlying instructions sent to the models have been improved for better compliance and quality.
+
+#### Minor Versions of v.2.0.x
+
+* **2.0.1**
+  * Addressed a bug where newline removal suggestions (pilcrows) were not resolved by "Accept/Reject all in paragraph" commands and were not correctly identified for navigation, improving workflow consistency.
+  * Added models Claude Sonnet 4 & Claude Opus 4 via OpenRouter API. Gave Opus for a 16k thinking token budget.
 
 ### ✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging
 
