@@ -342,10 +342,7 @@ export class ContextControlPanel extends ItemView {
 			return { rawText: textToProcess, referencedNotes: [] };
 		}
 
-		let match: RegExpExecArray | null;
-		wikilinkRegex.lastIndex = 0;
-
-		match = wikilinkRegex.exec(textToProcess);
+		let match = wikilinkRegex.exec(textToProcess);
 		while (match !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];
@@ -401,6 +398,9 @@ export class ContextControlPanel extends ItemView {
 				})();
 				uniqueReferencedNotes.set(linkPathOnly, promise);
 			}
+
+			// Find the next match to continue the loop.
+			match = wikilinkRegex.exec(textToProcess);
 		}
 
 		const resolvedNotes = await Promise.all(Array.from(uniqueReferencedNotes.values()));
