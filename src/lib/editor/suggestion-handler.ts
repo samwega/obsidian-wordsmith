@@ -364,9 +364,30 @@ function handleParagraphNavigationAndGetScope(
 		operationRange = { from: mainSelRange.from, to: mainSelRange.to };
 	}
 
-	const marksInCurrentScope = getMarksInRange(allMarks, operationRange);
+	const marksInsideRange = getMarksInRange(allMarks, operationRange);
+	const trailingNewlineMarks: SuggestionMark[] = [];
 
-	if (marksInCurrentScope.length === 0) {
+	// If we are operating on a paragraph (not a user selection), also grab any
+	// consecutive newline removal marks that immediately follow it.
+	if (isOperatingOnIdentifiedParagraph) {
+		let searchPos = operationRange.to;
+		while (true) {
+			const nextTrailingMark = allMarks.find(
+				(m) => m.type === "removed" && m.from === searchPos,
+			);
+			if (nextTrailingMark) {
+				trailingNewlineMarks.push(nextTrailingMark);
+				// Continue search from the end of the last found mark to find the next one in a chain
+				searchPos = nextTrailingMark.to;
+			} else {
+				break;
+			}
+		}
+	}
+
+	const marksInScope = [...marksInsideRange, ...trailingNewlineMarks];
+
+	if (marksInScope.length === 0) {
 		// Try to find next paragraph with suggestions
 		const nextParagraphWithSuggestions = findNextParagraphWithSuggestions(
 			doc,
@@ -412,7 +433,7 @@ function handleParagraphNavigationAndGetScope(
 	// Found suggestions in the current scope
 	return {
 		operationRange,
-		marksInScope: marksInCurrentScope,
+		marksInScope,
 		isOperatingOnIdentifiedParagraph,
 	};
 }

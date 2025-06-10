@@ -135,7 +135,13 @@ export function findNextParagraphWithSuggestions(
 			// "removed" marks are ranges
 			return mark.from < p.to && mark.to > p.from;
 		});
-		if (marksInThisP.length > 0) {
+
+		// Also check for "homeless" newline removal marks that start exactly where this paragraph ends.
+		const hasTrailingNewlineMarks = marks.some(
+			(mark) => mark.type === "removed" && mark.from === p.to,
+		);
+
+		if (marksInThisP.length > 0 || hasTrailingNewlineMarks) {
 			return p;
 		}
 	}
@@ -165,7 +171,13 @@ export function findPreviousParagraphWithSuggestions(
 			}
 			return mark.from < p.to && mark.to > p.from;
 		});
-		if (marksInThisP.length > 0) {
+
+		// Also check for "homeless" newline removal marks that start exactly where this paragraph ends.
+		const hasTrailingNewlineMarks = marks.some(
+			(mark) => mark.type === "removed" && mark.from === p.to,
+		);
+
+		if (marksInThisP.length > 0 || hasTrailingNewlineMarks) {
 			lastParagraphWithSuggestions = p; // Keep track of the latest one found before endOffset
 		}
 	}
