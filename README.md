@@ -163,7 +163,7 @@ Key features and improvements include:
 * Refactor that makes it much **easier to add new models**.
 * **Improved Model Information:** The model selection dropdown in settings now provides more useful information about each model.
 * **Better Runtime Debug Logging:** Enhanced logging makes it easier to diagnose issues.
-* **Bug Fix:** Fixed a smooth scrolling bug in styles.
+* **Bug Fixes:** Fixed a smooth scrolling bug in styles. Fixed infinite loop when parsing wikilinks in custom context.
 * **Refined System Instructions:** The underlying instructions sent to the models have been improved for better compliance and quality.
 
 #### Minor Versions of v.2.0.x
