@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 2.1.0
+**Current Version:** 2.1.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -145,6 +145,10 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 * **Feat: Persistent & Decoupled AI Context Control**—Your preferred context settings (Dynamic, Full Note, Custom Context Toggle & Text) are now saved automatically across sessions, and the plugin can utilize them even when the Context Control Panel is closed.
 * Bug Fix: was sending thinking budget to all "Flash" models causing Gemini 2.0 Flash-Lite to throw an error.
+
+#### Minor Versions of v.2.1.x
+
+* **2.1.1** 🛠️ Under The Hood Improvements—The plugin's internal prompt construction logic has been centralized, leading to more robust and consistent AI interactions across all supported models.
 
 ### ✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models
 
