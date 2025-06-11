@@ -1,9 +1,9 @@
 // src/lib/llm/gemini.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
 import type { AssembledContextForLLM } from "../lib/core/textTransformer";
 import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
+import { buildPromptComponents } from "./prompt-builder";
 
 /**
  * Sends a request to the Google Gemini API.
@@ -29,78 +29,23 @@ export async function geminiRequest(
 		return;
 	}
 
-	let fullPrompt = "";
-	const customContextStart = "--- Custom Context Start ---";
-	const customContextEnd = "--- Custom Context End ---";
-	// REFERENCED_NOTES_START/END are part of assembledContext.referencedNotesContent if it exists
-	// CURRENT_NOTE_CONTEXT_START/END are part of assembledContext.editorContextContent if it exists
+	const { systemInstructions, userContent, contextBlock } = buildPromptComponents(
+		assembledContext,
+		prompt,
+		isGenerationTask,
+		oldText,
+	);
 
-	if (isGenerationTask) {
-		fullPrompt =
-			"You are an AI assistant embedded in Obsidian, tasked with generating text based on a user prompt. Your primary instruction is to fulfill the user's ad-hoc prompt. ";
-
-		if (assembledContext?.customContext) {
-			fullPrompt += `You will be given \'Custom Context\' (marked as \'${customContextStart}\' and \'${customContextEnd}\'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed and are considered as important as the user\'s ad-hoc prompt. `;
-		}
-		if (assembledContext?.referencedNotesContent) {
-			fullPrompt += `You may also be given \'Referenced Notes\' (typically marked with \'--- BEGIN REFERENCED NOTES ---\' and \'--- END REFERENCED NOTES ---\'). Treat this as supplementary background information unless instructed otherwise in the \'Custom Context\'. `;
-		}
-		if (assembledContext?.editorContextContent) {
-			fullPrompt += `Additionally, you will see \'Current Note Context\' (typically marked with \'--- Current Note Context Start ---\' and \'--- Current Note Context End ---\') which represents content from the current editor. `;
-			if (assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)) {
-				fullPrompt += `This \'Current Note Context\' contains a marker \'${GENERATION_TARGET_CURSOR_MARKER}\'. This marker indicates the precise spot where the new text should be generated or inserted. `;
-			}
-		}
-
-		fullPrompt +=
-			"Output ONLY the generated text, without any preambles or explanatory sentences. ";
-
-		// Append actual context blocks
-		if (assembledContext?.customContext) {
-			fullPrompt += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
-		}
-		if (assembledContext?.referencedNotesContent) {
-			fullPrompt += `\n\n${assembledContext.referencedNotesContent}`; // Already wrapped
-		}
-		if (assembledContext?.editorContextContent) {
-			fullPrompt += `\n\n${assembledContext.editorContextContent}`; // Already wrapped
-		}
-
-		fullPrompt += `\n\nUser's ad-hoc prompt: ${prompt.text}\n\nGenerate text to fulfill this prompt. Output ONLY the generated text.`;
-	} else {
-		// Transformation logic
-		fullPrompt = "You are an AI assistant. You will be provided with a 'Text to Transform'. ";
-
-		if (assembledContext?.customContext) {
-			fullPrompt += `You will also be given \'Custom Context\' (marked as \'${customContextStart}\' and \'${customContextEnd}\'). Any guidance, instructions, rules, or requests contained in this block MUST be strictly obeyed and are as important as the main \'User\'s instruction\'. `;
-		}
-		if (assembledContext?.referencedNotesContent) {
-			fullPrompt += `You may also be given \'Referenced Notes\' (typically marked with \'--- BEGIN REFERENCED NOTES ---\' and \'--- END REFERENCED NOTES ---\'). Treat this as background information for the transformation unless instructed otherwise in the \'Custom Context\'. `;
-		}
-		if (assembledContext?.editorContextContent) {
-			fullPrompt += `Additionally, \'Current Note Context\' (typically marked with \'--- Current Note Context Start ---\' and \'--- Current Note Context End ---\') provides surrounding content from the editor for awareness. `;
-		}
-		fullPrompt +=
-			"Apply instructions ONLY to the 'Text to Transform'. Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context). ";
-
-		// Append actual context blocks
-		if (assembledContext?.customContext) {
-			fullPrompt += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
-		}
-		if (assembledContext?.referencedNotesContent) {
-			fullPrompt += `\n\n${assembledContext.referencedNotesContent}`; // Already wrapped
-		}
-		if (assembledContext?.editorContextContent) {
-			// Note: The 'oldText' parameter is the specific text to transform.
-			// The 'editorContextContent' is the broader surrounding context.
-			// We display editorContextContent for awareness.
-			fullPrompt += `\n\n${assembledContext.editorContextContent}`; // Already wrapped
-		}
-
-		fullPrompt += `\n\nUser's instruction: ${prompt.text}`;
-		fullPrompt += `\n\n--- Text to Transform Start ---\n${oldText}\n--- Text to Transform End ---`;
-		fullPrompt += "\n\nTransformed text:";
-	}
+	// For Gemini, we assemble all components into a single string.
+	const fullPrompt = [
+		systemInstructions,
+		contextBlock,
+		userContent,
+		// For transformation tasks, Gemini seems to work better when prompted for the final output.
+		isGenerationTask ? "" : "\n\nTransformed text:",
+	]
+		.filter(Boolean)
+		.join("\n\n");
 
 	let response: RequestUrlResponse;
 	try {

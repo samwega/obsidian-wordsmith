@@ -1,10 +1,10 @@
 // src/lib/llm/chat-completion-handler.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
-import { GENERATION_TARGET_CURSOR_MARKER } from "../lib/constants";
 import type { AssembledContextForLLM } from "../lib/core/textTransformer";
 import { MODEL_SPECS, TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
 import type TextTransformer from "../main";
+import { buildPromptComponents } from "./prompt-builder";
 
 interface ChatCompletionOptions {
 	apiUrl: string;
@@ -36,70 +36,19 @@ export async function chatCompletionRequest(
 	isGenerationTask: boolean,
 	options: ChatCompletionOptions,
 ): Promise<{ newText: string; isOverlength: boolean; cost: number } | undefined> {
-	const customContextStart = "--- Custom Context Start ---";
-	const customContextEnd = "--- Custom Context End ---";
+	const { systemInstructions, userContent, contextBlock } = buildPromptComponents(
+		assembledContext,
+		prompt,
+		isGenerationTask,
+		oldText,
+	);
 
-	const systemInstructionBuilder: string[] = [
-		"--- BEGIN SYSTEM INSTRUCTIONS ---",
-		"You are an AI assistant embedded in Obsidian helping with text tasks. Your primary instruction is to fulfill the user's ad-hoc prompt or transformation instruction.",
-	];
-
-	if (assembledContext?.customContext) {
-		systemInstructionBuilder.push(
-			`You will be given 'Custom Context' (marked as '${customContextStart}' and '${customContextEnd}'). Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed.`,
-		);
-	}
-	if (assembledContext?.referencedNotesContent) {
-		systemInstructionBuilder.push(
-			`You may also be given 'Referenced Notes' (typically marked with '--- BEGIN REFERENCED NOTES ---' and '--- END REFERENCED NOTES ---'). Treat this as supplementary background information unless instructed otherwise in the 'Custom Context'.`,
-		);
-	}
-	if (assembledContext?.editorContextContent) {
-		systemInstructionBuilder.push(
-			`Additionally, you will see 'Current Note Context' (typically marked with '--- Current Note Context Start ---' and '--- Current Note Context End ---') which represents content from the current editor.`,
-		);
-		if (
-			isGenerationTask &&
-			assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)
-		) {
-			systemInstructionBuilder.push(
-				`This 'Current Note Context' contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted.`,
-			);
-		}
-	}
-
-	if (isGenerationTask) {
-		systemInstructionBuilder.push(
-			"Output the generated text ONLY, without any preambles, tags or explanatory sentences.",
-		);
-	} else {
-		systemInstructionBuilder.push(
-			"Apply instructions ONLY to the 'Text to Transform' (which will be provided as the user message). Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context).",
-		);
-	}
-
-	systemInstructionBuilder.push("--- END SYSTEM INSTRUCTIONS ---");
-
-	let systemMessageContent = systemInstructionBuilder.join(" ");
-
-	if (assembledContext?.customContext) {
-		systemMessageContent += `\n\n${customContextStart}\n${assembledContext.customContext}\n${customContextEnd}`;
-	}
-	if (assembledContext?.referencedNotesContent) {
-		systemMessageContent += `\n\n${assembledContext.referencedNotesContent}`;
-	}
-	if (assembledContext?.editorContextContent) {
-		systemMessageContent += `\n\n${assembledContext.editorContextContent}`;
-	}
+	// For OpenAI-style APIs, system instructions and context are combined in the system message.
+	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
 
 	const messages = [
 		{ role: "system", content: systemMessageContent },
-		{
-			role: "user",
-			content: isGenerationTask
-				? prompt.text
-				: `User's transformation instruction: ${prompt.text}\n\n--- Text to Transform Start ---\n${oldText}\n--- Text to Transform End ---`,
-		},
+		{ role: "user", content: userContent },
 	];
 
 	const requestBody = {

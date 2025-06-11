@@ -300,7 +300,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
 		},
 		minTemperature: 0.0,
-		maxTemperature: 1.0,
+		maxTemperature: 2.0,
 		defaultModelTemperature: 1.0,
 	},
 	"claude-3.5-sonnet-openrouter": {
