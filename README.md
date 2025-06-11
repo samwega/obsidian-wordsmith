@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 2.1.1
+**Current Version:** 2.2.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -41,6 +41,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+- [Usage](#usage)
 
 - [Usage](#usage)
   - [Commands](#commands)
@@ -48,31 +49,33 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
   - [Customizing Prompts](#customizing-prompts)
   - [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 - [Release History](#release-history)
-  - [✨ What's New in v2.1.0 - Context Panel Save State Across Sessions!](#-whats-new-in-v210---context-panel-save-state-across-sessions)
-  - [✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models](#-whats-new-in-v200---openrouter-support---28-new-models)
+  - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w%CD%9Cs-whats-new-in-v220---knowledge-graph-generation)
+  - [w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions](#w%CD%9Cs-whats-new-in-v210---context-panel-save-state-across-sessions)
+    - [Minor Versions of v.2.1.x](#minor-versions-of-v21x)
+  - [w͜s What's New in v2.0.0 - OpenRouter Support - 28 New Models](#w%CD%9Cs-whats-new-in-v200---openrouter-support---28-new-models)
     - [Minor Versions of v.2.0.x](#minor-versions-of-v20x)
-  - [✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging](#-whats-new-in-v1110---temperature-sliders--debug-logging)
-  - [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
+  - [w͜s What's New in v1.11.0 - Temperature Sliders & Debug Logging](#w%CD%9Cs-whats-new-in-v1110---temperature-sliders--debug-logging)
+  - [w͜s What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! w͜s](#w%CD%9Cs-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-w%CD%9Cs)
     - [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
-  - [✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨](#-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-)
+  - [w͜s What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! w͜s](#w%CD%9Cs-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-w%CD%9Cs)
     - [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
-  - [✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨](#-whats-new-in-v180---persistent-suggestions--enhanced-prompts-)
+  - [w͜s What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! w͜s](#w%CD%9Cs-whats-new-in-v180---persistent-suggestions--enhanced-prompts-w%CD%9Cs)
     - [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
-  - [✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨](#-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-)
+  - [w͜s What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! w͜s](#w%CD%9Cs-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-w%CD%9Cs)
     - [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
-  - [✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨](#-whats-new-in-v160--enhanced-suggestion-navigation-)
+  - [w͜s What's New in v1.6.0 – Enhanced Suggestion Navigation! w͜s](#w%CD%9Cs-whats-new-in-v160--enhanced-suggestion-navigation-w%CD%9Cs)
     - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
-  - [✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨](#-whats-new-in-v150---context-aware-generation-at-cursor-)
+  - [w͜s What's New in v1.5.0 - Context Aware Generation at Cursor! w͜s](#w%CD%9Cs-whats-new-in-v150---context-aware-generation-at-cursor-w%CD%9Cs)
     - [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
   - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
-  - [✨ What's New in v1.4.0 - Precision Newline Tracking! ✨](#-whats-new-in-v140---precision-newline-tracking-)
+  - [w͜s What's New in v1.4.0 - Precision Newline Tracking! w͜s](#w%CD%9Cs-whats-new-in-v140---precision-newline-tracking-w%CD%9Cs)
     - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
-  - [✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨](#-whats-new-in-v130---revamped-suggestion-display-)
+  - [w͜s What's New in v1.3.0 - Revamped Suggestion Display! w͜s](#w%CD%9Cs-whats-new-in-v130---revamped-suggestion-display-w%CD%9Cs)
     - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
-  - [✨ What's New in v1.2.1 & v1.2.2 ✨](#-whats-new-in-v121--v122-)
-  - [✨ What's New in v1.2.0 ✨](#-whats-new-in-v120-)
-  - [✨ What's New in v1.1.0 ✨](#-whats-new-in-v110-)
-  - [✨ What's New in v1.0.0 ✨](#-whats-new-in-v100-)
+  - [w͜s What's New in v1.2.1 & v1.2.2 w͜s](#w%CD%9Cs-whats-new-in-v121--v122-w%CD%9Cs)
+  - [w͜s What's New in v1.2.0 w͜s](#w%CD%9Cs-whats-new-in-v120-w%CD%9Cs)
+  - [w͜s What's New in v1.1.0 w͜s](#w%CD%9Cs-whats-new-in-v110-w%CD%9Cs)
+  - [w͜s What's New in v1.0.0 w͜s](#w%CD%9Cs-whats-new-in-v100-w%CD%9Cs)
 - [Installation & Setup](#installation--setup)
   - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
   - [Manual Installation](#manual-installation)
@@ -141,7 +144,21 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 ## Release History
 
-### ✨ What's New in v2.1.0 - Context Panel Save State Across Sessions
+### w͜s What's New in v2.2.0 - Knowledge Graph Generation
+
+This is a major feature release that introduces a powerful new way to visualize your ideas. With the new **Knowledge Graph Generator**, you can now transform your notes and research into beautiful, editable Obsidian Canvases.
+
+Key features and improvements include:
+
+* **AI-Powered Knowledge Graph Generation**—This is the centerpiece of the update!
+  * A new command, **`Generate knowledge graph`**, analyzes your context to extract key entities and their relationships.
+  * **Intelligent & Context-Aware**—Fully integrated with the Context Control Panel. Use your full note and/or provide detailed instructions and linked notes in the "Custom Context" field to guide the generation.
+  * **Spacious & Readable Layouts**—Utilizes the `d3-force` engine to automatically arrange nodes in a clean, expanded layout with plenty of breathing room, avoiding cluttered clusters.
+  * **Automatic Node Sizing & Coloring** Nodes perfectly expand to fit their entire text content—no more manual resizing! To improve readability, the most central "hub" nodes in your graph are automatically highlighted with a random color.
+* **Tested Successfully With Several Models**—Not all models are capable of generating the precise JSON format required for the graph generation, but I have successfully tested with GPT 4.1 & 4o, Gemini 2.5 Flash & Pro, Grok 3, any of the Claude models, DeepSeek v3, Command A is a champ, all of the Llama models including the small 3.3 70B, and to my surprise, even small models like Qwen 3 32B succeeded! The size of the content to graph is a factor.
+* **All WordSmith Standard Functionality Works in Canvas Cards Seamlessly.**
+
+### w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions
 
 * **Feat: Persistent & Decoupled AI Context Control**—Your preferred context settings (Dynamic, Full Note, Custom Context Toggle & Text) are now saved automatically across sessions, and the plugin can utilize them even when the Context Control Panel is closed.
 * Bug Fix: was sending thinking budget to all "Flash" models causing Gemini 2.0 Flash-Lite to throw an error.
@@ -150,7 +167,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 * **2.1.1** 🛠️ Under The Hood Improvements—The plugin's internal prompt construction logic has been centralized, leading to more robust and consistent AI interactions across all supported models.
 
-### ✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models
+### w͜s What's New in v2.0.0 - OpenRouter Support - 28 New Models
 
 Key features and improvements include:
 
@@ -183,7 +200,7 @@ Key features and improvements include:
   * Addressed a bug where newline removal suggestions (pilcrows) were not resolved by "Accept/Reject all in paragraph" commands and were not correctly identified for navigation, improving workflow consistency.
   * Added models Claude Sonnet 4 & Claude Opus 4 via OpenRouter API. Gave Opus for a 16k thinking token budget.
 
-### ✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging
+### w͜s What's New in v1.11.0 - Temperature Sliders & Debug Logging
 
 * **Temperature Sliders**—now included in both the Context Side Pane and the settings panel. Previously, the temperature was hard coded at 0.7. Now, it will defaut to 1.0 for enhanced creativity. I've seen pretty good compliance with temperatures as high as 1.8 (not thoroughly tested yet).
 * **Console Debug Logging**—You now have a toggle which will log all WordSmith activity in the developer console. This will include the prompt sent to the model, so you can verify that it is sending the intended, properly constructed prompt. Temperature is also included.
@@ -191,7 +208,7 @@ Key features and improvements include:
   * Upgrades `gemini-2.5-flash-preview-04-17` to `gemini-2.5-flash-preview-05-20`.
   * Upgrades `gemini-2.5-pro-preview-05-06` to `gemini-2.5-pro-preview-06-05`.
 
-### ✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨
+### w͜s What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! w͜s
 
 * **Filename Inclusion for Improved Contextual Understanding:**—When using "Full Note" or "Dynamic Context" options, WordSmith now automatically includes the **name of the current file** (e.g., `Filename: My Note About AI.md`) as part of the context sent to the AI. Previously, if you didn't include the title of the note as a header, it would not be incldued with the context.
 * **Reliable Preset Prompt Management:**
@@ -207,7 +224,7 @@ Key features and improvements include:
 * **1.10.2**—Fix: reintroduced the Pilcrow ¶ functionality accidentally removed during refactoring when we switched to ghost text CM6 inplementation. This time the ¶ symbol uses ghost text, rather than modify the user's actual text. Also completely revamped the style for both ¶ and ↵ symbols.
 * **1.10.3**—Improved AI compliance with any additional instructions the user might provite through the Custom Context input box, for the purposes of [Wiki - Personalized Memory: Crafting Memory Notes](https://github.com/samwega/obsidian-wordsmith/wiki/Personalized-Memory:-Crafting-Memory-Notes)
 
-### ✨ What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! ✨
+### w͜s What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! w͜s
 
 This significant architectural update refines how WordSmith presents and manages "added" text suggestions, leading to a smoother, more robust, and performant experience.
 
@@ -241,7 +258,7 @@ Version 1.9.0 marks a significant step forward in WordSmith's technical foundati
 * **1.9.2**—The CM6 implementation of suggestions (ghost text) caused a lot more issues than expected. In particular: fixed aggressive view centering & the corect highlighting of the first of multi-line suggestions.  I'm finally satisfied with the results. Finally a release that should be bug free!
 * **1.9.3**—Tweaks to *Improve* Preset Prompt; "Default Prompts" renamed "Preset Prompts" & "Custom Prompts" renamed "User Prompts".
 
-### ✨ What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! ✨
+### w͜s What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! w͜s
 
 This release brings two major improvements to make your AI writing experience more seamless and powerful:
 
@@ -259,7 +276,7 @@ This release brings two major improvements to make your AI writing experience mo
 
 **Ready for Prime Time!:** With this update, I'm finally getting ready to have my very first Plugin—WordSmith—added to the official Obsidian community plugin store. 🤞🏻
 
-### ✨ What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! ✨
+### w͜s What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! w͜s
 
 This upgrade streamlines the process of providing the AI with the precise information needed for optimal results. By integrating seamless note linking into the Custom Context feature, WordSmith now leverages your interconnected notes, making context building faster, more intuitive, and more powerful.
 
@@ -273,7 +290,7 @@ This upgrade streamlines the process of providing the AI with the precise inform
 
 * **v1.7.1**—*Text Transformer* **Rebranded as WordSmith**. Developers, note that most code still refers to TextTransformer.
 
-### ✨ What's New in v1.6.0 – Enhanced Suggestion Navigation! ✨
+### w͜s What's New in v1.6.0 – Enhanced Suggestion Navigation! w͜s
 
 This release supercharges your suggestion review workflow, making it faster and more intuitive to manage AI-generated edits and new content.
 
@@ -303,7 +320,7 @@ WordSmith now offers one of the fastest and most ergonomic AI suggestion review 
   * **Removed Legacy Full Document Transform**: This command was adding unnecessary complexity. You may simply Ctrl-A and Transform Selection.
 * **v1.6.4**—**Minimalistic Context Control Side Panel**: All the explanations are now tucked away in a collapsible menu. The menu is as minimal as possible, allowing you to make it narrow and gain space. It is more aesthetically pleasing as well.
 
-### ✨ What's New in v1.5.0 - Context Aware Generation at Cursor! ✨
+### w͜s What's New in v1.5.0 - Context Aware Generation at Cursor! w͜s
 
 This major release introduces a powerful new way to interact with AI: **Ad-hoc Contextual Generation directly at your cursor, presented as a suggestion.** Go beyond processing existing text – now you can generate new content, ideas, or continuations seamlessly within your writing flow.
 
@@ -341,7 +358,7 @@ This feature transforms WordSmith from primarily an editing/refinement tool into
 
 ![image](https://github.com/user-attachments/assets/88076b79-a060-402a-a4cd-61f5ef35adcf)
 
-### ✨ What's New in v1.4.0 - Precision Newline Tracking! ✨
+### w͜s What's New in v1.4.0 - Precision Newline Tracking! w͜s
 
 This update brings a crucial enhancement to how WordSmith handles changes involving **newlines**, making suggestions more accurate and intuitive, especially for structural edits and reformatting.
 
@@ -361,7 +378,7 @@ This update brings a crucial enhancement to how WordSmith handles changes involv
 * **v1.4.2—Adaptive Styling for dark/light themes.**
 * * **v1.4.3—Disables spellcheck red squiggle during suggestion**. Suggestion sticks the old and new word together and everything is flagged by spellcheck, so it needed to be disabled.
 
-### ✨ What's New in v1.3.0 - Revamped Suggestion Display! ✨
+### w͜s What's New in v1.3.0 - Revamped Suggestion Display! w͜s
 
 This major update overhauls how AI suggestions are displayed and managed, moving to a more robust and visually integrated system within the Obsidian editor:
 
@@ -385,7 +402,7 @@ This major update overhauls how AI suggestions are displayed and managed, moving
 **v1.3.1**—**AI Model Selector in Side Pane:** Quickly switch your preferred AI model directly from the AI Context Control Panel for even faster workflow adjustments.
 **v1.3.2**—Bug fixes.
 
-### ✨ What's New in v1.2.1 & v1.2.2 ✨
+### w͜s What's New in v1.2.1 & v1.2.2 w͜s
 
 These updates brought significant UI enhancements, a new dynamic translator feature, and a powerful new default prompt:
 
@@ -397,7 +414,7 @@ These updates brought significant UI enhancements, a new dynamic translator feat
 * **New Preset Prompt - "Mind the Context!":** This prompt instructs the model to do what the context says, and revises the text strictly based on the directives provided in the context. For instance, you can add any rule on the fly in the Custom Context box.
 * **Bug Fixes:** Addressed issues related to the translator input box display.
 
-### ✨ What's New in v1.2.0 ✨
+### w͜s What's New in v1.2.0 w͜s
 
 This version significantly enhanced your control over the AI's context and
 streamlined prompt management:
@@ -410,7 +427,7 @@ streamlined prompt management:
 * **New Setting - Dynamic Context Lines:** Fine-tune the amount of surrounding text (number of paragraphs) used by the Dynamic Context feature.
 * **Prompt Management Update:** Added a helpful note in the settings page explaining how to manually edit default prompts by modifying the `data.json` file (requires an Obsidian reload after changes).
 
-### ✨ What's New in v1.1.0 ✨
+### w͜s What's New in v1.1.0 w͜s
 
 Version 1.1.0 expanded your AI model horizons:
 
@@ -421,7 +438,7 @@ Version 1.1.0 expanded your AI model horizons:
 * **Seamless Model Selection:** The settings panel was updated to easily switch
     between your preferred OpenAI and Gemini models.
 
-### ✨ What's New in v1.0.0 ✨
+### w͜s What's New in v1.0.0 w͜s
 
 Version 1.0.0 marked the initial major transformation from the original
 Proofreader plugin, introducing core functionalities that define WordSmith today:

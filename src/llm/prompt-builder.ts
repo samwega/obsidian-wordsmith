@@ -127,12 +127,18 @@ interface KnowledgeGraph {
 
 ### RULES AND CONSTRAINTS
 1.  **Strict JSON Only**: Your response MUST begin with \`{\` and end with \`}\`.
-2.  **Focus on Significance**: Extract only the most important entities and relationships.
+2.  **Focus on Significance**: Extract only the most important entities and relationships to build a useful, insightful graph.
 3.  **Node Creation Mandate**: For every relationship you identify in an \`edge\`, you **MUST** create a corresponding \`node\` for both its \`source\` and its \`target\`.
 4.  **Referential Integrity**: All \`source\` and \`target\` IDs in the \`edges\` array **MUST** correspond to a valid \`id\` in the \`nodes\` array. Do not create edges that point to non-existent nodes.
 5.  **No External Information**: Derive all information exclusively from the provided text context.
 6.  **Graph Structure**: The output must represent a graph, not necessarily a tree. Cycles and many-to-many connections are permitted.
 7.  **Unique IDs**: All node \`id\`s must be unique.
+
+### CONTEXT ANALYSIS
+The following text blocks are your source material.
+- **ABSOLUTE PRIORITY**: Your output **MUST** always be valid JSON conforming to the specified interface. This rule is unbreakable.
+- **Custom Context Guidance**: If a 'Custom Context' block is provided, use the instructions within it to guide **what** you extract (e.g., "focus on philosophical concepts," "ignore personal names") and the **style** of the descriptions. These instructions should influence the content of the graph, not its fundamental JSON structure.
+- **Source Material**: If provided, use the 'Current Note Context' and 'Referenced Notes' as the primary source material from which to extract entities and relationships, according to the guidance you receive.
 
 ### EXAMPLE
 **GIVEN INPUT TEXT**: Socrates was a Greek philosopher known for the Socratic method. His student, Plato, documented his life.

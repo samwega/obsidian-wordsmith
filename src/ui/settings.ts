@@ -416,7 +416,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderKnowledgeGraphSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Knowledge Graph Generation" });
+		containerEl.createEl("h3", { text: "w͜s Knowledge Graph Generation" });
 
 		new Setting(containerEl)
 			.setName("Knowledge Graphs asset path")
