@@ -32,10 +32,6 @@ export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
 export class ContextControlPanel extends ItemView {
 	private plugin: TextTransformer;
-	private useWholeNoteContext = false;
-	private useCustomContext = false;
-	private customContextText = "";
-	private useDynamicContext = false;
 
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
@@ -97,7 +93,6 @@ export class ContextControlPanel extends ItemView {
 		this._renderDescriptionSection(contentEl);
 		this._renderContextToggles(contentEl);
 		this._renderCustomContextArea(contentEl);
-		this.updateTemperatureSlider(); // Call to initialize slider value and limits
 		return Promise.resolve();
 	}
 
@@ -193,13 +188,18 @@ export class ContextControlPanel extends ItemView {
 	private _renderContextToggles(container: HTMLElement): void {
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
-			toggle.setValue(this.useDynamicContext).onChange((value) => {
-				this.useDynamicContext = value;
-				if (value && this.wholeNoteContextToggleComponent) {
-					this.useWholeNoteContext = false;
-					this.wholeNoteContextToggleComponent.setValue(false);
+			// --- MODIFIED --- Read from plugin.settings
+			toggle.setValue(this.plugin.settings.useDynamicContext).onChange(async (value) => {
+				// --- MODIFIED --- Write to plugin.settings and save
+				this.plugin.settings.useDynamicContext = value;
+				if (value) {
+					this.plugin.settings.useWholeNoteContext = false;
+					if (this.wholeNoteContextToggleComponent) {
+						this.wholeNoteContextToggleComponent.setValue(false);
+					}
 				}
 				this.dynamicContextLinesSetting?.settingEl.classList.toggle("is-visible", value);
+				await this.plugin.saveSettings();
 			});
 		});
 
@@ -227,31 +227,42 @@ export class ContextControlPanel extends ItemView {
 
 		this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
 		this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
+		// --- MODIFIED --- Read from plugin.settings
 		this.dynamicContextLinesSetting.settingEl.classList.toggle(
 			"is-visible",
-			this.useDynamicContext,
+			this.plugin.settings.useDynamicContext,
 		);
 
 		new Setting(container).setName("Full note").addToggle((toggle) => {
 			this.wholeNoteContextToggleComponent = toggle;
-			toggle.setValue(this.useWholeNoteContext).onChange((value) => {
-				this.useWholeNoteContext = value;
-				if (value && this.dynamicContextToggleComponent) {
-					this.useDynamicContext = false;
-					this.dynamicContextToggleComponent.setValue(false);
+			// --- MODIFIED --- Read from plugin.settings
+			toggle.setValue(this.plugin.settings.useWholeNoteContext).onChange(async (value) => {
+				// --- MODIFIED --- Write to plugin.settings and save
+				this.plugin.settings.useWholeNoteContext = value;
+				if (value) {
+					this.plugin.settings.useDynamicContext = false;
+					if (this.dynamicContextToggleComponent) {
+						this.dynamicContextToggleComponent.setValue(false);
+					}
 					this.dynamicContextLinesSetting?.settingEl.classList.remove("is-visible");
 				}
+				await this.plugin.saveSettings();
 			});
 		});
 
 		new Setting(container).setName("Custom").addToggle((toggle) =>
-			toggle.setValue(this.useCustomContext).onChange((value) => {
-				this.useCustomContext = value;
-				this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
-				if (value && this.customContextTextArea) {
-					this.customContextTextArea.inputEl.focus();
-				}
-			}),
+			// --- MODIFIED --- Read from plugin.settings
+			toggle
+				.setValue(this.plugin.settings.useCustomContext)
+				.onChange(async (value) => {
+					// --- MODIFIED --- Write to plugin.settings and save
+					this.plugin.settings.useCustomContext = value;
+					this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
+					if (value && this.customContextTextArea) {
+						this.customContextTextArea.inputEl.focus();
+					}
+					await this.plugin.saveSettings();
+				}),
 		);
 	}
 
@@ -259,13 +270,18 @@ export class ContextControlPanel extends ItemView {
 		this.customContextTextAreaContainer = container.createDiv({
 			cls: "ccp-custom-context-container",
 		});
-		if (this.useCustomContext) this.customContextTextAreaContainer.classList.add("is-visible");
+		// --- MODIFIED --- Read from plugin.settings
+		if (this.plugin.settings.useCustomContext)
+			this.customContextTextAreaContainer.classList.add("is-visible");
 
 		this.customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
 			.setPlaceholder("Add custom context. Type '[[' to link notes...")
-			.setValue(this.customContextText)
-			.onChange((value) => {
-				this.customContextText = value;
+			// --- MODIFIED --- Read from plugin.settings
+			.setValue(this.plugin.settings.customContextText)
+			.onChange(async (value) => {
+				// --- MODIFIED --- Write to plugin.settings and save
+				this.plugin.settings.customContextText = value;
+				await this.plugin.saveSettings();
 			});
 		this.customContextTextArea.inputEl.classList.add("ccp-custom-context-textarea");
 
@@ -281,12 +297,14 @@ export class ContextControlPanel extends ItemView {
 			const match = /\[\[([^\]]*)$/.exec(textBeforeCursor);
 
 			if (match) {
-				new WikilinkSuggestModal(this.plugin.app, (chosenFile: TFile) => {
+				new WikilinkSuggestModal(this.plugin.app, async (chosenFile: TFile) => {
 					const linkText = `[[${chosenFile.basename}]]`;
 					const textBeforeLinkOpen = textBeforeCursor.substring(0, match.index);
 					const textAfterCursor = text.substring(cursorPos);
 					const newText = textBeforeLinkOpen + linkText + textAfterCursor;
-					this.customContextText = newText;
+					// --- MODIFIED --- Write to plugin.settings and save
+					this.plugin.settings.customContextText = newText;
+					await this.plugin.saveSettings();
 
 					if (this.customContextTextArea) {
 						this.customContextTextArea.setValue(newText);
@@ -314,24 +332,14 @@ export class ContextControlPanel extends ItemView {
 		return super.onClose();
 	}
 
-	getWholeNoteContextState(): boolean {
-		return this.useWholeNoteContext;
-	}
-
-	getCustomContextState(): boolean {
-		return this.useCustomContext;
-	}
-
-	getDynamicContextState(): boolean {
-		return this.useDynamicContext;
-	}
-
 	async getStructuredCustomContext(): Promise<StructuredCustomContext> {
-		if (!this.useCustomContext || !this.customContextText) {
-			return { rawText: this.customContextText || "", referencedNotes: [] };
+		// --- MODIFIED --- Read from plugin.settings
+		if (!this.plugin.settings.useCustomContext || !this.plugin.settings.customContextText) {
+			return { rawText: this.plugin.settings.customContextText || "", referencedNotes: [] };
 		}
 
-		const textToProcess = this.customContextText;
+		// --- MODIFIED --- Read from plugin.settings
+		const textToProcess = this.plugin.settings.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
 		const uniqueReferencedNotes = new Map<string, Promise<ReferencedNoteData>>();
 
@@ -401,6 +409,9 @@ export class ContextControlPanel extends ItemView {
 				})();
 				uniqueReferencedNotes.set(linkPathOnly, promise);
 			}
+
+			// Find the next match to continue the loop.
+			match = wikilinkRegex.exec(textToProcess);
 		}
 
 		const resolvedNotes = await Promise.all(Array.from(uniqueReferencedNotes.values()));

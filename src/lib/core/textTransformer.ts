@@ -41,111 +41,99 @@ async function gatherContextForAI(
 	taskType: "generation" | "transformation",
 	scopeDetails?: { range: { from: number; to: number }; originalText: string },
 ): Promise<AssembledContextForLLM> {
-	const { app } = plugin;
+	const { app, settings } = plugin; // --- MODIFIED: Destructure settings
 	const assembledContext: AssembledContextForLLM = {};
 	const currentFile = app.workspace.getActiveFile();
 
-	const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
-	if (contextPanelLeaves.length > 0) {
-		const view = contextPanelLeaves[0].view;
-		// Type assertion to ContextControlPanel after checking instance type
-		if (view instanceof ContextControlPanel) {
-			const contextPanel = view; // Now correctly typed
+	// --- MODIFIED: Logic now reads directly from `settings`.
+	// The Context Panel instance is only needed for the RUNTIME action of parsing wikilinks.
 
-			// 1. Custom Context
-			if (contextPanel.getCustomContextState()) {
-				const structuredContext = await contextPanel.getStructuredCustomContext();
-				if (structuredContext.rawText) {
-					// The LLM-specific functions will wrap the entire additionalContextForAI
-					// with the Custom User-Provided Context Start/End delimiters.
-					// So, we just push the rawText here.
-					assembledContext.customContext = structuredContext.rawText;
-				}
+	// 1. Custom Context
+	if (settings.useCustomContext) {
+		const contextPanelLeaves = app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		if (
+			contextPanelLeaves.length > 0 &&
+			contextPanelLeaves[0].view instanceof ContextControlPanel
+		) {
+			const contextPanel = contextPanelLeaves[0].view;
+			// We need the view instance to perform the live parsing of wikilinks.
+			const structuredContext = await contextPanel.getStructuredCustomContext();
 
-				if (structuredContext.referencedNotes && structuredContext.referencedNotes.length > 0) {
-					let referencedNotesText = "--- BEGIN REFERENCED NOTES ---\n";
-					for (const note of structuredContext.referencedNotes) {
-						// Using note.originalWikilink to accurately represent what the user typed,
-						// including any alias.
-						referencedNotesText += `\n${note.originalWikilink}\n`;
-						referencedNotesText += `SourcePath: ${note.sourcePath}\n`;
-						referencedNotesText += `Content:\n${note.content}\n`;
-					}
-					referencedNotesText += "\n--- END REFERENCED NOTES ---";
-					assembledContext.referencedNotesContent = referencedNotesText;
-				}
+			if (structuredContext.rawText) {
+				assembledContext.customContext = structuredContext.rawText;
 			}
-
-			const useDynamic = contextPanel.getDynamicContextState();
-			const useWholeNote = contextPanel.getWholeNoteContextState();
-			const doc = cmView.state.doc;
-
-			// 2. Dynamic Context or Whole Note Context
-			if (useDynamic && currentFile) {
-				const linesToInclude = plugin.settings.dynamicContextLineCount;
-				const cursorOffset = cmView.state.selection.main.head;
-
-				let startLineNum: number;
-				let endLineNum: number;
-
-				if (taskType === "generation") {
-					const cursorLineNum = doc.lineAt(cursorOffset).number;
-					startLineNum = Math.max(1, cursorLineNum - linesToInclude);
-					endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
-				} else if (scopeDetails) {
-					const selectionStartLine = doc.lineAt(scopeDetails.range.from).number;
-					const selectionEndLine = doc.lineAt(scopeDetails.range.to).number;
-					startLineNum = Math.max(1, selectionStartLine - linesToInclude);
-					endLineNum = Math.min(doc.lines, selectionEndLine + linesToInclude);
-				} else {
-					// Should not happen for transformation if scopeDetails is always provided
-					startLineNum = 1;
-					endLineNum = doc.lines;
+			if (structuredContext.referencedNotes && structuredContext.referencedNotes.length > 0) {
+				let referencedNotesText = "--- BEGIN REFERENCED NOTES ---\n";
+				for (const note of structuredContext.referencedNotes) {
+					referencedNotesText += `\n${note.originalWikilink}\n`;
+					referencedNotesText += `SourcePath: ${note.sourcePath}\n`;
+					referencedNotesText += `Content:\n${note.content}\n`;
 				}
-
-				let dynamicContextAccumulator = "";
-				for (let i = startLineNum; i <= endLineNum; i++) {
-					const line = doc.line(i);
-					let lineText = line.text;
-
-					if (
-						taskType === "generation" &&
-						cursorOffset >= line.from &&
-						cursorOffset <= line.to
-					) {
-						const charPosInLine = cursorOffset - line.from;
-						lineText =
-							lineText.substring(0, charPosInLine) +
-							GENERATION_TARGET_CURSOR_MARKER +
-							lineText.substring(charPosInLine);
-					}
-					dynamicContextAccumulator += lineText;
-					if (i < endLineNum) {
-						dynamicContextAccumulator += "\n";
-					}
-				}
-				// Use "Current Note Context" label
-				// For transformation tasks, textToMark (the selected text) is NOT marked here anymore.
-				// It's passed separately as 'oldText' to the LLM.
-				assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Current Note Context End ---`;
-			} else if (useWholeNote && currentFile) {
-				let fileContent = await app.vault.cachedRead(currentFile);
-
-				if (taskType === "generation") {
-					const cursorOffset = cmView.state.selection.main.head;
-					const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
-					fileContent =
-						fileContent.substring(0, safeCursorOffset) +
-						GENERATION_TARGET_CURSOR_MARKER +
-						fileContent.substring(safeCursorOffset);
-				}
-				// For transformation tasks, scopeDetails.originalText (the selected text) is NOT marked here anymore.
-				// It's passed separately as 'oldText' to the LLM.
-				// Use "Current Note Context" label
-				assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Current Note Context End ---`;
+				referencedNotesText += "\n--- END REFERENCED NOTES ---";
+				assembledContext.referencedNotesContent = referencedNotesText;
 			}
+		} else if (settings.customContextText) {
+			// Fallback: If panel is not open, use the saved raw text. Wikilinks won't be resolved.
+			assembledContext.customContext = settings.customContextText;
 		}
 	}
+
+	const doc = cmView.state.doc;
+
+	// 2. Dynamic Context or Whole Note Context
+	if (settings.useDynamicContext && currentFile) {
+		// ... (rest of the logic is unchanged, it was already reading from settings for line count)
+		const linesToInclude = settings.dynamicContextLineCount;
+		const cursorOffset = cmView.state.selection.main.head;
+		// ...
+		// --- Unchanged logic for calculating and assembling dynamic context ---
+		let startLineNum: number;
+		let endLineNum: number;
+		if (taskType === "generation") {
+			const cursorLineNum = doc.lineAt(cursorOffset).number;
+			startLineNum = Math.max(1, cursorLineNum - linesToInclude);
+			endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
+		} else if (scopeDetails) {
+			const selectionStartLine = doc.lineAt(scopeDetails.range.from).number;
+			const selectionEndLine = doc.lineAt(scopeDetails.range.to).number;
+			startLineNum = Math.max(1, selectionStartLine - linesToInclude);
+			endLineNum = Math.min(doc.lines, selectionEndLine + linesToInclude);
+		} else {
+			startLineNum = 1;
+			endLineNum = doc.lines;
+		}
+		let dynamicContextAccumulator = "";
+		for (let i = startLineNum; i <= endLineNum; i++) {
+			const line = doc.line(i);
+			let lineText = line.text;
+
+			if (taskType === "generation" && cursorOffset >= line.from && cursorOffset <= line.to) {
+				const charPosInLine = cursorOffset - line.from;
+				lineText =
+					lineText.substring(0, charPosInLine) +
+					GENERATION_TARGET_CURSOR_MARKER +
+					lineText.substring(charPosInLine);
+			}
+			dynamicContextAccumulator += lineText;
+			if (i < endLineNum) {
+				dynamicContextAccumulator += "\n";
+			}
+		}
+		assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Current Note Context End ---`;
+	} else if (settings.useWholeNoteContext && currentFile) {
+		// --- MODIFIED --- Read `useWholeNoteContext` from settings
+		let fileContent = await app.vault.cachedRead(currentFile);
+		if (taskType === "generation") {
+			const cursorOffset = cmView.state.selection.main.head;
+			const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
+			fileContent =
+				fileContent.substring(0, safeCursorOffset) +
+				GENERATION_TARGET_CURSOR_MARKER +
+				fileContent.substring(safeCursorOffset);
+		}
+		assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${fileContent}\n--- Current Note Context End ---`;
+	}
+
 	return assembledContext;
 }
 

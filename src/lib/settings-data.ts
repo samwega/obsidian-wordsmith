@@ -706,6 +706,12 @@ export interface TextTransformerSettings {
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
 	saveToClipboard: boolean;
+
+	// --- ADDED: Context Panel State ---
+	useWholeNoteContext: boolean;
+	useCustomContext: boolean;
+	useDynamicContext: boolean;
+	customContextText: string;
 }
 
 export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> = {
@@ -727,6 +733,11 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" |
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: 2048,
 	saveToClipboard: false,
+	// --- ADDED: Context Panel State Defaults ---
+	useWholeNoteContext: false,
+	useCustomContext: false,
+	useDynamicContext: false,
+	customContextText: "",
 };
 
 // Note: defaultPromptId and debugMode were removed from DEFAULT_SETTINGS structure
