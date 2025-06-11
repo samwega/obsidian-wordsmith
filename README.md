@@ -158,6 +158,8 @@ Key features and improvements include:
 * **Tested Successfully With Several Models**—Not all models are capable of generating the precise JSON format required for the graph generation, but I have successfully tested with GPT 4.1 & 4o, Gemini 2.5 Flash & Pro, Grok 3, any of the Claude models, DeepSeek v3, Command A is a champ, all of the Llama models including the small 3.3 70B, and to my surprise, even small models like Qwen 3 32B succeeded! The size of the content to graph is a factor.
 * **All WordSmith Standard Functionality Works in Canvas Cards Seamlessly.**
 
+![WordSmith Knowledge Graph](https://github.com/user-attachments/assets/1c06ee58-6518-4866-96fb-026f82ec406f)
+
 ### w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions
 
 * **Feat: Persistent & Decoupled AI Context Control**—Your preferred context settings (Dynamic, Full Note, Custom Context Toggle & Text) are now saved automatically across sessions, and the plugin can utilize them even when the Context Control Panel is closed.
