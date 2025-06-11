@@ -426,7 +426,16 @@ export async function generateGraphAndCreateCanvas(
 	let nodesWithLayout: LayoutNode[];
 	try {
 		notice.setMessage("Parsing and validating graph data...");
-		const parsedJson = JSON.parse(response.newText);
+
+		// --- NEW: Sanitize the LLM response before parsing ---
+		const rawResponseText = response.newText.trim();
+		const jsonRegex = /```json\n([\s\S]*?)\n```/; // Matches a JSON block wrapped in ```json
+		const match = rawResponseText.match(jsonRegex);
+		// If there's a match, use the captured group; otherwise, use the raw text.
+		const jsonToParse = match ? match[1] : rawResponseText;
+		// --- END NEW ---
+
+		const parsedJson = JSON.parse(jsonToParse);
 		validatedGraph = validateLlmResponse(parsedJson);
 
 		if (plugin.runtimeDebugMode) {

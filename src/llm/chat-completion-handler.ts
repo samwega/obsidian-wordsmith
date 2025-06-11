@@ -60,7 +60,7 @@ export async function chatCompletionRequest(
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
-		max_tokens: prompt.max_tokens ?? settings.max_tokens,
+		max_tokens: settings.max_tokens,
 		...(options.additionalRequestBodyParams || {}),
 	};
 

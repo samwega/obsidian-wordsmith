@@ -57,6 +57,7 @@ export async function geminiRequest(
 			generationConfig: {
 				temperature: number;
 				thinkingConfig?: { thinkingBudget: number };
+				maxOutputTokens?: number;
 			};
 			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
 			tool_config: {
@@ -71,6 +72,7 @@ export async function geminiRequest(
 			],
 			generationConfig: {
 				temperature: settings.temperature,
+				maxOutputTokens: settings.max_tokens,
 			},
 			// biome-ignore lint/style/useNamingConvention: Gemini API requires snake_case
 			tool_config: {

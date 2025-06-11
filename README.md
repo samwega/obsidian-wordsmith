@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 2.2.0
+**Current Version:** 2.2.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -28,7 +28,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 * **BYOK:** Bring your own API key—only pay what you use  
 * **Multiple AI providers supported**—OpenAI, Google AI Studio & OpenRouter
 * **Tons of Models**—Including all state-of-the-art writing models—*Open AI models (GPT 4o, GPT 4.1, GPT 4.1 mini, GPT 4.1 nano, OpenAI 03 & GPT 4.5), Google models (Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash-Lite & Gemma 3 27B), Anthropic models (Claude 3.5 Sonnet, Claude 3.7 Sonnet, Claude Sonnet 4 & Claude Opus 4), Grok 3 beta, DeepSeek models (v3 & R1), Qwen models (3 235B A22B & Qwen 3 32B), Llama models (3.1 405B Instruct, 3.3 70B Instruct, Nvidia 3.1 Nemotron Ultra 253B v1), Nous models (Hermes 3 70B & Hermes 3 405B), TheDrummer's models (Skyfall 36B V2, Valkyrie 49B v1 and Anubis Pro 105b v1), Cohere's Command A (111B), Magnum 72B,  Luminad v0.2 70B, Mistral Large 2411 (123B), Goliath 120B*
-* ** Automatically Generate Canvas Knowledge Graphs** based on your notes!
+* **Automatically Generate Canvas Knowledge Graphs** based on your notes!
 * **Great Prompt Management Settings UI:** enable/disable prompts or create new one
 * Robust error handling, performance
 * **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
@@ -43,14 +43,13 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 - [Usage](#usage)
-
-- [Usage](#usage)
   - [Commands](#commands)
   - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
   - [Customizing Prompts](#customizing-prompts)
   - [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 - [Release History](#release-history)
   - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w%CD%9Cs-whats-new-in-v220---knowledge-graph-generation)
+    - [Minor Versions of v.2.2.x](#minor-versions-of-v22x)
   - [w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions](#w%CD%9Cs-whats-new-in-v210---context-panel-save-state-across-sessions)
     - [Minor Versions of v.2.1.x](#minor-versions-of-v21x)
   - [w͜s What's New in v2.0.0 - OpenRouter Support - 28 New Models](#w%CD%9Cs-whats-new-in-v200---openrouter-support---28-new-models)
@@ -156,8 +155,12 @@ Key features and improvements include:
   * **Intelligent & Context-Aware**—Fully integrated with the Context Control Panel. Use your full note and/or provide detailed instructions and linked notes in the "Custom Context" field to guide the generation.
   * **Spacious & Readable Layouts**—Utilizes the `d3-force` engine to automatically arrange nodes in a clean, expanded layout with plenty of breathing room, avoiding cluttered clusters.
   * **Automatic Node Sizing & Coloring** Nodes perfectly expand to fit their entire text content—no more manual resizing! To improve readability, the most central "hub" nodes in your graph are automatically highlighted with a random color.
-* **Tested Successfully With Several Models**—Not all models are capable of generating the precise JSON format required for the graph generation, but I have successfully tested with GPT 4.1 & 4o, Gemini 2.5 Flash & Pro, Grok 3, any of the Claude models, DeepSeek v3, Command A is a champ, all of the Llama models including the small 3.3 70B, and to my surprise, even small models like Qwen 3 32B succeeded! The size of the content to graph is a factor.
+* **Tested Successfully With Several Models**—Not all models are capable of generating the precise JSON format required for the graph generation, but I have successfully tested with GPT 4.1 & 4o, Gemini 2.5 Flash, Grok 3, any of the Claude models, DeepSeek v3, Command A is a champ, all of the Llama models including the small 3.3 70B, and to my surprise, even small models like Qwen 3 32B succeeded! The size of the content to graph is a factor.
 * **All WordSmith Standard Functionality Works in Canvas Cards Seamlessly.**
+
+#### Minor Versions of v.2.2.x
+
+* **2.2.1**—Added a Max Output Tokens input box. Larger models were failing at Knowledge Graph generation because the output was too large and got truncated by legacy hardcoded max 2k tokens output.
 
 ![WordSmith Knowledge Graph](https://github.com/user-attachments/assets/1c06ee58-6518-4866-96fb-026f82ec406f)
 

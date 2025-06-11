@@ -283,7 +283,7 @@ export default class TextTransformer extends Plugin {
 			newPrompt.frequency_penalty = combined.frequency_penalty;
 		if (typeof combined.presence_penalty !== "undefined")
 			newPrompt.presence_penalty = combined.presence_penalty;
-		if (typeof combined.max_tokens !== "undefined") newPrompt.max_tokens = combined.max_tokens;
+		// if (typeof combined.max_tokens !== "undefined") newPrompt.max_tokens = combined.max_tokens;
 
 		return newPrompt;
 	}

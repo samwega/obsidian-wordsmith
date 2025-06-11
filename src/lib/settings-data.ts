@@ -682,8 +682,6 @@ export interface TextTransformerPrompt {
 	frequency_penalty?: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	presence_penalty?: number;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	max_tokens?: number;
 	showInPromptPalette?: boolean; // Made optional
 }
 
@@ -734,7 +732,7 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" |
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	presence_penalty: 0,
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	max_tokens: 2048,
+	max_tokens: 8192,
 	saveToClipboard: false,
 	// --- ADDED: Context Panel State Defaults ---
 	useWholeNoteContext: false,

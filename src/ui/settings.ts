@@ -170,6 +170,23 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 					});
 			});
 
+		// Max Tokens Setting
+		new Setting(apiModelSectionContents)
+			.setName("Max Output Tokens")
+			.setDesc(
+				"Set the maximum number of tokens the AI can generate in a single response. Higher values allow for longer, more complex outputs (like knowledge graphs) but may increase cost and latency.",
+			)
+			.addText((text) => {
+				text.inputEl.type = "number";
+				text.setValue(this.plugin.settings.max_tokens.toString()).onChange(async (value) => {
+					const numValue = Number.parseInt(value);
+					if (!Number.isNaN(numValue) && numValue > 0) {
+						this.plugin.settings.max_tokens = numValue;
+						await this.plugin.saveSettings();
+					}
+				});
+			});
+
 		// Debug Mode Setting
 		new Setting(apiModelSectionContents)
 			.setName("Debug Mode (Runtime Only)")
