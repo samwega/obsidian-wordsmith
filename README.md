@@ -2,7 +2,7 @@
 
 **Current Version:** 2.2.0
 
-WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
+WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
 **Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT, Google Gemini & OpenRouter), curently serving 40 models, and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
@@ -28,6 +28,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 * **BYOK:** Bring your own API key—only pay what you use  
 * **Multiple AI providers supported**—OpenAI, Google AI Studio & OpenRouter
 * **Tons of Models**—Including all state-of-the-art writing models—*Open AI models (GPT 4o, GPT 4.1, GPT 4.1 mini, GPT 4.1 nano, OpenAI 03 & GPT 4.5), Google models (Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash-Lite & Gemma 3 27B), Anthropic models (Claude 3.5 Sonnet, Claude 3.7 Sonnet, Claude Sonnet 4 & Claude Opus 4), Grok 3 beta, DeepSeek models (v3 & R1), Qwen models (3 235B A22B & Qwen 3 32B), Llama models (3.1 405B Instruct, 3.3 70B Instruct, Nvidia 3.1 Nemotron Ultra 253B v1), Nous models (Hermes 3 70B & Hermes 3 405B), TheDrummer's models (Skyfall 36B V2, Valkyrie 49B v1 and Anubis Pro 105b v1), Cohere's Command A (111B), Magnum 72B,  Luminad v0.2 70B, Mistral Large 2411 (123B), Goliath 120B*
+* ** Automatically Generate Canvas Knowledge Graphs** based on your notes!
 * **Great Prompt Management Settings UI:** enable/disable prompts or create new one
 * Robust error handling, performance
 * **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
