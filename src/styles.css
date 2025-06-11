@@ -246,7 +246,7 @@ body.theme-light .text-transformer-removed-active {
 
 /* FIX: Placed after the rule above to resolve descending specificity lint error */
 .setting-item.api-key-setting-el .setting-item-info {
-	flex-basis: 300px;
+	flex-basis: 260px;
 	flex-grow: 0;
 	flex-shrink: 0;
 }

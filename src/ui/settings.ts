@@ -514,7 +514,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Prompt Management" });
+		containerEl.createEl("h3", { text: "w͜s Prompt Management" });
 		const promptManagementWrapper = containerEl.createDiv({
 			cls: "prompt-management-section-container",
 		});
