@@ -25,6 +25,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
 		this._renderApiModelSection(containerEl);
+		this._renderKnowledgeGraphSection(containerEl);
 		this._renderPromptManagementSection(containerEl);
 	}
 
@@ -412,6 +413,26 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				modelDescDiv.createEl("strong", { text: item.text });
 			else if (item.type === "br") modelDescDiv.createEl("br");
 		});
+	}
+
+	private _renderKnowledgeGraphSection(containerEl: HTMLElement): void {
+		containerEl.createEl("h3", { text: "Knowledge Graph Generation" });
+
+		new Setting(containerEl)
+			.setName("Knowledge Graphs asset path")
+			.setDesc("The vault subfolder where generated .canvas files will be stored.")
+			.addText((text) => {
+				text
+					.setPlaceholder("WordSmith/graphs")
+					.setValue(this.plugin.settings.graphAssetPath)
+					.onChange(async (value) => {
+						// Basic sanitization: remove leading/trailing slashes and ensure no empty string
+						const sanitizedPath = value.trim().replace(/^\/+|\/+$/g, "");
+						this.plugin.settings.graphAssetPath =
+							sanitizedPath || this.plugin.defaultSettings.graphAssetPath;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {

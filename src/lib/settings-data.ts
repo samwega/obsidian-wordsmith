@@ -712,6 +712,9 @@ export interface TextTransformerSettings {
 	useCustomContext: boolean;
 	useDynamicContext: boolean;
 	customContextText: string;
+
+	// --- ADDED: Knowledge Graph ---
+	graphAssetPath: string;
 }
 
 export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> = {
@@ -738,6 +741,8 @@ export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" |
 	useCustomContext: false,
 	useDynamicContext: false,
 	customContextText: "",
+	// --- ADDED: Knowledge Graph Default ---
+	graphAssetPath: "WordSmith/graphs",
 };
 
 // Note: defaultPromptId and debugMode were removed from DEFAULT_SETTINGS structure

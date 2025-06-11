@@ -35,7 +35,7 @@ export interface AssembledContextForLLM {
  * @param scopeDetails Optional details about the current selection or paragraph for transformation tasks.
  * @returns A promise that resolves to a string containing the formatted context for the AI.
  */
-async function gatherContextForAI(
+export async function gatherContextForAI(
 	plugin: TextTransformer,
 	cmView: EditorView,
 	taskType: "generation" | "transformation",

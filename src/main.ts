@@ -1,6 +1,7 @@
 // src/main.ts
 import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
+import { generateGraphAndCreateCanvas } from "./lib/core/graphGenerator";
 import {
 	generateTextAndApplyAsSuggestionCM6,
 	textTransformerTextCM6,
@@ -66,6 +67,15 @@ export default class TextTransformer extends Plugin {
 				new CustomPromptModal(this.app, this, async (promptText) => {
 					await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
 				}).open();
+			},
+		});
+
+		this.addCommand({
+			id: "generate-knowledge-graph",
+			name: "Generate knowledge graph",
+			icon: "brain-circuit",
+			editorCallback: async (editor: Editor): Promise<void> => {
+				await generateGraphAndCreateCanvas(this, editor);
 			},
 		});
 
@@ -233,6 +243,18 @@ export default class TextTransformer extends Plugin {
 					leaf.view.updateTemperatureSlider();
 				}
 			});
+	}
+
+	/**
+	 * Retrieves the active ContextControlPanel instance, if it exists.
+	 * @returns The ContextControlPanel instance or null.
+	 */
+	getContextPanel(): ContextControlPanel | null {
+		const leaf = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)[0];
+		if (leaf?.view instanceof ContextControlPanel) {
+			return leaf.view;
+		}
+		return null;
 	}
 
 	private _createPromptObject(
