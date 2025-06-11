@@ -317,7 +317,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				text: " - Context: 164k, Intelligence: 4, Speed: 37 tps, Price: $0.00088",
 			},
 			{ type: "br" },
-			{ type: "strong", text: "ⓡ DeepSeek Chat R1" },
+			{ type: "strong", text: "ⓡ DeepSeek R1" },
 			{
 				type: "text",
 				text: " - Context: 164k, Intelligence: 4 (reasoning), Speed: 50-140 tps, Price: $0.002",

@@ -350,10 +350,7 @@ export class ContextControlPanel extends ItemView {
 			return { rawText: textToProcess, referencedNotes: [] };
 		}
 
-		let match: RegExpExecArray | null;
-		wikilinkRegex.lastIndex = 0;
-
-		match = wikilinkRegex.exec(textToProcess);
+		let match = wikilinkRegex.exec(textToProcess);
 		while (match !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];

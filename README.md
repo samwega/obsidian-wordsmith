@@ -4,9 +4,9 @@
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT & Google Gemini), and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT, Google Gemini & OpenRouter), curently serving 40 models, and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
-Initially forked from the excellent and much more focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
+Initially forked from the narrowly focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
 ![WordSmith suggestions in action](https://github.com/user-attachments/assets/55831bae-bc4b-4a4a-9448-cf1bc1fb5787)
 
@@ -26,13 +26,14 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * Custom Context (including embedded note linking with [[wikilinks]]!)  
 * **Keyboard-first workflow**: hotkeys for all main actions and suggestion navigation  
 * **BYOK:** Bring your own API key—only pay what you use  
-* Multiple AI provider/model support: *OpenAI (GPT-4.1, mini, nano)*, *Google Gemini 2.5 (Pro, Flash)*  
+* **Multiple AI providers supported**—OpenAI, Google AI Studio & OpenRouter
+* **Tons of Models**—Including all state-of-the-art writing models—*Open AI models (GPT 4o, GPT 4.1, GPT 4.1 mini, GPT 4.1 nano, OpenAI 03 & GPT 4.5), Google models (Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash-Lite & Gemma 3 27B), Anthropic models (Claude 3.5 Sonnet, Claude 3.7 Sonnet, Claude Sonnet 4 & Claude Opus 4), Grok 3 beta, DeepSeek models (v3 & R1), Qwen models (3 235B A22B & Qwen 3 32B), Llama models (3.1 405B Instruct, 3.3 70B Instruct, Nvidia 3.1 Nemotron Ultra 253B v1), Nous models (Hermes 3 70B & Hermes 3 405B), TheDrummer's models (Skyfall 36B V2, Valkyrie 49B v1 and Anubis Pro 105b v1), Cohere's Command A (111B), Magnum 72B,  Luminad v0.2 70B, Mistral Large 2411 (123B), Goliath 120B*
 * **Great Prompt Management Settings UI:** enable/disable prompts or create new one
 * Robust error handling, performance
 * **Theme-Adaptive Styles** (detects dark/light Obsidian theme)
 * **Multilingual**—the AI should autodetect the language from Context, selection and/or ad-hoc prompt, and return suggestions in the same language
 * Manual and (planned) community plugin installation
-* Many more!
+* Many more! Check the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more tricks and uses.
 
 ![WordSmith Settings and Context Side Pane](https://github.com/user-attachments/assets/66408578-1130-4b3f-a7b8-ea6bebe18f85)
 
@@ -48,6 +49,7 @@ Initially forked from the excellent and much more focused [obsidian-proofreader]
   * [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
 * [Release History](#release-history)
   * [✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models](#-whats-new-in-v200---openrouter-support---28-new-models)
+    * [Minor Versions of v.2.0.x](#minor-versions-of-v20x)
   * [✨ What's New in v1.11.0 - Temperature Sliders & Debug Logging](#-whats-new-in-v1110---temperature-sliders--debug-logging)
   * [✨ What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! ✨](#-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-)
     * [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
@@ -103,33 +105,23 @@ Check out the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wik
 
 ### Using the AI Context Control Panel
 
-The AI Context Control Panel allows you to manage what contextual information is
-sent to the AI with your text.
+The AI Context Control Panel allows you to manage what contextual information is sent to the AI with your text.
 
 **How to Open the Panel:**
 
-1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in
-    `Settings` -> `Community plugins`. The icon and panel will only be
-    available if the plugin is active.
-2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`)
-    for the command `"WordSmith: Open AI Context Control Panel"`.
+1. **Plugin Enable State:** Make sure the WordSmith plugin is enabled in `Settings` -> `Community plugins`. The icon and panel will only be available if the plugin is active.
+2. **Command Palette:** Search in the command palette (usually `Ctrl/Cmd+P`) for the command `"WordSmith: Open AI Context Control Panel"`.
 
-Once the panel is open, you can drag its icon to reorder is, or
-drag the panel itself to different parts of your workspace (e.e., left
-sidebar, right sidebar, or even as a new tab in the main workspace).
+Once the panel is open, you can drag its icon to reorder is, or drag the panel itself to different parts of your workspace (e.e., left sidebar, right sidebar, or even as a new tab in the main workspace).
 
 **Panel Options:**
 
 Once open, you can use the toggles for:
 
-* **Dynamic Context:** Toggle on to automatically include a configurable number
-    of lines (paragraphs) surrounding your selection/current paragraph as
-    context for the AI. Adjust the line count in the plugin settings
-    (`Settings → WordSmith → Dynamic context lines`).
-* **Entire Note as Context:** Toggle on to send the entire content of the
-    current note as context.
-* **Custom Context:** Toggle on and paste any specific text into the provided
-    text area to use as context. This overrides Dynamic and Entire Note context
+* **Dynamic Context:** Toggle on to automatically include a configurable number of lines (paragraphs) surrounding your selection/current paragraph as
+    context for the AI. Adjust the line count in the plugin settings (`Settings → WordSmith → Dynamic context lines`).
+* **Entire Note as Context:** Toggle on to send the entire content of the current note as context.
+* **Custom Context:** Toggle on and paste any specific text into the provided text area to use as context. This overrides Dynamic and Entire Note context
     if active.
 
 ### Customizing Prompts
@@ -137,15 +129,10 @@ Once open, you can use the toggles for:
 Tailor WordSmith to your exact needs:
 
 * **Add User Prompts:** In plugin settings
-    (`Settings → WordSmith → Prompt Management`), click
-    "Add User Prompt". Give your prompt a name and provide the instructional
-    text for the AI.
-* **Manage Prompts:** Enable or disable any default or custom prompt using the
-    toggles in the settings.
-* **Edit/Delete User Prompts:** Use the pencil and trash icons next to your
-    custom prompts.
-* **Advanced - Modify Preset Prompts:** If you wish to alter the behavior of
-    default prompts, you can find them in `[YourVault]/.obsidian/plugins/text-transformer/data.json`. Do not edit this file as it gets reset every time. Instead, copy the Built-In prompts you wish to customize and make new User Prompts based on them.
+    (`Settings → WordSmith → Prompt Management`), click "Add User Prompt". Give your prompt a name and provide the instructional text for the AI.
+* **Manage Prompts:** Enable or disable any default or custom prompt using the toggles in the settings.
+* **Edit/Delete User Prompts:** Use the pencil and trash icons next to your custom prompts.
+* **Advanced - Modify Preset Prompts:** If you wish to alter the behavior of preset prompts, you can find the full text in `[YourVault]/.obsidian/plugins/text-transformer/data.json`. Do not edit this file as it gets reset every time. Instead, copy the Built-In prompts you wish to customize and make new User Prompts based on them. Prompts also show up in Console if Debug Logging is turned on in Settings—you can quickly copy it from there.
 
 ### API Key Setup, AI Providers & Models Info
 
@@ -158,7 +145,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 Key features and improvements include:
 
 * **OpenRouter API Integration:** A huge new addition! You can now use your OpenRouter API keys to access dozens of models from various providers.
-* **26 New Models Added to previous existing 5 models list:** Massively expanding your options, this release includes:
+* **28 New Models Added to previous existing 5 models list:** Massively expanding your options, this release includes:
   * **OpenAI:** GPT-4o, GPT-o4-mini, GPT-4.5 & O3
   * **Google:** Gemini 2.0 Flash-Lite & Gemma 3 27B
   * **Anthropic:** Claude 3.5 Sonnet & Claude 3.7 Sonnet
@@ -177,7 +164,7 @@ Key features and improvements include:
 * Refactor that makes it much **easier to add new models**.
 * **Improved Model Information:** The model selection dropdown in settings now provides more useful information about each model.
 * **Better Runtime Debug Logging:** Enhanced logging makes it easier to diagnose issues.
-* **Bug Fix:** Fixed a smooth scrolling bug in styles.
+* **Bug Fixes:** Fixed a smooth scrolling bug in styles. Fixed infinite loop when parsing wikilinks in custom context.
 * **Refined System Instructions:** The underlying instructions sent to the models have been improved for better compliance and quality.
 
 #### Minor Versions of v.2.0.x
