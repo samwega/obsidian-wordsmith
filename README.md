@@ -143,7 +143,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 
 ### ✨ What's New in v2.1.0 - Context Panel Save State Across Sessions
 
-* **Persistent & Decoupled AI Context Control**: Your preferred context settings (Dynamic, Full Note, Custom Context Toggle & Text) are now saved automatically across sessions, and the plugin can utilize them even when the Context Control Panel is closed.
+* **Feat: Persistent & Decoupled AI Context Control**—Your preferred context settings (Dynamic, Full Note, Custom Context Toggle & Text) are now saved automatically across sessions, and the plugin can utilize them even when the Context Control Panel is closed.
 * Bug Fix: was sending thinking budget to all "Flash" models causing Gemini 2.0 Flash-Lite to throw an error.
 
 ### ✨ What's New in v2.0.0 - OpenRouter Support - 28 New Models
@@ -151,7 +151,7 @@ See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/ob
 Key features and improvements include:
 
 * **OpenRouter API Integration:** A huge new addition! You can now use your OpenRouter API keys to access dozens of models from various providers.
-* **28 New Models Added to previous existing 5 models list:** Massively expanding your options, this release includes:
+* **28 New Models Added to previous existing 5 models list**—Massively expanding your options, this release includes:
   * **OpenAI:** GPT-4o, GPT-o4-mini, GPT-4.5 & O3
   * **Google:** Gemini 2.0 Flash-Lite & Gemma 3 27B
   * **Anthropic:** Claude 3.5 Sonnet & Claude 3.7 Sonnet
