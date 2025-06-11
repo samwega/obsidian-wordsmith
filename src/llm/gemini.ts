@@ -134,7 +134,7 @@ export async function geminiRequest(
 			},
 		};
 
-		if (actualModelId.includes("flash")) {
+		if (actualModelId.includes("2.5-flash")) {
 			requestBody.generationConfig.thinkingConfig = {
 				thinkingBudget: isGenerationTask ? 1 : 0,
 			};
