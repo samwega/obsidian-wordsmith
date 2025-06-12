@@ -19,6 +19,18 @@ export function getCmEditorView(editor: Editor): EditorView | null {
 }
 
 /**
+ * Formats a Date object into a 'yyyy-mm-dd' string.
+ * @param date The Date object to format.
+ * @returns The formatted date string.
+ */
+export function formatDateForFilename(date: Date): string {
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, "0");
+	const day = date.getDate().toString().padStart(2, "0");
+	return `${year}-${month}-${day}`;
+}
+
+/**
  * Logs an error to the console and displays a user-friendly notice.
  * @param error The error object or message to log.
  */

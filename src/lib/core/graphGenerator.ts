@@ -13,11 +13,11 @@ import { openAiRequest } from "../../llm/openai";
 import { openRouterRequest } from "../../llm/openrouter";
 import type TextTransformer from "../../main";
 import { SingleInputModal } from "../../ui/modals/single-input-modal";
-import { GEMINI_MODELS, MODEL_SPECS } from "../settings-data";
 
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
-import { getCmEditorView, logError } from "../utils";
+import { GEMINI_MODELS, MODEL_SPECS } from "../settings-data";
+import { formatDateForFilename, getCmEditorView, logError } from "../utils"; // MODIFIED: Import formatDateForFilename
 import { gatherContextForAI } from "./textTransformer";
 
 const CANVAS_NODE_WIDTH = 400;
@@ -77,16 +77,19 @@ function calculateNodeHeight(text: string, width: number): number {
 
 /**
  * Prompts the user for a base name for the canvas file using a modal.
+ * The default value will be today's date in 'yyyy-mm-dd ' format.
  * @param app The Obsidian App instance.
  * @returns A promise that resolves with the entered name, or null if cancelled.
  */
 function promptForBaseName(app: App): Promise<string | null> {
 	return new Promise((resolve) => {
+		const defaultDateName = `${formatDateForFilename(new Date())} `; // MODIFIED: Use utility function
+
 		new SingleInputModal(
 			app,
 			"Enter a name for the knowledge graph canvas",
-			"My Knowledge Graph",
-			"My Knowledge Graph",
+			"My Knowledge Graph", // Placeholder text
+			defaultDateName, // Initial value in the input field
 			(result) => resolve(result),
 			() => resolve(null),
 		).open();
@@ -325,15 +328,22 @@ function constructCanvasJson(
 
 /**
  * Generates a unique filename for the canvas.
- * @param baseName The user-provided base name.
- * @returns A unique filename string.
+ * The input `baseName` is expected to potentially start with the date.
+ * @param baseName The user-provided base name (e.g., "2024-07-30 My Graph").
+ * @returns A unique filename string (e.g., "2024-07-30-My-Graph--123456.canvas").
  */
 function generateUniqueFilename(baseName: string): string {
-	const now = new Date();
-	const datePrefix = `${now.getFullYear().toString().slice(-2)}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
-	const sanitizedName = baseName.replace(/[^a-zA-Z0-9\s]/g, "").replace(/\s+/g, "-");
-	const uniqueId = Date.now().toString().slice(-6);
-	return `${datePrefix}-${sanitizedName}--${uniqueId}.canvas`;
+	// Sanitize the baseName: remove illegal characters and replace spaces with hyphens.
+	// Trim leading/trailing spaces from the baseName to handle the default 'yyyy-mm-dd ' correctly.
+	const sanitizedName = baseName
+		.trim()
+		.replace(/[^a-zA-Z0-9\s-]/g, "")
+		.replace(/\s+/g, "-");
+	const uniqueId = Date.now().toString().slice(-6); // Last 6 digits of timestamp for uniqueness
+
+	// The date prefix is now part of the baseName if the user kept the default.
+	// Only append the unique identifier.
+	return `${sanitizedName}--${uniqueId}.canvas`;
 }
 
 /**
@@ -427,13 +437,12 @@ export async function generateGraphAndCreateCanvas(
 	try {
 		notice.setMessage("Parsing and validating graph data...");
 
-		// --- NEW: Sanitize the LLM response before parsing ---
+		// Sanitize the LLM response by extracting the JSON block if it's wrapped in markdown
 		const rawResponseText = response.newText.trim();
 		const jsonRegex = /```json\n([\s\S]*?)\n```/; // Matches a JSON block wrapped in ```json
 		const match = rawResponseText.match(jsonRegex);
 		// If there's a match, use the captured group; otherwise, use the raw text.
 		const jsonToParse = match ? match[1] : rawResponseText;
-		// --- END NEW ---
 
 		const parsedJson = JSON.parse(jsonToParse);
 		validatedGraph = validateLlmResponse(parsedJson);

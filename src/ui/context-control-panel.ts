@@ -61,7 +61,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getIcon(): string {
-		return "anvil";
+		return "crown";
 	}
 
 	updateModelSelector(): void {

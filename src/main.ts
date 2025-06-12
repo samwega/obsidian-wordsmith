@@ -124,7 +124,7 @@ export default class TextTransformer extends Plugin {
 					modal.open();
 				});
 			},
-			icon: "anvil",
+			icon: "crown",
 		});
 
 		this.addCommand({
