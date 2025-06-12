@@ -796,7 +796,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "mind-the-context",
-		name: "Mind the Context!",
+		name: "Do Context Tasks",
 		text: "[AI ROLE]:  Professional editor.\n[TASK]: You will receive a text selection, and a context which may contain instructions or indications. Do to the text whatever the context says.",
 		isDefault: true,
 		enabled: true,

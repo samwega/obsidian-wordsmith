@@ -20,9 +20,9 @@ import { GEMINI_MODELS, MODEL_SPECS } from "../settings-data";
 import { formatDateForFilename, getCmEditorView, logError } from "../utils"; // MODIFIED: Import formatDateForFilename
 import { gatherContextForAI } from "./textTransformer";
 
-const CANVAS_NODE_WIDTH = 400;
+const CANVAS_NODE_WIDTH = 480;
 const CANVAS_NODE_PADDING = 30; // Internal padding of a canvas node
-const D3_SIMULATION_TICKS = 300;
+const D3_SIMULATION_TICKS = 400;
 const CANVAS_COLLISION_PADDING = 50;
 const INITIAL_SPREAD_FACTOR = 1000;
 
