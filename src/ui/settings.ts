@@ -369,10 +369,22 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				text: " - Context: 41k, Intelligence: 2, Speed: 40-55 tps, Price: $0.0004, NSFW",
 			},
 			{ type: "br" },
+			{ type: "strong", text: "ⓡ Llama 4 Maverick" },
+			{
+				type: "text",
+				text: " - Context: 1.05M, Intelligence: 4, Speed: 100-200 tps, Price: $0.001",
+			},
+			{ type: "br" },
+			{ type: "strong", text: "ⓡ Llama 4 Scout" },
+			{
+				type: "text",
+				text: " - Context: 1.05M, Intelligence: 4, Speed: 70-110 tps, Price: $0.0007",
+			},
+			{ type: "br" },
 			{ type: "strong", text: "ⓡ Llama 3.3 70B Instruct" },
 			{
 				type: "text",
-				text: " - Context: 131k,, Intelligence: 3, Speed: 30-76 tps, Price: $0.0004, NSFW",
+				text: " - Context: 131k, Intelligence: 3, Speed: 30-76 tps, Price: $0.0004, NSFW",
 			},
 			{ type: "br" },
 			{ type: "strong", text: "ⓡ Llama 3.1 405B Instruct" },
