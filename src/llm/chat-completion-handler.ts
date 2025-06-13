@@ -32,10 +32,40 @@ export async function chatCompletionRequest(
 
 	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
 
-	const messages = [
-		{ role: "system", content: systemMessageContent },
-		{ role: "user", content: userContent },
-	];
+	const messages = [];
+
+	// The 'system' role is not consistently supported across all OpenAI-compatible APIs.
+	// Models from major providers (OpenAI, Anthropic, Google, Meta, Mistral, Cohere) are
+	// specifically tuned for it. Many other models (especially local ones) respond more
+	// reliably when system instructions are part of the first user message. This heuristic
+	// checks the model's origin to decide the format for maximum performance and compatibility.
+	const isOfficialOpenAIEndpoint = options.apiUrl.includes("api.openai.com");
+	const isKnownOpenAIModel =
+		options.modelId.startsWith("openai/") || options.modelId.startsWith("gpt-");
+	const isKnownAnthropicModel = options.modelId.startsWith("anthropic/");
+	const isKnownGeminiModel =
+		options.modelId.startsWith("google/") || options.modelId.startsWith("gemini");
+	const isKnownLlamaModel = options.modelId.startsWith("meta-llama/");
+	const isKnownMistralModel = options.modelId.startsWith("mistralai/");
+	const isKnownCohereModel = options.modelId.startsWith("cohere/");
+
+	const shouldUseSeparateSystemPrompt =
+		isOfficialOpenAIEndpoint ||
+		isKnownOpenAIModel ||
+		isKnownAnthropicModel ||
+		isKnownGeminiModel ||
+		isKnownLlamaModel ||
+		isKnownMistralModel ||
+		isKnownCohereModel;
+
+	if (systemMessageContent && shouldUseSeparateSystemPrompt) {
+		messages.push({ role: "system", content: systemMessageContent });
+		messages.push({ role: "user", content: userContent });
+	} else {
+		// For other providers/models, combine into a single user message for max compatibility.
+		const combinedContent = [systemMessageContent, userContent].filter(Boolean).join("\n\n");
+		messages.push({ role: "user", content: combinedContent });
+	}
 
 	const requestBody = {
 		model: options.modelId,

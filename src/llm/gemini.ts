@@ -32,14 +32,19 @@ export async function geminiRequest(
 		oldText,
 	);
 
-	const fullPrompt = [systemInstructions, contextBlock, userContent].filter(Boolean).join("\n\n");
+	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
 
 	// Strip "google/" prefix from model ID if present, as Gemini API expects just the model name
 	const cleanModelId = modelApiId.startsWith("google/") ? modelApiId.slice(7) : modelApiId;
 	const requestUrlString = `${provider.endpoint}/${cleanModelId}:generateContent?key=${provider.apiKey}`;
 
-	const requestBody = {
-		contents: [{ parts: [{ text: fullPrompt }] }],
+	const requestBody: {
+		contents: { role: string; parts: { text: string }[] }[];
+		systemInstruction?: { parts: { text: string }[] };
+		generationConfig: Record<string, unknown>;
+		safetySettings: Record<string, string>[];
+	} = {
+		contents: [{ role: "user", parts: [{ text: userContent }] }],
 		generationConfig: {
 			temperature: settings.temperature,
 			maxOutputTokens: settings.max_tokens,
@@ -51,6 +56,12 @@ export async function geminiRequest(
 			{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
 		],
 	};
+
+	if (systemMessageContent) {
+		requestBody.systemInstruction = {
+			parts: [{ text: systemMessageContent }],
+		};
+	}
 
 	if (plugin.runtimeDebugMode) {
 		console.debug("[WordSmith plugin] Gemini Request Body:", requestBody);
