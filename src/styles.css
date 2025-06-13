@@ -194,12 +194,6 @@ body.theme-light .text-transformer-removed-active {
 	border: none !important;
 }
 
-.tt-model-description {
-	margin-top: 15px;
-	color: var(--text-muted);
-	font-size: var(--font-ui-small);
-}
-
 .tt-prompt-section-title {
 	color: #b6a84b;
 	font-size: 1.1em;
@@ -353,23 +347,6 @@ body.theme-light .text-transformer-removed-active {
 	margin-bottom: 2px;
 }
 
-.ccp-title {
-	margin-top: 0px;
-	margin-bottom: 0px;
-	flex-grow: 1;
-	font-size: var(--font-ui-medium);
-	color: var(--text-accent);
-	font-weight: bold;
-}
-
-.ccp-model-dropdown-select {
-	/* Applied to the <select> element within the dropdown */
-	max-width: 150px;
-	font-size: var(--font-ui-smaller);
-	padding: 3px 18px 1px 2px; /* Note: Obsidian's default dropdown might have specific padding needs */
-	height: auto;
-}
-
 .ccp-context-options-header {
 	cursor: pointer;
 	display: flex;
@@ -447,4 +424,186 @@ body.theme-light .text-transformer-removed-active {
 	width: 100%;
 	min-height: 80px;
 	resize: vertical;
+}
+
+/* --- Provider Management (Settings) --- */
+.tt-quick-setup-container {
+	margin-bottom: 20px;
+	padding: 10px;
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: 5px;
+}
+.tt-quick-setup-title {
+	margin: 0 0 10px 0;
+	font-weight: bold;
+	color: var(--text-muted);
+}
+.tt-quick-setup-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.tt-provider-disabled .setting-item-name {
+	color: var(--text-muted);
+	text-decoration: line-through;
+}
+
+/* --- Model Selection Modal --- */
+.tt-model-selection-modal {
+	width: 800px;
+	max-width: 85vw;
+}
+
+.tt-model-selection-modal .modal-content {
+	padding: 15px;
+	padding-bottom: 0;
+}
+.tt-model-filters {
+	padding-bottom: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 10px;
+}
+.tt-model-filters-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+}
+.tt-model-filters .setting-item.tt-model-filter-item {
+	border: none;
+	padding: 5px;
+	margin: 0;
+	align-items: center;
+}
+
+.tt-model-search-input {
+	width: 100%; /* Adjust this value as needed, e.g., '250px' */
+}
+
+.tt-refresh-button-wrapper {
+	display: flex;
+	justify-content: right;
+	padding: 12px 5px 12px 5px;
+}
+.tt-model-list-container {
+	max-height: 55vh;
+	overflow-y: auto;
+}
+.tt-model-list-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 8px;
+	border-bottom: 1px solid var(--background-modifier-border-hover);
+	cursor: pointer;
+	border-left: 2px solid transparent; /* For selected indicator */
+}
+.tt-model-list-item:not(.is-selected):hover {
+	background-color: var(--background-modifier-hover);
+}
+.tt-model-list-item.is-selected {
+	background-color: var(--background-modifier-hover);
+	border-left-color: var(--interactive-accent);
+}
+
+.tt-model-info {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding-right: 10px;
+	min-width: 0; /* CRITICAL: Prevents flex item from overflowing its container */
+}
+.tt-model-name {
+	font-weight: bold;
+	word-break: break-word;
+}
+.tt-model-description {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	white-space: normal;
+	line-height: 1.4;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.tt-model-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+.tt-provider-tag {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background-color: var(--background-secondary);
+	padding: 2px 6px;
+	border-radius: 4px;
+	white-space: nowrap;
+}
+.tt-model-favorite-button-container {
+	padding: 0;
+	margin: 0;
+}
+.tt-model-list-item.is-favorite .lucide-star {
+	color: var(--color-yellow);
+	fill: currentColor;
+	filter: drop-shadow(0 0 3px var(--color-yellow));
+}
+.tt-model-list-item:not(.is-favorite) .lucide-star:hover {
+	color: var(--color-yellow);
+}
+
+/* --- Context Control Panel --- */
+.ccp-header-container {
+	display: flex;
+	align-items: center; /* Use align-items for better vertical centering */
+	justify-content: space-between;
+	gap: 10px;
+}
+.ccp-model-controls {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	flex-shrink: 0;
+	/* Allow control to take up available space */
+	flex-grow: 1;
+	justify-content: flex-end;
+}
+.wordsmith-model-selector-setting {
+	border: none !important;
+	padding: 0 !important;
+	flex-grow: 1; /* Allow the setting to fill space */
+}
+.wordsmith-model-selector-setting .setting-item-info {
+	display: none; /* Hide setting name/desc */
+}
+.setting-item.wordsmith-model-selector-setting .setting-item-control {
+	width: 100%;
+}
+.wordsmith-model-selector {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	gap: 8px;
+	padding: 4px 8px;
+	font-size: var(--font-ui-small);
+}
+.wordsmith-model-selector-icon {
+	color: var(--text-accent);
+	font-weight: bold;
+	font-size: var(--font-ui-medium);
+}
+.wordsmith-model-selector-text {
+	flex-grow: 1;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.wordsmith-model-selector-short-tag {
+	color: var(--text-muted);
+	margin-right: 4px;
 }
