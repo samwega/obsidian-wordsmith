@@ -353,7 +353,7 @@ export async function generateGraphAndCreateCanvas(
 	let response: { newText: string } | undefined;
 	try {
 		// --- FIX: Request Routing Logic ---
-		const isGeminiProvider = provider.name.toLowerCase().includes("gemini");
+		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
 			response = await geminiRequest(
 				plugin,

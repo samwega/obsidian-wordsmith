@@ -209,7 +209,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	try {
 		let response: { newText: string } | undefined;
 
-		const isGeminiProvider = provider.name.toLowerCase().includes("gemini");
+		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
 			response = await geminiRequest(
 				plugin,
@@ -361,7 +361,7 @@ async function validateAndApplyAIDrivenChanges(
 
 		let response: { newText: string } | undefined;
 
-		const isGeminiProvider = provider.name.toLowerCase().includes("gemini");
+		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
 			response = await geminiRequest(
 				plugin,
