@@ -34,7 +34,9 @@ export async function geminiRequest(
 
 	const fullPrompt = [systemInstructions, contextBlock, userContent].filter(Boolean).join("\n\n");
 
-	const requestUrlString = `${provider.endpoint}/${modelApiId}:generateContent?key=${provider.apiKey}`;
+	// Strip "google/" prefix from model ID if present, as Gemini API expects just the model name
+	const cleanModelId = modelApiId.startsWith("google/") ? modelApiId.slice(7) : modelApiId;
+	const requestUrlString = `${provider.endpoint}/${cleanModelId}:generateContent?key=${provider.apiKey}`;
 
 	const requestBody = {
 		contents: [{ parts: [{ text: fullPrompt }] }],
