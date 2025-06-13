@@ -396,6 +396,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			{ type: "strong", text: "ⓡ Nvidia/Llama 3.1 Nemotron Ultra 253B v1" },
 			{ type: "text", text: " - Context: 131k, Speed: 42 tps, Price: $0.0024" },
 			{ type: "br" },
+			{ type: "strong", text: "ⓡ Nvidia/Llama 3.3 Nemotron Ultra 253B v1" },
+			{ type: "text", text: " - Context: 131k, Speed: 42 tps, Price: $0.0024" },
+			{ type: "br" },
 			{ type: "strong", text: "ⓡ Hermes 3 70B" },
 			{
 				type: "text",
