@@ -1,705 +1,31 @@
 // src/lib/settings-data.ts
 
-/**
- * Represents the specification for a supported AI model.
- */
-export interface ModelSpec {
-	displayText: string;
-	/** The unique ID required by the API provider. For OpenAI/Gemini, this matches the object key. For OpenRouter, it's their specific string. */
-	apiId: string;
-	maxOutputTokens: number;
-	costPerMillionTokens: { input: number; output: number };
-	info: {
-		intelligence: number;
-		speed: number;
-		url: string;
-	};
-	minTemperature: number;
-	maxTemperature: number;
-	defaultModelTemperature: number;
+// --- Internal Model Object Structure (in memory) ---
+export interface Model {
+	id: string;
+	name: string;
+	provider: string; // The provider's display name
+	providerId: string; // The provider's unique ID (from CustomProvider.id)
+	description?: string;
+	contextLength?: number;
+	isFavorite?: boolean; // Enriched by FavoritesService
 }
 
-export const MODEL_SPECS: Record<string, ModelSpec> = {
-	// OpenAI models
-	"gpt-4.1": {
-		displayText: "GPT 4.1",
-		apiId: "gpt-4.1",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 2.0, output: 8.0 },
-		info: {
-			intelligence: 4,
-			speed: 2,
-			url: "https://platform.openai.com/docs/models/gpt-4.1",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4o": {
-		displayText: "GPT-4o",
-		apiId: "gpt-4o",
-		maxOutputTokens: 16_384,
-		costPerMillionTokens: { input: 5.0, output: 15.0 },
-		info: {
-			intelligence: 5,
-			speed: 4,
-			url: "https://platform.openai.com/docs/models/gpt-4o",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4.1-mini": {
-		displayText: "GPT 4.1 mini",
-		apiId: "gpt-4.1-mini",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.4, output: 1.6 },
-		info: {
-			intelligence: 3,
-			speed: 3,
-			url: "https://platform.openai.com/docs/models/gpt-4.1-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4.1-nano": {
-		displayText: "GPT 4.1 nano",
-		apiId: "gpt-4.1-nano",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.1, output: 0.4 },
-		info: {
-			intelligence: 2,
-			speed: 4,
-			url: "https://platform.openai.com/docs/models/gpt-4.1-nano",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"o4-mini": {
-		displayText: "OpenAI o4-mini",
-		apiId: "o4-mini-2025-04-16",
-		maxOutputTokens: 100_000,
-		costPerMillionTokens: { input: 1.1, output: 4.4 },
-		info: {
-			intelligence: 4,
-			speed: 5,
-			url: "https://platform.openai.com/docs/models/o4-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"o3-2025-04-16": {
-		displayText: "OpenAI o3",
-		apiId: "o3-2025-04-16",
-		maxOutputTokens: 100_000,
-		costPerMillionTokens: { input: 10.0, output: 40.0 },
-		info: {
-			intelligence: 5,
-			speed: 3,
-			url: "https://platform.openai.com/docs/models/o3",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"gpt-4.5-preview-2025-02-27": {
-		displayText: "GPT 4.5 Preview",
-		apiId: "gpt-4.5-preview-2025-02-27",
-		maxOutputTokens: 16_000,
-		costPerMillionTokens: { input: 75.0, output: 150.0 },
-		info: {
-			intelligence: 5,
-			speed: 2,
-			url: "https://platform.openai.com/docs/models/gpt-4.5-preview",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	// Gemini models
-	"gemini-2.5-flash-preview-05-20": {
-		displayText: "Gemini 2.5 Flash",
-		apiId: "gemini-2.5-flash-preview-05-20",
-		maxOutputTokens: 67584,
-		costPerMillionTokens: { input: 0.15, output: 0.6 },
-		info: {
-			intelligence: 3,
-			speed: 4,
-			url: "https://ai.google.dev/models/gemini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.5-pro-preview-06-05": {
-		displayText: "Gemini 2.5 Pro",
-		apiId: "gemini-2.5-pro-preview-06-05",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 1.25, output: 10.0 },
-		info: {
-			intelligence: 5,
-			speed: 3,
-			url: "https://ai.google.dev/models/gemini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.0-flash-lite": {
-		displayText: "Gemini 2.0 Flash-Lite",
-		apiId: "gemini-2.0-flash-lite-001",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.075, output: 0.3 },
-		info: {
-			intelligence: 2,
-			speed: 5,
-			url: "https://ai.google.dev/models/gemini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemma-3-27b": {
-		displayText: "Gemma 3 27B Free",
-		apiId: "gemma-3-27b-it",
-		maxOutputTokens: 8192, // Please verify this value
-		costPerMillionTokens: { input: 0.15, output: 0.6 },
-		info: {
-			intelligence: 1,
-			speed: 1,
-			url: "https://ai.google.dev/models/gemini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	// OpenRouter Models
-	"gpt-4.1-openrouter": {
-		displayText: "ⓡGPT-4.1",
-		apiId: "openai/gpt-4.1",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 2.0, output: 8.0 },
-		info: {
-			intelligence: 4,
-			speed: 3,
-			url: "https://openrouter.ai/models/openai/gpt-4.1",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4o-openrouter": {
-		displayText: "ⓡGPT-4o",
-		apiId: "openai/gpt-4o-2024-11-20",
-		maxOutputTokens: 16384,
-		costPerMillionTokens: { input: 2.5, output: 10.0 },
-		info: {
-			intelligence: 5,
-			speed: 4,
-			url: "https://openrouter.ai/openai/gpt-4o-2024-11-20",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4.1-mini-openrouter": {
-		displayText: "ⓡGPT-4.1 Mini",
-		apiId: "openai/gpt-4.1-mini",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.4, output: 1.6 },
-		info: {
-			intelligence: 3,
-			speed: 3,
-			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gpt-4.1-nano-openrouter": {
-		displayText: "ⓡGPT-4.1 nano",
-		apiId: "openai/gpt-4.1-nano",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.1, output: 0.4 },
-		info: {
-			intelligence: 2,
-			speed: 4,
-			url: "https://openrouter.ai/models/openai/gpt-4.1-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"o4-mini-openrouter": {
-		displayText: "ⓡGPT o4-mini",
-		apiId: "openai/o4-mini",
-		maxOutputTokens: 100_000,
-		costPerMillionTokens: { input: 1.1, output: 4.4 },
-		info: {
-			intelligence: 4,
-			speed: 5,
-			url: "https://openrouter.ai/models/openai/o4-mini",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.5-flash-openrouter": {
-		displayText: "ⓡGemini 2.5 Flash",
-		apiId: "google/gemini-2.5-flash-preview-05-20",
-		maxOutputTokens: 67584,
-		costPerMillionTokens: { input: 0.15, output: 0.6 },
-		info: {
-			intelligence: 3,
-			speed: 4,
-			url: "https://openrouter.ai/models/google/gemini-2.5-flash-preview-05-20",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.5-pro-openrouter": {
-		displayText: "ⓡGemini 2.5 Pro",
-		apiId: "google/gemini-2.5-pro-preview-06-05",
-		maxOutputTokens: 67584,
-		costPerMillionTokens: { input: 1.25, output: 10.0 },
-		info: {
-			intelligence: 5,
-			speed: 3,
-			url: "https://openrouter.ai/models/google/gemini-2.5-pro-preview-06-05",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemini-2.0-flash-lite-openrouter": {
-		displayText: "ⓡGemini 2.0 Flash-Lite",
-		apiId: "google/gemini-2.0-flash-lite-001",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.075, output: 0.3 },
-		info: {
-			intelligence: 2,
-			speed: 5,
-			url: "https://openrouter.ai/google/gemini-2.0-flash-lite-001",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"gemma-3-27b-openrouter": {
-		displayText: "ⓡGemma 3 27B Free",
-		apiId: "google/gemma-3-27b-it:free",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 0.0, output: 0.0 },
-		info: {
-			intelligence: 3,
-			speed: 3,
-			url: "https://openrouter.ai/google/gemma-3-27b-it:free",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"claude-3.5-sonnet-openrouter": {
-		displayText: "ⓡClaude 3.5 Sonnet",
-		apiId: "anthropic/claude-3.5-sonnet",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 3.0, output: 15.0 },
-		info: {
-			intelligence: 4,
-			speed: 2,
-			url: "https://openrouter.ai/models/anthropic/claude-3.5-sonnet",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"claude-3.7-sonnet-openrouter": {
-		displayText: "ⓡClaude 3.7 Sonnet",
-		apiId: "anthropic/claude-3.7-sonnet",
-		maxOutputTokens: 65_536,
-		costPerMillionTokens: { input: 3.0, output: 15.0 },
-		info: {
-			intelligence: 5,
-			speed: 3,
-			url: "https://openrouter.ai/models/anthropic/claude-3.7-sonnet",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"claude-sonnet-4": {
-		displayText: "ⓡClaude Sonnet 4",
-		apiId: "anthropic/claude-sonnet-4",
-		maxOutputTokens: 64_000,
-		costPerMillionTokens: { input: 3.0, output: 15.0 },
-		info: {
-			intelligence: 5,
-			speed: 1,
-			url: "https://openrouter.ai/anthropic/claude-sonnet-4",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"claude-opus-4": {
-		displayText: "ⓡClaude Opus 4",
-		apiId: "anthropic/claude-opus-4",
-		maxOutputTokens: 32_000,
-		costPerMillionTokens: { input: 15.0, output: 75.0 },
-		info: {
-			intelligence: 5,
-			speed: 2,
-			url: "https://openrouter.ai/models/anthropic/claude-opus-4",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"grok-3-beta-openrouter": {
-		displayText: "ⓡGrok 3",
-		apiId: "x-ai/grok-3-beta",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 3.0, output: 15.0 },
-		info: {
-			intelligence: 4,
-			speed: 2,
-			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"deepseek-chat-v3-openrouter": {
-		displayText: "ⓡDeepSeek v3",
-		apiId: "deepseek/deepseek-chat-v3-0324",
-		maxOutputTokens: 163_840,
-		costPerMillionTokens: { input: 0.3, output: 0.88 },
-		info: {
-			intelligence: 4,
-			speed: 4,
-			url: "https://openrouter.ai/models/deepseek/deepseek-chat-v3-0324",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"deepseek-r1-openrouter": {
-		displayText: "ⓡDeepSeek R1",
-		apiId: "deepseek/deepseek-r1-0528",
-		maxOutputTokens: 163_840, // 164K
-		costPerMillionTokens: { input: 0.5, output: 2.15 },
-		info: {
-			intelligence: 4,
-			speed: 3,
-			url: "https://openrouter.ai/models/deepseek/deepseek-r1-0528",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 1.0,
-	},
-	"qwen3-235b-a22b-openrouter": {
-		displayText: "ⓡQwen 3 235B",
-		apiId: "qwen/qwen3-235b-a22b",
-		maxOutputTokens: 41_072,
-		costPerMillionTokens: { input: 0.14, output: 1.0 },
-		info: {
-			intelligence: 3,
-			speed: 2,
-			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"qwen3-32b-openrouter": {
-		displayText: "ⓡQwen 3 32B",
-		apiId: "qwen/qwen3-32b",
-		maxOutputTokens: 41_072,
-		costPerMillionTokens: { input: 0.1, output: 0.3 },
-		info: {
-			intelligence: 2,
-			speed: 2,
-			url: "https://openrouter.ai/models/x-ai/grok-3-beta",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"llama-4-maverick-openrouter": {
-		displayText: "ⓡLlama 4 Maverick",
-		apiId: "meta-llama/llama-4-maverick",
-		maxOutputTokens: 1_005_000,
-		costPerMillionTokens: { input: 0.16, output: 0.8 },
-		info: {
-			intelligence: 4,
-			speed: 4,
-			url: "https://openrouter.ai/meta-llama/llama-4-maverick",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.6,
-	},
-	"llama-4-scout-openrouter": {
-		displayText: "ⓡLlama 4 Scout",
-		apiId: "meta-llama/llama-4-scout",
-		maxOutputTokens: 1_005_000,
-		costPerMillionTokens: { input: 0.08, output: 0.3 },
-		info: {
-			intelligence: 3,
-			speed: 4,
-			url: "https://openrouter.ai/meta-llama/llama-4-scout",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.6,
-	},
-	"llama-3.3-70b-instruct-openrouter": {
-		displayText: "ⓡLlama 3.3 70B",
-		apiId: "meta-llama/llama-3.3-70b-instruct",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.1, output: 0.3 },
-		info: {
-			intelligence: 3,
-			speed: 2,
-			url: "https://openrouter.ai/meta-llama/llama-3.3-70b-instruct",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 5.0,
-		defaultModelTemperature: 0.7,
-	},
-	"llama-3.1-405b-instruct-openrouter": {
-		displayText: "ⓡLlama 3.1 405B",
-		apiId: "meta-llama/llama-3.1-405b-instruct",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.8, output: 0.8 },
-		info: {
-			intelligence: 3,
-			speed: 1,
-			url: "https://openrouter.ai/meta-llama/llama-3.1-405b-instruct",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"llama-3.1-nemotron-ultra-253b-v1": {
-		displayText: "ⓡLlama 3.1 NU 253B",
-		apiId: "nvidia/llama-3.1-nemotron-ultra-253b-v1",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.6, output: 1.8 },
-		info: {
-			intelligence: 3,
-			speed: 2,
-			url: "https://openrouter.ai/meta-llama/llama-3.1-405b-instruct",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.0,
-	},
-	"hermes-3-70b-openrouter": {
-		displayText: "ⓡHermes 3 70B",
-		apiId: "nousresearch/hermes-3-llama-3.1-70b",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.12, output: 0.3 },
-		info: {
-			intelligence: 2,
-			speed: 2,
-			url: "https://openrouter.ai/models/nousresearch/hermes-3-llama-3.1-70b",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"hermes-3-405b-openrouter": {
-		displayText: "ⓡHermes 3 405B",
-		apiId: "nousresearch/hermes-3-llama-3.1-405b",
-		maxOutputTokens: 16384,
-		costPerMillionTokens: { input: 0.7, output: 0.8 },
-		info: {
-			intelligence: 3,
-			speed: 1,
-			url: "https://openrouter.ai/nousresearch/hermes-3-llama-3.1-405b",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.7,
-	},
-	"magnum-72b-openrouter": {
-		displayText: "ⓡMagnum v4 72B",
-		apiId: "anthracite-org/magnum-v4-72b",
-		maxOutputTokens: 16_384,
-		costPerMillionTokens: { input: 2.5, output: 3.0 },
-		info: {
-			intelligence: 2,
-			speed: 1,
-			url: "https://openrouter.ai/anthracite-org/magnum-v4-72b",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"skyfall-36b-v2-openrouter": {
-		displayText: "ⓡSkyfall 36B V2",
-		apiId: "thedrummer/skyfall-36b-v2",
-		maxOutputTokens: 32_768,
-		costPerMillionTokens: { input: 0.5, output: 0.8 },
-		info: {
-			intelligence: 1,
-			speed: 2,
-			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"valkyrie-49b-v1-openrouter": {
-		displayText: "ⓡValkyrie 49B",
-		apiId: "thedrummer/valkyrie-49b-v1",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.5, output: 0.8 },
-		info: {
-			intelligence: 3,
-			speed: 2,
-			url: "https://openrouter.ai/thedrummer/skyfall-36b-v2",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"anubis-pro-105b-v1-openrouter": {
-		displayText: "ⓡAnubis 105B",
-		apiId: "thedrummer/anubis-pro-105b-v1",
-		maxOutputTokens: 131_072,
-		costPerMillionTokens: { input: 0.8, output: 1.0 },
-		info: {
-			intelligence: 3,
-			speed: 1,
-			url: "https://openrouter.ai/thedrummer/anubis-pro-105b-v1",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"lumimaid-v0.2-70b-openrouter": {
-		displayText: "ⓡLumimaid 70B",
-		apiId: "neversleep/llama-3.1-lumimaid-70b",
-		maxOutputTokens: 2048,
-		costPerMillionTokens: { input: 2.5, output: 3.0 },
-		info: {
-			intelligence: 2,
-			speed: 1,
-			url: "https://openrouter.ai/models/neversleep/llama-3.1-lumimaid-70b",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"command-a-openrouter": {
-		displayText: "ⓡCommand A (111B)",
-		apiId: "cohere/command-a",
-		maxOutputTokens: 8048,
-		costPerMillionTokens: { input: 2.5, output: 10.0 },
-		info: {
-			intelligence: 3,
-			speed: 3,
-			url: "https://openrouter.ai/cohere/command-a",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 1.0,
-		defaultModelTemperature: 0.3,
-	},
-	"mistral-large-2411-openrouter": {
-		displayText: "ⓡMistral Large 2411",
-		apiId: "mistralai/mistral-large-2411",
-		maxOutputTokens: 131_000,
-		costPerMillionTokens: { input: 2.0, output: 6.0 },
-		info: {
-			intelligence: 3,
-			speed: 2,
-			url: "https://openrouter.ai/mistralai/mistral-large-2411",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-	"goliath-120b-openrouter": {
-		displayText: "ⓡGoliath 120B",
-		apiId: "alpindale/goliath-120b",
-		maxOutputTokens: 8192,
-		costPerMillionTokens: { input: 10.0, output: 12.5 },
-		info: {
-			intelligence: 2,
-			speed: 1,
-			url: "https://openrouter.ai/models/alpindale/goliath-120b",
-		},
-		minTemperature: 0.0,
-		maxTemperature: 2.0,
-		defaultModelTemperature: 0.7,
-	},
-};
+// --- Custom Provider Structure ---
+export interface CustomProvider {
+	id: string; // A unique identifier, e.g., "custom-provider-162..."
+	name: string; // User-defined name, e.g., "OpenRouter"
+	endpoint: string; // API base URL, e.g., "https://openrouter.ai/api/v1"
+	apiKey: string; // The user's API key (can be empty for some local providers)
+	isEnabled: boolean; // Whether this provider is active
+}
 
-export const OPENAI_MODELS = [
-	"gpt-4.1",
-	"gpt-4.1-mini",
-	"gpt-4.1-nano",
-	"gpt-4o",
-	"o4-mini",
-	"o3-2025-04-16",
-	"gpt-4.5-preview-2025-02-27",
-] as const;
-export type OpenAiModels = (typeof OPENAI_MODELS)[number];
-
-export const GEMINI_MODELS = [
-	"gemini-2.5-flash-preview-05-20",
-	"gemini-2.5-pro-preview-06-05",
-	"gemini-2.0-flash-lite",
-	"gemma-3-27b",
-] as const;
-export type GeminiModels = (typeof GEMINI_MODELS)[number];
-
-export const OPENROUTER_MODELS = [
-	"gpt-4.1-openrouter",
-	"gpt-4.1-mini-openrouter",
-	"gpt-4.1-nano-openrouter",
-	"gpt-4o-openrouter",
-	"o4-mini-openrouter",
-	"gemini-2.5-flash-openrouter",
-	"gemini-2.5-pro-openrouter",
-	"gemini-2.0-flash-lite",
-	"gemini-2.0-flash-lite-openrouter",
-	"gemma-3-27b-openrouter",
-	"claude-3.5-sonnet-openrouter",
-	"claude-3.7-sonnet-openrouter",
-	"claude-sonnet-4",
-	"claude-opus-4",
-	"grok-3-beta-openrouter",
-	"deepseek-chat-v3-openrouter",
-	"deepseek-r1-openrouter",
-	"qwen3-235b-a22b",
-	"qwen3-32b-openrouter",
-	"llama-4-maverick-openrouter",
-	"llama-4-scout-openrouter",
-	"llama-3.3-70b-instruct-openrouter",
-	"llama-3.1-405b-instruct-openrouter",
-	"llama-3.1-nemotron-ultra-253b-v1",
-	"hermes-3-70b-openrouter",
-	"hermes-3-405b-openrouter",
-	"goliath-120b-openrouter",
-	"magnum-72b-openrouter",
-	"skyfall-36b-v2-openrouter",
-	"anubis-pro-105b-v1-openrouter",
-	"valkyrie-49b-v1-openrouter",
-	"lumimaid-v0.2-70b-openrouter",
-	"command-a-openrouter",
-	"mistral-large-2411-openrouter",
-] as const;
-export type OpenRouterModels = (typeof OPENROUTER_MODELS)[number];
-
-export type SupportedModels = OpenAiModels | GeminiModels | OpenRouterModels;
-//──────────────────────────────────────────────────────────────────────────────
+// --- Favorite Model Structure (in settings) ---
+export interface FavoriteModel {
+	providerId: string; // The ID of the provider, e.g., "custom-provider-162..."
+	modelId: string; // The canonical model ID, e.g., "openrouter//cohere/command-a"
+	addedAt: number; // Timestamp of when it was favorited
+}
 
 export interface TextTransformerPrompt {
 	id: string;
@@ -707,25 +33,92 @@ export interface TextTransformerPrompt {
 	text: string;
 	isDefault: boolean;
 	enabled: boolean;
-	model?: SupportedModels;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	frequency_penalty?: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	presence_penalty?: number;
-	showInPromptPalette?: boolean; // Made optional
+	showInPromptPalette?: boolean;
 }
 
+// --- Temperature Hint Structure ---
+export interface ModelTemperatureHint {
+	min: number;
+	max: number;
+	default: number;
+}
+
+export const KNOWN_MODEL_HINTS: Record<string, ModelTemperatureHint> = {
+	// OpenAI (Direct)
+	"gpt-4.1": { min: 0.0, max: 2.0, default: 1.0 },
+	"gpt-4o": { min: 0.0, max: 2.0, default: 1.0 },
+	"gpt-4.1-mini": { min: 0.0, max: 2.0, default: 1.0 },
+	"gpt-4.1-nano": { min: 0.0, max: 2.0, default: 1.0 },
+	"o4-mini-2025-04-16": { min: 0.0, max: 2.0, default: 1.0 },
+	"o3-2025-04-16": { min: 0.0, max: 2.0, default: 0.7 },
+	"gpt-4.5-preview-2025-02-27": { min: 0.0, max: 2.0, default: 0.7 },
+
+	// Gemini (Direct)
+	"gemini-2.5-flash-preview-05-20": { min: 0.0, max: 2.0, default: 1.0 },
+	"gemini-2.5-pro-preview-06-05": { min: 0.0, max: 2.0, default: 1.0 },
+	"gemini-2.0-flash-lite-001": { min: 0.0, max: 2.0, default: 1.0 },
+	"gemma-3-27b-it": { min: 0.0, max: 2.0, default: 1.0 },
+
+	// OpenRouter - OpenAI
+	"openai/gpt-4.1": { min: 0.0, max: 2.0, default: 1.0 },
+	"openai/gpt-4o-2024-11-20": { min: 0.0, max: 2.0, default: 1.0 },
+	"openai/gpt-4.1-mini": { min: 0.0, max: 2.0, default: 1.0 },
+	"openai/gpt-4.1-nano": { min: 0.0, max: 2.0, default: 1.0 },
+	"openai/o4-mini": { min: 0.0, max: 2.0, default: 1.0 },
+
+	// OpenRouter - Google
+	"google/gemini-2.5-flash-preview-05-20": { min: 0.0, max: 2.0, default: 1.0 },
+	"google/gemini-2.5-pro-preview-06-05": { min: 0.0, max: 2.0, default: 1.0 },
+	"google/gemini-2.0-flash-lite-001": { min: 0.0, max: 2.0, default: 1.0 },
+	"google/gemma-3-27b-it:free": { min: 0.0, max: 2.0, default: 1.0 },
+
+	// OpenRouter - Anthropic
+	"anthropic/claude-3.5-sonnet": { min: 0.0, max: 1.0, default: 0.7 },
+	"anthropic/claude-3.7-sonnet": { min: 0.0, max: 1.0, default: 0.7 },
+	"anthropic/claude-sonnet-4": { min: 0.0, max: 1.0, default: 0.7 },
+	"anthropic/claude-opus-4": { min: 0.0, max: 1.0, default: 0.7 },
+
+	// OpenRouter - Others
+	"x-ai/grok-3-beta": { min: 0.0, max: 2.0, default: 0.7 },
+	"deepseek/deepseek-chat-v3-0324": { min: 0.0, max: 2.0, default: 1.0 },
+	"deepseek/deepseek-r1-0528": { min: 0.0, max: 2.0, default: 1.0 },
+	"qwen/qwen3-235b-a22b": { min: 0.0, max: 2.0, default: 0.7 },
+	"qwen/qwen3-32b": { min: 0.0, max: 2.0, default: 0.7 },
+	"meta-llama/llama-4-maverick": { min: 0.0, max: 1.0, default: 0.6 },
+	"meta-llama/llama-4-scout": { min: 0.0, max: 1.0, default: 0.6 },
+	"meta-llama/llama-3.3-70b-instruct": { min: 0.0, max: 5.0, default: 0.7 },
+	"meta-llama/llama-3.1-405b-instruct": { min: 0.0, max: 1.0, default: 0.7 },
+	"nvidia/llama-3.1-nemotron-ultra-253b-v1": { min: 0.0, max: 1.0, default: 0.0 },
+	"nousresearch/hermes-3-llama-3.1-70b": { min: 0.0, max: 1.0, default: 0.7 },
+	"nousresearch/hermes-3-llama-3.1-405b": { min: 0.0, max: 1.0, default: 0.7 },
+	"anthracite-org/magnum-v4-72b": { min: 0.0, max: 2.0, default: 0.7 },
+	"thedrummer/skyfall-36b-v2": { min: 0.0, max: 2.0, default: 0.7 },
+	"thedrummer/valkyrie-49b-v1": { min: 0.0, max: 2.0, default: 0.7 },
+	"thedrummer/anubis-pro-105b-v1": { min: 0.0, max: 2.0, default: 0.7 },
+	"neversleep/llama-3.1-lumimaid-70b": { min: 0.0, max: 2.0, default: 0.7 },
+	"cohere/command-a": { min: 0.0, max: 1.0, default: 0.3 },
+	"mistralai/mistral-large-2411": { min: 0.0, max: 2.0, default: 0.7 },
+	"alpindale/goliath-120b": { min: 0.0, max: 2.0, default: 0.7 },
+
+	// Local Ollama
+	llama3: { min: 0.0, max: 2.0, default: 0.8 },
+	mistral: { min: 0.0, max: 2.0, default: 0.8 },
+};
+
+// --- Core Settings Structure ---
 export interface TextTransformerSettings {
-	openAiApiKey: string;
-	geminiApiKey: string;
-	openRouterApiKey: string; // New API key
-	model: SupportedModels;
-	prompts: TextTransformerPrompt[];
-	alwaysShowPromptSelection: boolean;
-	dynamicContextLineCount: number;
-	translationLanguage: string;
-	longInputThreshold: number;
-	veryLongInputThreshold: number;
+	// API Keys and provider settings
+	customProviders: CustomProvider[];
+
+	// Model selection and management
+	selectedModelId: string; // Canonical ID, e.g., "ollama//llama3"
+	favoriteModels: FavoriteModel[];
+
+	// LLM parameters
 	temperature: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	frequency_penalty: number;
@@ -733,47 +126,29 @@ export interface TextTransformerSettings {
 	presence_penalty: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
+
+	// Prompt management
+	prompts: TextTransformerPrompt[];
+	alwaysShowPromptSelection: boolean;
+	translationLanguage: string;
 	saveToClipboard: boolean;
 
-	// --- ADDED: Context Panel State ---
+	// Context Panel State
 	useWholeNoteContext: boolean;
 	useCustomContext: boolean;
 	useDynamicContext: boolean;
+	dynamicContextLineCount: number;
 	customContextText: string;
 
-	// --- ADDED: Knowledge Graph ---
+	// Knowledge Graph
 	graphAssetPath: string;
+
+	// Legacy - to be removed/ignored on load
+	openAiApiKey?: string;
+	geminiApiKey?: string;
+	openRouterApiKey?: string;
+	model?: string;
 }
-
-export const DEFAULT_SETTINGS: Omit<TextTransformerSettings, "defaultPromptId" | "debugMode"> = {
-	openAiApiKey: "",
-	geminiApiKey: "",
-	openRouterApiKey: "", // New default
-	model: "gpt-4.1-nano",
-	prompts: [],
-	alwaysShowPromptSelection: false,
-	dynamicContextLineCount: 3,
-	translationLanguage: "English",
-	longInputThreshold: 1500,
-	veryLongInputThreshold: 15000,
-	temperature: 1.0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	frequency_penalty: 0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	presence_penalty: 0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	max_tokens: 8192,
-	saveToClipboard: false,
-	// --- ADDED: Context Panel State Defaults ---
-	useWholeNoteContext: false,
-	useCustomContext: false,
-	useDynamicContext: false,
-	customContextText: "",
-	// --- ADDED: Knowledge Graph Default ---
-	graphAssetPath: "WordSmith/graphs",
-};
-
-// Note: defaultPromptId and debugMode were removed from DEFAULT_SETTINGS structure
 
 export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	{
@@ -866,7 +241,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "translate",
-		name: `Translate to ${DEFAULT_SETTINGS.translationLanguage}—autodetects source language`, // Name will be dynamically updated in loadSettings
+		name: "Translate to English—autodetects source language", // Will be dynamically updated
 		text: "[AI ROLE]: Professional translator.\n [TASK]: Automatically detect language and translate the following text to {language}, preserving meaning, tone, format and style.",
 		isDefault: true,
 		enabled: true,
@@ -874,5 +249,28 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 ];
 
-// Assign DEFAULT_TEXT_TRANSFORMER_PROMPTS to DEFAULT_SETTINGS.prompts after definition
-DEFAULT_SETTINGS.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => ({ ...p }));
+export const DEFAULT_SETTINGS: TextTransformerSettings = {
+	customProviders: [],
+	selectedModelId: "",
+	favoriteModels: [],
+	temperature: 1.0,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	frequency_penalty: 0,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	presence_penalty: 0,
+	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	max_tokens: 8192,
+
+	prompts: JSON.parse(JSON.stringify(DEFAULT_TEXT_TRANSFORMER_PROMPTS)),
+	alwaysShowPromptSelection: false,
+	translationLanguage: "English",
+	saveToClipboard: false,
+
+	useWholeNoteContext: false,
+	useCustomContext: false,
+	useDynamicContext: false,
+	dynamicContextLineCount: 3,
+	customContextText: "",
+
+	graphAssetPath: "WordSmith/graphs",
+};

@@ -1,30 +1,31 @@
 // src/ui/context-control-panel.ts
 import {
-	DropdownComponent,
+	ButtonComponent,
 	ItemView,
 	Notice,
 	Setting,
-	SliderComponent,
 	TFile,
 	TextAreaComponent,
 	ToggleComponent,
 	WorkspaceLeaf,
+	setIcon,
 } from "obsidian";
-import { MODEL_SPECS, SupportedModels } from "../lib/settings-data";
+import { getProviderInfo } from "../lib/provider-utils";
+import { KNOWN_MODEL_HINTS, ModelTemperatureHint } from "../lib/settings-data";
 import type TextTransformer from "../main";
+import { ModelSelectionModal } from "./modals/ModelSelectionModal";
 import { WikilinkSuggestModal } from "./modals/wikilink-suggest-modal";
 
-// Add these new interface definitions
 export interface ReferencedNoteData {
-	originalWikilink: string; // The exact string matched, e.g., "[[NoteA]]" or "[[NoteA|Alias]]"
-	linkText: string; // The text used for resolution, e.g., "NoteA"
-	aliasText?: string; // The alias text, e.g., "Alias" from "[[NoteA|Alias]]"
-	sourcePath: string; // Full path to the note, e.g., "folder/NoteA.md" or "[NOT FOUND]"
-	content: string; // Content of the note or "[This note could not be found.]"
+	originalWikilink: string;
+	linkText: string;
+	aliasText?: string;
+	sourcePath: string;
+	content: string;
 }
 
 export interface StructuredCustomContext {
-	rawText: string; // The original custom context text with [[wikilinks]] intact.
+	rawText: string;
 	referencedNotes: ReferencedNoteData[];
 }
 
@@ -32,19 +33,14 @@ export const CONTEXT_CONTROL_VIEW_TYPE = "context-control-panel";
 
 export class ContextControlPanel extends ItemView {
 	private plugin: TextTransformer;
-
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
-	private modelDropdown: DropdownComponent | null = null;
-	private temperatureSliderComponent: SliderComponent | null = null;
 	private dynamicContextLinesSetting: Setting | null = null;
-
 	private descriptionContainer: HTMLDivElement | null = null;
 	private descriptionIndicator: HTMLSpanElement | null = null;
 	private isDescriptionExpanded = false;
 	private customContextTextAreaContainer: HTMLDivElement | null = null;
 	private customContextTextArea: TextAreaComponent | null = null;
-
 	private justInsertedLink = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
@@ -57,90 +53,131 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	override getDisplayText(): string {
-		return "WordSmith: Context Control";
+		return "WordSmith: Context";
 	}
 
 	override getIcon(): string {
 		return "crown";
 	}
 
-	updateModelSelector(): void {
-		if (this.modelDropdown) {
-			this.modelDropdown.setValue(this.plugin.settings.model);
-		}
+	async updateView(): Promise<void> {
+		await this.renderModelControls();
+		this.updateTemperatureSlider();
 	}
 
-	updateTemperatureSlider(): void {
-		if (this.temperatureSliderComponent) {
-			const modelSpec = MODEL_SPECS[this.plugin.settings.model];
-			if (modelSpec) {
-				this.temperatureSliderComponent.setLimits(
-					modelSpec.minTemperature,
-					modelSpec.maxTemperature,
-					0.1,
-				);
-				this.temperatureSliderComponent.setValue(this.plugin.settings.temperature);
-			}
-		}
-	}
-
-	override onOpen(): Promise<void> {
+	override async onOpen(): Promise<void> {
 		const { contentEl } = this;
 		contentEl.empty();
+		contentEl.addClass("wordsmith-context-panel");
 
 		this._renderHeader(contentEl);
-		this._renderTemperatureSlider(contentEl); // Slider rendered on a new line
+		await this.updateView(); // Initial render of dynamic controls
+
 		this._renderDescriptionSection(contentEl);
 		this._renderContextToggles(contentEl);
 		this._renderCustomContextArea(contentEl);
-		return Promise.resolve();
 	}
 
 	private _renderHeader(container: HTMLElement): void {
-		const headerContainer = container.createDiv({ cls: "ccp-header-container" });
-		headerContainer.createEl("div", { text: "w͜s", cls: "ccp-title" });
-
-		const modelSelectorContainer = headerContainer.createDiv();
-		this.modelDropdown = new DropdownComponent(modelSelectorContainer);
-		for (const key in MODEL_SPECS) {
-			if (!Object.hasOwn(MODEL_SPECS, key)) continue;
-			const display = MODEL_SPECS[key as SupportedModels].displayText;
-			this.modelDropdown.addOption(key, display);
-		}
-		this.modelDropdown.setValue(this.plugin.settings.model).onChange(async (value) => {
-			const modelId = value as SupportedModels;
-			const modelSpec = MODEL_SPECS[modelId];
-
-			this.plugin.settings.model = modelId;
-			if (modelSpec) {
-				this.plugin.settings.temperature = modelSpec.defaultModelTemperature;
-			}
-			await this.plugin.saveSettings();
-			// The saveSettings call will trigger the updateTemperatureSlider via main.ts
-		});
-		this.modelDropdown.selectEl.classList.add("ccp-model-dropdown-select");
+		container.createDiv({ cls: "ccp-header-container" });
 	}
 
-	private _renderTemperatureSlider(container: HTMLElement): void {
-		const modelSpec = MODEL_SPECS[this.plugin.settings.model];
-		const minTemp = modelSpec?.minTemperature ?? 0.0;
-		const maxTemp = modelSpec?.maxTemperature ?? 2.0;
+	private async renderModelControls(): Promise<void> {
+		const container = this.contentEl.querySelector(".ccp-header-container");
+		if (!container) return;
 
-		// Temperature Slider
-		new Setting(container)
-			.setName("Temperature") // Name changed
+		container.querySelector(".ccp-model-controls")?.remove();
+		const controlsContainer = container.createDiv({ cls: "ccp-model-controls" });
+
+		let modelNameText = "Select a Model";
+		let providerNameText: string | null = null;
+
+		const { selectedModelId } = this.plugin.settings;
+		if (selectedModelId) {
+			const allModels = await this.plugin.modelService.getModels();
+			const selectedModel = allModels.find((m) => m.id === selectedModelId);
+
+			if (selectedModel) {
+				modelNameText = selectedModel.name;
+				providerNameText = selectedModel.provider;
+
+				// For OpenRouter models, shorten the display name by removing the original provider prefix.
+				if (
+					providerNameText?.toLowerCase().includes("openrouter") &&
+					modelNameText.includes("/")
+				) {
+					modelNameText = modelNameText.substring(modelNameText.indexOf("/") + 1);
+				}
+			} else {
+				const [provider, name] = selectedModelId.split("//");
+				modelNameText = name || selectedModelId;
+				if (provider) providerNameText = provider;
+			}
+		}
+
+		const setting = new Setting(controlsContainer).addButton((button: ButtonComponent) => {
+			button.buttonEl.empty();
+			button.buttonEl.addClass("wordsmith-model-selector");
+
+			button.buttonEl.createSpan({
+				cls: "wordsmith-model-selector-icon",
+				text: "w͜s",
+			});
+
+			const textWrapper = button.buttonEl.createSpan({
+				cls: "wordsmith-model-selector-text",
+			});
+			const providerInfo = getProviderInfo(providerNameText);
+
+			textWrapper.createSpan({
+				text: `${providerInfo.shortTag} `,
+				cls: "wordsmith-model-selector-short-tag",
+			});
+
+			textWrapper.createSpan({ text: modelNameText });
+
+			const chevronEl = button.buttonEl.createSpan();
+			setIcon(chevronEl, "chevron-down");
+
+			button
+				.setTooltip("Select model")
+				.onClick(() => new ModelSelectionModal(this.app, this.plugin).open());
+		});
+
+		setting.settingEl.addClass("wordsmith-model-selector-setting");
+	}
+
+	private updateTemperatureSlider(): void {
+		const sliderSettingEl = this.contentEl.querySelector(".ccp-temperature-slider-setting");
+		sliderSettingEl?.remove();
+
+		let hint: ModelTemperatureHint | undefined;
+		const currentModelId = this.plugin.settings.selectedModelId;
+		if (currentModelId) {
+			const apiId = currentModelId.split("//")[1];
+			// Check by API ID (e.g., 'gpt-4o') or by full local ID (e.g., 'llama3')
+			hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[currentModelId];
+		}
+
+		const minTemp = hint ? hint.min : 0.0;
+		const maxTemp = hint ? hint.max : 2.0;
+
+		const temperatureSetting = new Setting(this.contentEl)
+			.setName("Temperature")
 			.addSlider((slider) => {
-				this.temperatureSliderComponent = slider;
 				slider
-					.setLimits(minTemp, maxTemp, 0.1) // Step is 0.1
+					.setLimits(minTemp, maxTemp, 0.1)
 					.setValue(this.plugin.settings.temperature)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
 						this.plugin.settings.temperature = value;
 						await this.plugin.saveSettings();
 					});
-			})
-			.settingEl.classList.add("ccp-temperature-slider-setting");
+			});
+		temperatureSetting.settingEl.addClass("ccp-temperature-slider-setting");
+
+		const header = this.contentEl.querySelector(".ccp-header-container");
+		header?.insertAdjacentElement("afterend", temperatureSetting.settingEl);
 	}
 
 	private _renderDescriptionSection(container: HTMLElement): void {
@@ -150,15 +187,12 @@ export class ContextControlPanel extends ItemView {
 			cls: "ccp-description-indicator",
 		});
 		contextOptionsHeader.createEl("div", { text: "Context Options:", cls: "ccp-subtitle" });
-
 		this.descriptionContainer = container.createDiv({ cls: "ccp-description-container" });
 		if (this.isDescriptionExpanded) this.descriptionContainer.classList.add("is-visible");
-
 		this.descriptionContainer.createEl("p", {
 			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
 			cls: "ccp-description-p1",
 		});
-
 		this.descriptionContainer.createEl("p", {
 			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
 			cls: "ccp-description-paragraph",
@@ -175,7 +209,6 @@ export class ContextControlPanel extends ItemView {
 			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
 			cls: "ccp-description-paragraph",
 		});
-
 		contextOptionsHeader.addEventListener("click", () => {
 			this.isDescriptionExpanded = !this.isDescriptionExpanded;
 			if (this.descriptionContainer && this.descriptionIndicator) {
@@ -188,9 +221,7 @@ export class ContextControlPanel extends ItemView {
 	private _renderContextToggles(container: HTMLElement): void {
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
-			// --- MODIFIED --- Read from plugin.settings
 			toggle.setValue(this.plugin.settings.useDynamicContext).onChange(async (value) => {
-				// --- MODIFIED --- Write to plugin.settings and save
 				this.plugin.settings.useDynamicContext = value;
 				if (value) {
 					this.plugin.settings.useWholeNoteContext = false;
@@ -202,7 +233,6 @@ export class ContextControlPanel extends ItemView {
 				await this.plugin.saveSettings();
 			});
 		});
-
 		this.dynamicContextLinesSetting = new Setting(container)
 			.setName("‣  Lines")
 			.addText((text) => {
@@ -224,20 +254,15 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.max = "21";
 				text.inputEl.classList.add("ccp-dynamic-lines-input");
 			});
-
 		this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
 		this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
-		// --- MODIFIED --- Read from plugin.settings
 		this.dynamicContextLinesSetting.settingEl.classList.toggle(
 			"is-visible",
 			this.plugin.settings.useDynamicContext,
 		);
-
 		new Setting(container).setName("Full note").addToggle((toggle) => {
 			this.wholeNoteContextToggleComponent = toggle;
-			// --- MODIFIED --- Read from plugin.settings
 			toggle.setValue(this.plugin.settings.useWholeNoteContext).onChange(async (value) => {
-				// --- MODIFIED --- Write to plugin.settings and save
 				this.plugin.settings.useWholeNoteContext = value;
 				if (value) {
 					this.plugin.settings.useDynamicContext = false;
@@ -249,20 +274,15 @@ export class ContextControlPanel extends ItemView {
 				await this.plugin.saveSettings();
 			});
 		});
-
 		new Setting(container).setName("Custom").addToggle((toggle) =>
-			// --- MODIFIED --- Read from plugin.settings
-			toggle
-				.setValue(this.plugin.settings.useCustomContext)
-				.onChange(async (value) => {
-					// --- MODIFIED --- Write to plugin.settings and save
-					this.plugin.settings.useCustomContext = value;
-					this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
-					if (value && this.customContextTextArea) {
-						this.customContextTextArea.inputEl.focus();
-					}
-					await this.plugin.saveSettings();
-				}),
+			toggle.setValue(this.plugin.settings.useCustomContext).onChange(async (value) => {
+				this.plugin.settings.useCustomContext = value;
+				this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
+				if (value && this.customContextTextArea) {
+					this.customContextTextArea.inputEl.focus();
+				}
+				await this.plugin.saveSettings();
+			}),
 		);
 	}
 
@@ -270,21 +290,16 @@ export class ContextControlPanel extends ItemView {
 		this.customContextTextAreaContainer = container.createDiv({
 			cls: "ccp-custom-context-container",
 		});
-		// --- MODIFIED --- Read from plugin.settings
 		if (this.plugin.settings.useCustomContext)
 			this.customContextTextAreaContainer.classList.add("is-visible");
-
 		this.customContextTextArea = new TextAreaComponent(this.customContextTextAreaContainer)
 			.setPlaceholder("Add custom context. Type '[[' to link notes...")
-			// --- MODIFIED --- Read from plugin.settings
 			.setValue(this.plugin.settings.customContextText)
 			.onChange(async (value) => {
-				// --- MODIFIED --- Write to plugin.settings and save
 				this.plugin.settings.customContextText = value;
 				await this.plugin.saveSettings();
 			});
 		this.customContextTextArea.inputEl.classList.add("ccp-custom-context-textarea");
-
 		this.customContextTextArea.inputEl.addEventListener("input", (event) => {
 			if (this.justInsertedLink) {
 				this.justInsertedLink = false;
@@ -295,17 +310,14 @@ export class ContextControlPanel extends ItemView {
 			const cursorPos = inputEl.selectionStart;
 			const textBeforeCursor = text.substring(0, cursorPos);
 			const match = /\[\[([^\]]*)$/.exec(textBeforeCursor);
-
 			if (match) {
-				new WikilinkSuggestModal(this.plugin.app, async (chosenFile: TFile) => {
+				new WikilinkSuggestModal(this.app, async (chosenFile: TFile) => {
 					const linkText = `[[${chosenFile.basename}]]`;
 					const textBeforeLinkOpen = textBeforeCursor.substring(0, match.index);
 					const textAfterCursor = text.substring(cursorPos);
 					const newText = textBeforeLinkOpen + linkText + textAfterCursor;
-					// --- MODIFIED --- Write to plugin.settings and save
 					this.plugin.settings.customContextText = newText;
 					await this.plugin.saveSettings();
-
 					if (this.customContextTextArea) {
 						this.customContextTextArea.setValue(newText);
 						const newCursorPos = textBeforeLinkOpen.length + linkText.length;
@@ -322,8 +334,6 @@ export class ContextControlPanel extends ItemView {
 	override onClose(): Promise<void> {
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
-		this.modelDropdown = null;
-		this.temperatureSliderComponent = null;
 		this.dynamicContextLinesSetting = null;
 		this.descriptionContainer = null;
 		this.descriptionIndicator = null;
@@ -333,13 +343,11 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	async getStructuredCustomContext(): Promise<StructuredCustomContext> {
-		// --- MODIFIED --- Read from plugin.settings
-		if (!this.plugin.settings.useCustomContext || !this.plugin.settings.customContextText) {
-			return { rawText: this.plugin.settings.customContextText || "", referencedNotes: [] };
+		const { settings } = this.plugin;
+		if (!settings.useCustomContext || !settings.customContextText) {
+			return { rawText: settings.customContextText || "", referencedNotes: [] };
 		}
-
-		// --- MODIFIED --- Read from plugin.settings
-		const textToProcess = this.plugin.settings.customContextText;
+		const textToProcess = settings.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
 		const uniqueReferencedNotes = new Map<string, Promise<ReferencedNoteData>>();
 
@@ -349,16 +357,14 @@ export class ContextControlPanel extends ItemView {
 			);
 			return { rawText: textToProcess, referencedNotes: [] };
 		}
-
-		let match = wikilinkRegex.exec(textToProcess);
-		while (match !== null) {
+		let match: RegExpExecArray | null = null;
+		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while loop condition for brevity
+		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];
-
 			const parts = linkFullText.split("|");
 			const linkPathOnly = parts[0].trim();
 			const aliasText = parts.length > 1 ? parts[1].trim() : undefined;
-
 			if (!uniqueReferencedNotes.has(linkPathOnly)) {
 				const promise = (async (): Promise<ReferencedNoteData> => {
 					const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
@@ -376,10 +382,6 @@ export class ContextControlPanel extends ItemView {
 							}
 							return noteData;
 						} catch (error) {
-							console.error(
-								`WordSmith: Error reading file ${file.path} for wikilink ${originalWikilink}:`,
-								error,
-							);
 							const noteData: ReferencedNoteData = {
 								originalWikilink,
 								linkText: linkPathOnly,
@@ -406,16 +408,9 @@ export class ContextControlPanel extends ItemView {
 				})();
 				uniqueReferencedNotes.set(linkPathOnly, promise);
 			}
-
-			// Find the next match to continue the loop.
-			match = wikilinkRegex.exec(textToProcess);
 		}
 
 		const resolvedNotes = await Promise.all(Array.from(uniqueReferencedNotes.values()));
-
-		return {
-			rawText: textToProcess,
-			referencedNotes: resolvedNotes,
-		};
+		return { rawText: textToProcess, referencedNotes: resolvedNotes };
 	}
 }

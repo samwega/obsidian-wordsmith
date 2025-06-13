@@ -18,10 +18,17 @@ import { textTransformerSuggestionExtensions } from "./lib/editor/suggestion-sta
 import {
 	DEFAULT_SETTINGS,
 	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	MODEL_SPECS,
+	KNOWN_MODEL_HINTS,
 	TextTransformerPrompt,
 	TextTransformerSettings,
 } from "./lib/settings-data";
+
+// --- Service Imports ---
+import { CustomProviderService } from "./services/CustomProviderService";
+import { FavoritesService } from "./services/FavoritesService";
+import { ModelService } from "./services/ModelService";
+
+// --- UI Imports ---
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "./ui/context-control-panel";
 import { CustomPromptModal } from "./ui/modals/custom-prompt-modal";
 import { PromptPaletteModal } from "./ui/modals/prompt-palette";
@@ -29,11 +36,20 @@ import { TextTransformerSettingsMenu } from "./ui/settings";
 
 // biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
-	defaultSettings = DEFAULT_SETTINGS;
 	settings!: TextTransformerSettings;
 	runtimeDebugMode = false;
 
+	// --- Service Instances ---
+	customProviderService!: CustomProviderService;
+	modelService!: ModelService;
+	favoritesService!: FavoritesService;
+
 	override async onload(): Promise<void> {
+		// --- Initialize Services ---
+		this.customProviderService = new CustomProviderService(this);
+		this.modelService = new ModelService(this);
+		this.favoritesService = new FavoritesService(this);
+
 		await this.loadSettings();
 
 		this.addSettingTab(new TextTransformerSettingsMenu(this));
@@ -239,16 +255,30 @@ export default class TextTransformer extends Plugin {
 			.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)
 			.forEach((leaf: WorkspaceLeaf) => {
 				if (leaf.view instanceof ContextControlPanel) {
-					leaf.view.updateModelSelector();
-					leaf.view.updateTemperatureSlider();
+					leaf.view.updateView();
 				}
 			});
 	}
 
-	/**
-	 * Retrieves the active ContextControlPanel instance, if it exists.
-	 * @returns The ContextControlPanel instance or null.
-	 */
+	async updateTemperatureForModel(modelId: string): Promise<void> {
+		if (!modelId) return;
+
+		// Parse the API ID from the full canonical ID (e.g., "OpenRouter//anthropic/claude-3.5-sonnet")
+		const apiId = modelId.split("//")[1];
+
+		// Also check for local models that might not have a provider prefix in their ID
+		const hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[modelId];
+
+		if (hint) {
+			// If a known hint is found, update the global temperature to its default.
+			this.settings.temperature = hint.default;
+		}
+		// If no hint is found, do nothing. The current temperature value is preserved.
+
+		// Save settings to persist the potential change and trigger a UI update.
+		await this.saveSettings();
+	}
+
 	getContextPanel(): ContextControlPanel | null {
 		const leaf = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)[0];
 		if (leaf?.view instanceof ContextControlPanel) {
@@ -274,163 +304,90 @@ export default class TextTransformer extends Plugin {
 			enabled: typeof combined.enabled === "boolean" ? combined.enabled : true,
 			showInPromptPalette:
 				typeof combined.showInPromptPalette === "boolean" ? combined.showInPromptPalette : true,
-			// model, temperature, etc. can be undefined
 		};
-		// Conditionally add properties if they are not undefined to satisfy exactOptionalPropertyTypes
-		if (typeof combined.model !== "undefined") newPrompt.model = combined.model;
-		// if (typeof combined.temperature !== "undefined") newPrompt.temperature = combined.temperature; // Removed as temperature is now global
 		if (typeof combined.frequency_penalty !== "undefined")
 			newPrompt.frequency_penalty = combined.frequency_penalty;
 		if (typeof combined.presence_penalty !== "undefined")
 			newPrompt.presence_penalty = combined.presence_penalty;
-		// if (typeof combined.max_tokens !== "undefined") newPrompt.max_tokens = combined.max_tokens;
 
 		return newPrompt;
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)) as TextTransformerSettings;
-
+		const defaultSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 		const loadedData = (await this.loadData()) as Partial<TextTransformerSettings> | null;
 
-		if (loadedData) {
-			const {
-				prompts: loadedPrompts,
-				debugMode,
-				...otherLoadedSettings
-			} = loadedData as Partial<TextTransformerSettings> & { debugMode?: boolean }; // Explicitly type to handle potential old debugMode
-			Object.assign(this.settings, otherLoadedSettings);
+		this.settings = Object.assign({}, defaultSettings, loadedData);
 
-			// runtimeDebugMode is initialized to false and not loaded from settings.
-			// If an old debugMode setting exists in data, it's now ignored for persistent settings.
-
-			if (typeof this.settings.translationLanguage === "undefined") {
-				this.settings.translationLanguage = DEFAULT_SETTINGS.translationLanguage;
-			}
-			// Ensure temperature is loaded or defaulted
-			if (
-				typeof this.settings.temperature === "undefined" ||
-				this.settings.temperature === null
-			) {
-				this.settings.temperature = DEFAULT_SETTINGS.temperature;
-			}
-
-			if (Array.isArray(loadedPrompts) && loadedPrompts.length > 0) {
-				const processedDefaultPromptsMap = new Map<string, TextTransformerPrompt>();
-				const keptCustomPrompts: TextTransformerPrompt[] = [];
-
-				loadedPrompts.forEach((loadedPrompt) => {
-					if (loadedPrompt.isDefault) {
-						const defaultDefinition = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(
-							(dp) => dp.id === loadedPrompt.id,
-						);
-						if (defaultDefinition) {
-							let currentDefaultName = defaultDefinition.name;
-							if (defaultDefinition.id === "translate") {
-								const langSetting =
-									this.settings.translationLanguage ||
-									DEFAULT_SETTINGS.translationLanguage;
-								const capitalizedLang =
-									langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
-								currentDefaultName = `Translate to ${capitalizedLang}—autodetects source language`;
-							}
-							let showInPromptPalette = true;
-							if (typeof loadedPrompt.showInPromptPalette === "boolean") {
-								showInPromptPalette = loadedPrompt.showInPromptPalette;
-							} else if (typeof defaultDefinition.showInPromptPalette === "boolean") {
-								showInPromptPalette = defaultDefinition.showInPromptPalette;
-							}
-							processedDefaultPromptsMap.set(
-								loadedPrompt.id,
-								this._createPromptObject(defaultDefinition, {
-									name: currentDefaultName,
-									enabled:
-										typeof loadedPrompt.enabled === "boolean"
-											? loadedPrompt.enabled
-											: defaultDefinition.enabled,
-									showInPromptPalette,
-									isDefault: true,
-								}),
-							);
-						}
-					} else {
-						keptCustomPrompts.push(
-							this._createPromptObject(loadedPrompt, {
-								// Base is loadedPrompt
-								isDefault: false, // Ensure this is false
-								enabled:
-									typeof loadedPrompt.enabled === "boolean" ? loadedPrompt.enabled : true,
-								showInPromptPalette:
-									typeof loadedPrompt.showInPromptPalette === "boolean"
-										? loadedPrompt.showInPromptPalette
-										: true,
-							}),
-						);
-					}
-				});
-
-				const finalPrompts: TextTransformerPrompt[] = [];
-				DEFAULT_TEXT_TRANSFORMER_PROMPTS.forEach((defaultDefFromCode) => {
-					if (processedDefaultPromptsMap.has(defaultDefFromCode.id)) {
-						const prompt = processedDefaultPromptsMap.get(defaultDefFromCode.id);
-						if (prompt) finalPrompts.push(prompt);
-					} else {
-						let name = defaultDefFromCode.name;
-						if (defaultDefFromCode.id === "translate") {
-							const langSetting =
-								this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
-							const capitalizedLang =
-								langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
-							name = `Translate to ${capitalizedLang}—autodetects source language`;
-						}
-						finalPrompts.push(this._createPromptObject(defaultDefFromCode, { name }));
-					}
-				});
-
-				finalPrompts.push(...keptCustomPrompts);
-				this.settings.prompts = finalPrompts;
-			} else {
-				this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
-					let name = p.name;
-					if (p.id === "translate") {
-						const langSetting =
-							this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
-						const capitalizedLang =
-							langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
-						name = `Translate to ${capitalizedLang}—autodetects source language`;
-					}
-					return this._createPromptObject(p, { name });
-				});
-			}
-		} else {
-			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) => {
-				let name = p.name;
-				if (p.id === "translate") {
-					const langSetting =
-						this.settings.translationLanguage || DEFAULT_SETTINGS.translationLanguage;
-					const capitalizedLang = langSetting.charAt(0).toUpperCase() + langSetting.slice(1);
-					name = `Translate to ${capitalizedLang}—autodetects source language`;
+		// --- MIGRATION LOGIC ---
+		// Migration: Rename "Google/Gemini" provider to "AI Studio" for consistency
+		if (this.settings.customProviders) {
+			let wasMigrated = false;
+			this.settings.customProviders.forEach((provider) => {
+				if (provider.name === "Google/Gemini") {
+					provider.name = "AI Studio";
+					wasMigrated = true;
 				}
-				return this._createPromptObject(p, { name });
 			});
-		}
-
-		const { prompts, ...defaultKeysForLoop } = DEFAULT_SETTINGS;
-		for (const key of Object.keys(defaultKeysForLoop) as Array<keyof typeof defaultKeysForLoop>) {
-			const typedKey = key as keyof Omit<TextTransformerSettings, "prompts" | "defaultPromptId">;
-			if (
-				typeof this.settings[typedKey] === "undefined" &&
-				typeof DEFAULT_SETTINGS[typedKey] !== "undefined"
-			) {
-				(this.settings as unknown as Record<string, unknown>)[typedKey] =
-					DEFAULT_SETTINGS[typedKey];
+			if (wasMigrated && this.runtimeDebugMode) {
+				console.log("WordSmith: Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
 			}
 		}
+		// --- END MIGRATION LOGIC ---
 
-		if (!this.settings.model || !Object.keys(MODEL_SPECS).includes(this.settings.model)) {
-			this.settings.model = DEFAULT_SETTINGS.model;
+		if (loadedData && Array.isArray(loadedData.prompts) && loadedData.prompts.length > 0) {
+			const processedDefaultPromptsMap = new Map<string, TextTransformerPrompt>();
+			const keptCustomPrompts: TextTransformerPrompt[] = [];
+
+			loadedData.prompts.forEach((loadedPrompt) => {
+				if (loadedPrompt.isDefault) {
+					const defaultDefinition = DEFAULT_TEXT_TRANSFORMER_PROMPTS.find(
+						(dp) => dp.id === loadedPrompt.id,
+					);
+					if (defaultDefinition) {
+						// Create an update object and only add properties that are defined.
+						const updates: Partial<TextTransformerPrompt> = {};
+						if (typeof loadedPrompt.enabled === "boolean") {
+							updates.enabled = loadedPrompt.enabled;
+						}
+						if (typeof loadedPrompt.showInPromptPalette === "boolean") {
+							updates.showInPromptPalette = loadedPrompt.showInPromptPalette;
+						}
+						processedDefaultPromptsMap.set(
+							loadedPrompt.id,
+							this._createPromptObject(defaultDefinition, updates),
+						);
+					}
+				} else {
+					keptCustomPrompts.push(this._createPromptObject(loadedPrompt, {}));
+				}
+			});
+
+			const finalPrompts: TextTransformerPrompt[] = [];
+			DEFAULT_TEXT_TRANSFORMER_PROMPTS.forEach((defaultDefFromCode) => {
+				if (processedDefaultPromptsMap.has(defaultDefFromCode.id)) {
+					const prompt = processedDefaultPromptsMap.get(defaultDefFromCode.id);
+					if (prompt) finalPrompts.push(prompt);
+				} else {
+					finalPrompts.push(this._createPromptObject(defaultDefFromCode, {}));
+				}
+			});
+
+			finalPrompts.push(...keptCustomPrompts);
+			this.settings.prompts = finalPrompts;
+		} else {
+			this.settings.prompts = DEFAULT_TEXT_TRANSFORMER_PROMPTS.map((p) =>
+				this._createPromptObject(p, {}),
+			);
 		}
 
-		await this.saveData(this.settings);
+		const translatePrompt = this.settings.prompts.find((p) => p.id === "translate");
+		if (translatePrompt) {
+			const lang = this.settings.translationLanguage || "English";
+			const capitalizedLang = lang.charAt(0).toUpperCase() + lang.slice(1);
+			translatePrompt.name = `Translate to ${capitalizedLang}—autodetects source language`;
+		}
+
+		await this.saveSettings();
 	}
 }
