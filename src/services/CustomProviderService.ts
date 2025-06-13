@@ -56,7 +56,8 @@ export class CustomProviderService {
 				isFavorite: false, // isFavorite is handled by FavoritesService
 			};
 
-			if (apiModel.contextLength !== undefined) { // Corrected casing
+			if (apiModel.contextLength !== undefined) {
+				// Corrected casing
 				model.contextLength = apiModel.contextLength; // Corrected casing
 			}
 			if (apiModel.description !== undefined) {

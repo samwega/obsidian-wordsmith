@@ -524,6 +524,7 @@ body.theme-light .text-transformer-removed-active {
 	line-height: 1.4;
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
+	line-clamp: 2; /* Added standard property */
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 	text-overflow: ellipsis;
