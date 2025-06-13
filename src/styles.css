@@ -239,6 +239,10 @@ body.theme-light .text-transformer-removed-active {
 }
 
 /* FIX: Placed after the rule above to resolve descending specificity lint error */
+.wordsmith-model-selector-setting .setting-item-control {
+	width: 100%;
+}
+
 .setting-item.api-key-setting-el .setting-item-info {
 	flex-basis: 260px;
 	flex-grow: 0;
@@ -524,8 +528,8 @@ body.theme-light .text-transformer-removed-active {
 	line-height: 1.4;
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
-	line-clamp: 2; /* Added standard property */
 	-webkit-box-orient: vertical;
+	line-clamp: 2; /* Add standard property for compatibility */
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
@@ -579,9 +583,6 @@ body.theme-light .text-transformer-removed-active {
 }
 .wordsmith-model-selector-setting .setting-item-info {
 	display: none; /* Hide setting name/desc */
-}
-.setting-item.wordsmith-model-selector-setting .setting-item-control {
-	width: 100%;
 }
 .wordsmith-model-selector {
 	display: flex;
