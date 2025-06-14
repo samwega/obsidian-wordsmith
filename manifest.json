@@ -1,7 +1,7 @@
 {
 	"id": "wordsmith",
 	"name": "WordSmith",
-	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, multiple AI providers, seamless, keyboard-first workflow.",
+	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, seamless, keyboard-first workflow. Supports ALL remote and local models.",
 	"version": "3.0.0",
 	"minAppVersion": "1.5.8",
 	"isDesktopOnly": false,
