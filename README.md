@@ -160,6 +160,7 @@ Key features and improvements include:
 * **Favorites System:** Stared models are moved to the top of the list for quick selection.
 * **Future-Proof Foundation:** WordSmith no longer requires manual updates to support new models. As providers add models to their APIs, they will automatically become available in your browser.
 * **Overhauled the prompt engineering system** for significantly improved AI reliability and instruction-following. Now that we have access to thousands of models, each trained with different prompt and system instruction structures, we had to construct prompts in a way to maximize compliance by as many models as possible. This change enhances performance across all models, from top-tier APIs to local servers.
+* **Improved Settings Menu:** Now with tabs, free from clutter.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
