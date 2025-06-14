@@ -1,8 +1,8 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 2.2.2
+**Current Version:** 3.0.0
 
-WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, and effortless refinement, knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
+WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
 **Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT, Google Gemini & OpenRouter), curently serving 40 models, and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
@@ -42,46 +42,50 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-- [Usage](#usage)
-  - [Commands](#commands)
-  - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
-  - [Customizing Prompts](#customizing-prompts)
-  - [API Key Setup, AI Providers & Models Info](#api-key-setup-ai-providers--models-info)
-- [Release History](#release-history)
-  - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w%CD%9Cs-whats-new-in-v220---knowledge-graph-generation)
-    - [Minor Versions of v.2.2.x](#minor-versions-of-v22x)
-  - [w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions](#w%CD%9Cs-whats-new-in-v210---context-panel-save-state-across-sessions)
-    - [Minor Versions of v.2.1.x](#minor-versions-of-v21x)
-  - [w͜s What's New in v2.0.0 - OpenRouter Support - 28 New Models](#w%CD%9Cs-whats-new-in-v200---openrouter-support---28-new-models)
-    - [Minor Versions of v.2.0.x](#minor-versions-of-v20x)
-  - [w͜s What's New in v1.11.0 - Temperature Sliders & Debug Logging](#w%CD%9Cs-whats-new-in-v1110---temperature-sliders--debug-logging)
-  - [w͜s What's New in v1.10.0 - Enhanced Context Awareness & Prompt Stability! w͜s](#w%CD%9Cs-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-w%CD%9Cs)
-    - [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
-  - [w͜s What's New in v1.9.0 - Streamlined Ghost Text Suggestions & Cleaner State Management! w͜s](#w%CD%9Cs-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-w%CD%9Cs)
-    - [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
-  - [w͜s What's New in v1.8.0 - Persistent Suggestions & Enhanced Prompts! w͜s](#w%CD%9Cs-whats-new-in-v180---persistent-suggestions--enhanced-prompts-w%CD%9Cs)
-    - [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
-  - [w͜s What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! w͜s](#w%CD%9Cs-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-w%CD%9Cs)
-    - [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
-  - [w͜s What's New in v1.6.0 – Enhanced Suggestion Navigation! w͜s](#w%CD%9Cs-whats-new-in-v160--enhanced-suggestion-navigation-w%CD%9Cs)
-    - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
-  - [w͜s What's New in v1.5.0 - Context Aware Generation at Cursor! w͜s](#w%CD%9Cs-whats-new-in-v150---context-aware-generation-at-cursor-w%CD%9Cs)
-    - [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
-  - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
-  - [w͜s What's New in v1.4.0 - Precision Newline Tracking! w͜s](#w%CD%9Cs-whats-new-in-v140---precision-newline-tracking-w%CD%9Cs)
-    - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
-  - [w͜s What's New in v1.3.0 - Revamped Suggestion Display! w͜s](#w%CD%9Cs-whats-new-in-v130---revamped-suggestion-display-w%CD%9Cs)
-    - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
-  - [w͜s What's New in v1.2.1 & v1.2.2 w͜s](#w%CD%9Cs-whats-new-in-v121--v122-w%CD%9Cs)
-  - [w͜s What's New in v1.2.0 w͜s](#w%CD%9Cs-whats-new-in-v120-w%CD%9Cs)
-  - [w͜s What's New in v1.1.0 w͜s](#w%CD%9Cs-whats-new-in-v110-w%CD%9Cs)
-  - [w͜s What's New in v1.0.0 w͜s](#w%CD%9Cs-whats-new-in-v100-w%CD%9Cs)
-- [Installation & Setup](#installation--setup)
-  - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
-  - [Manual Installation](#manual-installation)
-- [Legacy Text Transformer (closest to Proofreader)](#legacy-text-transformer-closest-to-proofreader)
-- [Plugin Development](#plugin-development)
-- [About the Developer](#about-the-developer)
+- [WordSmith - AI Writing Assistant for Obsidian](#wordsmith---ai-writing-assistant-for-obsidian)
+  - [Features](#features)
+  - [Table of contents](#table-of-contents)
+  - [Usage](#usage)
+    - [Commands](#commands)
+    - [Using the AI Context Control Panel](#using-the-ai-context-control-panel)
+    - [Customizing Prompts](#customizing-prompts)
+    - [API Key Setup, AI Providers \& Models Info](#api-key-setup-ai-providers--models-info)
+  - [Release History](#release-history)
+    - [w͜s What's New in v3.0.0 - 400+ Models \& Local AI Provider Support](#w͜s-whats-new-in-v300---400-models--local-ai-provider-support)
+    - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w͜s-whats-new-in-v220---knowledge-graph-generation)
+      - [Minor Versions of v.2.2.x](#minor-versions-of-v22x)
+    - [w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions](#w͜s-whats-new-in-v210---context-panel-save-state-across-sessions)
+      - [Minor Versions of v.2.1.x](#minor-versions-of-v21x)
+    - [w͜s What's New in v2.0.0 - OpenRouter Support - 28 New Models](#w͜s-whats-new-in-v200---openrouter-support---28-new-models)
+      - [Minor Versions of v.2.0.x](#minor-versions-of-v20x)
+    - [w͜s What's New in v1.11.0 - Temperature Sliders \& Debug Logging](#w͜s-whats-new-in-v1110---temperature-sliders--debug-logging)
+    - [w͜s What's New in v1.10.0 - Enhanced Context Awareness \& Prompt Stability! w͜s](#w͜s-whats-new-in-v1100---enhanced-context-awareness--prompt-stability-w͜s)
+      - [Minor Versions of v.1.10.x](#minor-versions-of-v110x)
+    - [w͜s What's New in v1.9.0 - Streamlined Ghost Text Suggestions \& Cleaner State Management! w͜s](#w͜s-whats-new-in-v190---streamlined-ghost-text-suggestions--cleaner-state-management-w͜s)
+      - [Minor Versions of v.1.9.x](#minor-versions-of-v19x)
+    - [w͜s What's New in v1.8.0 - Persistent Suggestions \& Enhanced Prompts! w͜s](#w͜s-whats-new-in-v180---persistent-suggestions--enhanced-prompts-w͜s)
+      - [Minor Versions of v.1.8.x](#minor-versions-of-v18x)
+    - [w͜s What's New in v1.7.0 - Enhanced Custom Context with Smart Note Linking! w͜s](#w͜s-whats-new-in-v170---enhanced-custom-context-with-smart-note-linking-w͜s)
+      - [Minor Versions of v.1.7.x](#minor-versions-of-v17x)
+    - [w͜s What's New in v1.6.0 – Enhanced Suggestion Navigation! w͜s](#w͜s-whats-new-in-v160--enhanced-suggestion-navigation-w͜s)
+      - [Minor Versions of v.1.6.x](#minor-versions-of-v16x)
+    - [w͜s What's New in v1.5.0 - Context Aware Generation at Cursor! w͜s](#w͜s-whats-new-in-v150---context-aware-generation-at-cursor-w͜s)
+      - [Key Features of v1.5.0: Prompt Based Context Aware Generation at Cursor](#key-features-of-v150-prompt-based-context-aware-generation-at-cursor)
+    - [Minor Versions of v.1.5.x](#minor-versions-of-v15x)
+    - [w͜s What's New in v1.4.0 - Precision Newline Tracking! w͜s](#w͜s-whats-new-in-v140---precision-newline-tracking-w͜s)
+      - [Minor Versions of v.1.4.x](#minor-versions-of-v14x)
+    - [w͜s What's New in v1.3.0 - Revamped Suggestion Display! w͜s](#w͜s-whats-new-in-v130---revamped-suggestion-display-w͜s)
+      - [Minor Versions of v.1.3.x](#minor-versions-of-v13x)
+    - [w͜s What's New in v1.2.1 \& v1.2.2 w͜s](#w͜s-whats-new-in-v121--v122-w͜s)
+    - [w͜s What's New in v1.2.0 w͜s](#w͜s-whats-new-in-v120-w͜s)
+    - [w͜s What's New in v1.1.0 w͜s](#w͜s-whats-new-in-v110-w͜s)
+    - [w͜s What's New in v1.0.0 w͜s](#w͜s-whats-new-in-v100-w͜s)
+  - [Installation \& Setup](#installation--setup)
+    - [Plugin Installation (via Community Store)](#plugin-installation-via-community-store)
+    - [Manual Installation](#manual-installation)
+  - [Legacy Text Transformer (closest to Proofreader)](#legacy-text-transformer-closest-to-proofreader)
+  - [Plugin Development](#plugin-development)
+  - [About the Developer](#about-the-developer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -143,6 +147,18 @@ Tailor WordSmith to your exact needs:
 See the [API Key Setup, AI Providers, Models wiki](https://github.com/samwega/obsidian-wordsmith/wiki/API-Key-Setup%2C-AI-Providers%2C-Models) entry.
 
 ## Release History
+
+### w͜s What's New in v3.0.0 - 400+ Models & Local AI Provider Support
+
+This major release introduces a complete architectural overhaul brings Dynamic AI Model Providers to WordSmith. The hardcoded model list has been replaced with a dynamic, provider-agnostic framework. This unlocks access to **over 400 models** from top-tier services like **OpenAI, Anthropic, Google, and OpenRouter**, others you wish to add, and crucially, brings first-class support for running AI completely offline with **local servers like Ollama and LM Studio**. You now have ultimate control over your AI toolkit.
+
+Key features and improvements include:
+
+* **Massive Model Expansion:** Connect to any service with a standard chat completions API. The new system provides immediate access to hundreds of models, from the latest flagships to specialized open-source variants.
+* **First-Class Local AI Support:** Run your transformations and generations privately and for free by adding your local Ollama or LM Studio endpoints as providers.
+* **Comprehensive Model Browser:** A new "Browse All Models" modal displays every available model from all your configured providers in a single, searchable interface.
+* **Favorites System:** Star your most-used models for quick selection.
+* **Future-Proof Foundation:** WordSmith no longer requires manual updates to support new models. As providers add models to their APIs, they will automatically become available in your browser.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
