@@ -37,7 +37,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 * Manual and (planned) community plugin installation
 * Many more! Check the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more tricks and uses.
 
-![WordSmith Settings and Context Side Pane](https://github.com/user-attachments/assets/66408578-1130-4b3f-a7b8-ea6bebe18f85)
+![WordSmith Settings and Context Side Pane](https://github.com/user-attachments/assets/dad71548-0cf3-48fa-99e7-b86967b282d2)
 
 ## Table of contents
 
@@ -68,7 +68,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
 
 WordSmith is designed for a keyboard-centric workflow. Configure your preferred hotkeys in Obsidian's settings for the commands below. In the screenshot you can see a workable suggested setup, but feel free to make it your own:
 
-![image](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
+![WordSmith - Add Model Providers Settings](https://github.com/user-attachments/assets/5c88c1d0-75c3-40f0-bf43-7c3de8f100c1)
 
 Check out the [WordSmith Wiki](https://github.com/samwega/obsidian-wordsmith/wiki) for more advanced use guides.
 
@@ -120,6 +120,9 @@ Tailor WordSmith to your exact needs:
 
 The setup is very simple and intuitive—go to the WordSmith Settigns, select the `Model Providers` tab, click the `Add Provider` button, choose your model provider, paste the API Key, and that's it!
 
+![WordSmith Model Provider Setup](https://github.com/user-attachments/assets/4ef4d09d-4087-4e7c-9279-fd6c4123a780)
+
+
 ## Release History
 
 ### w͜s What's New in v3.0.0 - 400+ Models & Local AI Provider Support
@@ -135,6 +138,9 @@ Key features and improvements include:
 * **Future-Proof Foundation:** WordSmith no longer requires manual updates to support new models. As providers add models to their APIs, they will automatically become available in your browser.
 * **Overhauled the prompt engineering system** for significantly improved AI reliability and instruction-following. Now that we have access to thousands of models, each trained with different prompt and system instruction structures, we had to construct prompts in a way to maximize compliance by as many models as possible. This change enhances performance across all models, from top-tier APIs to local servers.
 * **Improved Settings Menu:** Now with tabs, free from clutter.
+
+![WordSmith Model Selection Modal](https://github.com/user-attachments/assets/8b2bec9c-27c2-43dc-b1f5-eb5716d324e8)
+
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
