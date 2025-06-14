@@ -4,7 +4,7 @@
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage multiple AI providers (OpenAI GPT, Google Gemini & OpenRouter), curently serving 40 models, and benefit from advanced context control—all fully keyboard-driven. WordSmith is free forever! Use your own API keys and only spend how much you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage a dynamic provider framework to access **over 400 models** from OpenAI, Anthropic, Google, OpenRouter, and even local AI servers like Ollama & LM Studio, and benefit from advanced context control—all fully keyboard-driven. Use your own API keys and only spend what you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
 Initially forked from the narrowly focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
@@ -157,8 +157,9 @@ Key features and improvements include:
 * **Massive Model Expansion:** Connect to any service with a standard chat completions API. The new system provides immediate access to hundreds of models, from the latest flagships to specialized open-source variants.
 * **First-Class Local AI Support:** Run your transformations and generations privately and for free by adding your local Ollama or LM Studio endpoints as providers.
 * **Comprehensive Model Browser:** A new "Browse All Models" modal displays every available model from all your configured providers in a single, searchable interface.
-* **Favorites System:** Star your most-used models for quick selection.
+* **Favorites System:** Stared models are moved to the top of the list for quick selection.
 * **Future-Proof Foundation:** WordSmith no longer requires manual updates to support new models. As providers add models to their APIs, they will automatically become available in your browser.
+* **Overhauled the prompt engineering system** for significantly improved AI reliability and instruction-following. Now that we have access to thousands of models, each trained with different prompt and system instruction structures, we had to construct prompts in a way to maximize compliance by as many models as possible. This change enhances performance across all models, from top-tier APIs to local servers.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
