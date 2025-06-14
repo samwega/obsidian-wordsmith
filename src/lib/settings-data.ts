@@ -47,6 +47,15 @@ export interface ModelTemperatureHint {
 	default: number;
 }
 
+/**
+ * Default temperature settings for models without a specific hint.
+ */
+export const UNKNOWN_MODEL_HINT: ModelTemperatureHint = {
+	min: 0.0,
+	max: 2.0,
+	default: 0.8,
+};
+
 export const KNOWN_MODEL_HINTS: Record<string, ModelTemperatureHint> = {
 	// OpenAI (Direct)
 	"gpt-4.1": { min: 0.0, max: 2.0, default: 1.0 },

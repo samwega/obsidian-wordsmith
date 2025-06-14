@@ -1,6 +1,39 @@
 /* styles.css - Wordsmith: Adaptive Dark/Light Theme */
 
-/* --- Base Styles (Primarily for Dark Theme, but with some adaptability) --- */
+/* --- Settings: Tabbed Interface --- */
+.tt-settings-tabs-container {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tt-settings-tab-button {
+	background-color: transparent;
+	border: none;
+	border-bottom: 3px solid transparent; /* Reserve space for the active indicator */
+	border-radius: var(--radius-s) var(--radius-s) 0 0;
+	padding: 10px 16px;
+	font-size: var(--font-ui-medium);
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease-in-out;
+	color: var(--text-muted);
+	position: relative;
+	top: 1px; /* Align with the bottom border of the container */
+}
+
+.tt-settings-tab-button:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.tt-settings-tab-button.is-active {
+	color: var(--text-normal);
+	border-bottom-color: var(--interactive-accent);
+}
+
+/* --- Base Suggestion Styles (Primarily for Dark Theme, but with some adaptability) --- */
 .text-transformer-added {
 	/* Light green background (good for dark themes) */
 	background-color: #6cdf6c5e; /* Your chosen green with alpha */
@@ -34,7 +67,7 @@
 	margin-right: 1px; /* Adds 1px of space to the right of the symbol's box */
 }
 
-/* --- Light Theme Overrides --- */
+/* --- Light Theme Suggestion Overrides --- */
 body.theme-light .text-transformer-added {
 	background-color: rgba(144, 238, 144, 0.45); /* A slightly more opaque, standard light green */
 	color: #185018; /* Dark green text for high contrast on light backgrounds */
@@ -132,7 +165,7 @@ body.theme-light .text-transformer-removed-active {
 	/* It will inherit background-color, color, outline, box-shadow from .text-transformer-removed / .text-transformer-removed-active */
 }
 
-/* Styles for CustomPromptModal */
+/* --- Styles for CustomPromptModal --- */
 .custom-prompt-modal-title {
 	text-align: center;
 }
@@ -164,7 +197,7 @@ body.theme-light .text-transformer-removed-active {
 	color: var(--text-muted);
 }
 
-/* Styles for TextTransformerSettingsMenu from settings.ts */
+/* --- Styles for TextTransformerSettingsMenu from settings.ts --- */
 .setting-item.api-model-setting-el {
 	border: none !important;
 	display: flex;
@@ -343,7 +376,7 @@ body.theme-light .text-transformer-removed-active {
 	margin: 10px 0;
 }
 
-/* Styles for ContextControlPanel from context-control-panel.ts */
+/* --- Styles for ContextControlPanel from context-control-panel.ts --- */
 .ccp-header-container {
 	display: flex;
 	align-items: baseline;
@@ -446,10 +479,6 @@ body.theme-light .text-transformer-removed-active {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-}
-.tt-provider-disabled .setting-item-name {
-	color: var(--text-muted);
-	text-decoration: line-through;
 }
 
 /* --- Model Selection Modal --- */

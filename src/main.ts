@@ -21,6 +21,7 @@ import {
 	KNOWN_MODEL_HINTS,
 	TextTransformerPrompt,
 	TextTransformerSettings,
+	UNKNOWN_MODEL_HINT,
 } from "./lib/settings-data";
 
 // --- Service Imports ---
@@ -272,8 +273,10 @@ export default class TextTransformer extends Plugin {
 		if (hint) {
 			// If a known hint is found, update the global temperature to its default.
 			this.settings.temperature = hint.default;
+		} else {
+			// If no hint is found, set to the sane default temperature.
+			this.settings.temperature = UNKNOWN_MODEL_HINT.default;
 		}
-		// If no hint is found, do nothing. The current temperature value is preserved.
 
 		// Save settings to persist the potential change and trigger a UI update.
 		await this.saveSettings();

@@ -11,7 +11,7 @@ import {
 	setIcon,
 } from "obsidian";
 import { getProviderInfo } from "../lib/provider-utils";
-import { KNOWN_MODEL_HINTS, ModelTemperatureHint } from "../lib/settings-data";
+import { KNOWN_MODEL_HINTS, ModelTemperatureHint, UNKNOWN_MODEL_HINT } from "../lib/settings-data";
 import type TextTransformer from "../main";
 import { ModelSelectionModal } from "./modals/ModelSelectionModal";
 import { WikilinkSuggestModal } from "./modals/wikilink-suggest-modal";
@@ -159,8 +159,11 @@ export class ContextControlPanel extends ItemView {
 			hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[currentModelId];
 		}
 
-		const minTemp = hint ? hint.min : 0.0;
-		const maxTemp = hint ? hint.max : 2.0;
+		// Use the explicit default hint if no specific hint is found.
+		const effectiveHint = hint || UNKNOWN_MODEL_HINT;
+
+		const minTemp = effectiveHint.min;
+		const maxTemp = effectiveHint.max;
 
 		const temperatureSetting = new Setting(this.contentEl)
 			.setName("Temperature")

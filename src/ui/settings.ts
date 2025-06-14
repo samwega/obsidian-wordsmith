@@ -4,10 +4,13 @@ import { DEFAULT_SETTINGS, TextTransformerPrompt } from "../lib/settings-data";
 import type TextTransformer from "../main";
 import { CustomProviderModal } from "./modals/CustomProviderModal";
 
+type SettingsTab = "prompts" | "providers" | "params";
+
 export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
 	private addPromptButtonSettingInstance: Setting | null = null;
+	private activeTab: SettingsTab = "prompts"; // Default to prompts as requested
 
 	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
@@ -18,14 +21,52 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		// Reset these on each display call to ensure clean state
 		this.addPromptForm = null;
 		this.addPromptButtonSettingInstance = null;
 
 		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
-		this._renderProviderManagementSection(containerEl);
-		this._renderApiModelSection(containerEl);
-		this._renderPromptManagementSection(containerEl);
+		this._renderTabs(containerEl);
+
+		const tabContentEl = containerEl.createDiv({ cls: "tt-settings-tab-content" });
+
+		switch (this.activeTab) {
+			case "prompts":
+				this._renderPromptManagementSection(tabContentEl);
+				break;
+			case "providers":
+				this._renderProviderManagementSection(tabContentEl);
+				break;
+			case "params":
+				this._renderApiModelSection(tabContentEl);
+				break;
+		}
+	}
+
+	private _renderTabs(containerEl: HTMLElement): void {
+		const tabsContainer = containerEl.createDiv({ cls: "tt-settings-tabs-container" });
+
+		const renderTabButton = (name: string, tabId: SettingsTab, container: HTMLElement): void => {
+			const button = container.createEl("button", {
+				text: name,
+				cls: "tt-settings-tab-button",
+			});
+
+			if (this.activeTab === tabId) {
+				button.addClass("is-active");
+			}
+
+			button.addEventListener("click", () => {
+				this.activeTab = tabId;
+				this.display(); // Re-render the whole settings tab
+			});
+		};
+
+		// Render buttons in the requested order
+		renderTabButton("Prompt Management", "prompts", tabsContainer);
+		renderTabButton("Model Providers", "providers", tabsContainer);
+		renderTabButton("LLM Parameters", "params", tabsContainer);
 	}
 
 	private _renderProviderManagementSection(containerEl: HTMLElement): void {
@@ -36,9 +77,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		);
 
 		this.plugin.settings.customProviders.forEach((provider) => {
-			const providerSetting = new Setting(containerEl)
+			new Setting(containerEl)
 				.setName(provider.name)
-				.setDesc(provider.isEnabled ? "Enabled" : "Disabled")
 				.addToggle((toggle) => {
 					toggle.setValue(provider.isEnabled).onChange(async (value) => {
 						provider.isEnabled = value;
@@ -80,10 +120,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 							this.display();
 						});
 				});
-
-			if (!provider.isEnabled) {
-				providerSetting.settingEl.addClass("tt-provider-disabled");
-			}
 		});
 
 		new Setting(containerEl).addButton((button) =>
@@ -103,7 +139,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Temperature")
 			.setDesc(
-				"Controls the creativity of the AI. Lower values (~0.2) make the output more deterministic and focused. Higher values (~1.2+) increase randomness and exploration. The default is 1.0.",
+				"Controls the creativity of the AI. Lower values make the output more deterministic and focused. Higher values increase randomness and exploration. High values may be prone to errors. Most models use a range of 0 to 2,, others 0 to 1 or something different. Defaults vary by model, most default to 1, others 0.7, 0.6, 0.3, even 0. Unfortunately, the API call to update models does not include any temperature information - I have included the ranges for 3 dozen popular models, so the range and default value will automatically change based on the model you select. However, for most other models, the temperature resets to a sane 0.8 and a range of 0 to 2 which should be ok for most models, but you might need to check the documentation for the model you are using to determine the range and default value.",
 			)
 			.addSlider((slider) => {
 				slider
