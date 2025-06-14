@@ -41,6 +41,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			case "params":
 				this._renderApiModelSection(tabContentEl);
 				break;
+			default:
+				// Fallback to prompts tab if activeTab is somehow invalid
+				this._renderPromptManagementSection(tabContentEl);
+				break;
 		}
 	}
 

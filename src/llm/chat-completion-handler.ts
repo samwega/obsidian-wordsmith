@@ -32,7 +32,7 @@ export async function chatCompletionRequest(
 
 	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
 
-	const messages = [];
+	const messages: Array<{ role: string; content: string }> = [];
 
 	// The 'system' role is not consistently supported across all OpenAI-compatible APIs.
 	// Models from major providers (OpenAI, Anthropic, Google, Meta, Mistral, Cohere) are
