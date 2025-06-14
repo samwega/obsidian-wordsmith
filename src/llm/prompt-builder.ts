@@ -134,14 +134,11 @@ export function buildPromptComponents(
 	oldText: string,
 ): PromptComponents {
 	// --- SPECIAL CASE: Graph Generation ---
-	// Graph generation uses a highly specialized prompt structure that must not be altered by the generic logic below.
 	if (prompt.id === "graph-generation") {
 		const graphComponents = buildGraphPrompt(assembledContext);
-		// The `prompt.text` for a graph prompt already contains the detailed `userContent`.
-		// We return the components from `buildGraphPrompt` directly to ensure the correct system instructions and context are used.
 		return {
 			systemInstructions: graphComponents.systemInstructions,
-			userContent: prompt.text, // This is `graphComponents.userContent` as set in graphGenerator.ts
+			userContent: prompt.text,
 			contextBlock: graphComponents.contextBlock,
 		};
 	}
@@ -149,45 +146,60 @@ export function buildPromptComponents(
 	// --- GENERIC TASK PROMPT BUILDING ---
 
 	// --- 1. Build System Instructions ---
-	const systemInstructionBuilder: string[] = [
-		"--- BEGIN SYSTEM INSTRUCTIONS ---",
-		"You are an AI assistant embedded in Obsidian helping with text tasks. Your primary instruction is to fulfill the user's ad-hoc prompt or transformation instruction.",
-	];
+	const systemInstructionBuilder: string[] = [];
+	systemInstructionBuilder.push(
+		"# CORE IDENTITY & DIRECTIVE: Your core identity is an AI assistant integrated into the Obsidian application. Your core directive is to follow all instructions precisely to help the user. For each specific task, you MUST adopt the task-oriented role defined in the user's prompt (e.g., '[AI ROLE]: Professional Editor').",
+	);
 
+	const contextRules: string[] = [];
 	if (assembledContext?.customContext) {
-		systemInstructionBuilder.push(
-			"You will be given 'Custom Context'. Any guidance, instructions, rules, or requests found within this block MUST be strictly obeyed.",
+		contextRules.push(
+			"1. You will be given 'Custom Context'. Any guidance, instructions, or rules in this block MUST be strictly obeyed above all else.",
 		);
 	}
 	if (assembledContext?.referencedNotesContent) {
-		systemInstructionBuilder.push(
-			"You may also be given 'Referenced Notes'. Treat this as supplementary background information unless instructed otherwise in the 'Custom Context'.",
+		contextRules.push(
+			"2. You may see 'Referenced Notes'. Treat this as supplementary background information unless the 'Custom Context' says otherwise.",
 		);
 	}
 	if (assembledContext?.editorContextContent) {
-		systemInstructionBuilder.push(
-			"Additionally, you will see 'Current Note Context' which represents content from the current editor.",
+		contextRules.push(
+			`3. You may see 'Current Note Context'. This is content from the note the user is currently editing.`,
 		);
 		if (
 			isGenerationTask &&
-			assembledContext.editorContextContent.includes(GENERATION_TARGET_CURSOR_MARKER)
+			assembledContext.editorContextContent?.includes(GENERATION_TARGET_CURSOR_MARKER)
 		) {
-			systemInstructionBuilder.push(
-				`This 'Current Note Context' contains a marker '${GENERATION_TARGET_CURSOR_MARKER}'. This marker indicates the precise spot where the new text should be generated or inserted.`,
+			contextRules.push(
+				`   - The marker '${GENERATION_TARGET_CURSOR_MARKER}' indicates the current cursor position within that context, it is where your output will be inserted.`,
 			);
 		}
 	}
 
+	if (contextRules.length > 0) {
+		systemInstructionBuilder.push("\n# CONTEXT RULES");
+		systemInstructionBuilder.push(...contextRules);
+	}
+
 	if (isGenerationTask) {
+		systemInstructionBuilder.push("\n# TASK: Fulfill the user's generation request.");
+		systemInstructionBuilder.push("\n# OUTPUT FORMAT");
+		systemInstructionBuilder.push("1. Output the generated text ONLY.");
+		systemInstructionBuilder.push("2. Do NOT repeat the user's prompt or instructions.");
 		systemInstructionBuilder.push(
-			"Output the generated text ONLY, without any preambles, tags or explanatory sentences.",
+			"3. Do NOT include any preambles, apologies, or explanatory sentences.",
 		);
 	} else {
+		systemInstructionBuilder.push("\n# TASK: Fulfill the user's transformation instruction.");
+		systemInstructionBuilder.push("\n# OUTPUT FORMAT");
 		systemInstructionBuilder.push(
-			"Apply instructions ONLY to the 'Text to Transform' (which will be provided as the user message). Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context). Output ONLY the transformed text.",
+			"1. Apply instructions ONLY to the 'Text to Transform', which will be in the user message.",
 		);
+		systemInstructionBuilder.push(
+			"2. Do not comment on or alter any provided context blocks (Custom Context, Referenced Notes, Current Note Context).",
+		);
+		systemInstructionBuilder.push("3. Output ONLY the transformed text.");
 	}
-	systemInstructionBuilder.push("--- END SYSTEM INSTRUCTIONS ---");
 	const systemInstructions = systemInstructionBuilder.join("\n");
 
 	// --- 2. Build User Content ---
