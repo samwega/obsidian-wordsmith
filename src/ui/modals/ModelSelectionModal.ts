@@ -14,7 +14,7 @@ export class ModelSelectionModal extends Modal {
 	private modelListContainer!: HTMLDivElement;
 	private providerDropdown!: HTMLSelectElement;
 	private searchInput!: TextComponent;
-	private searchDebounceTimer: number | null = null; // --- FIX: Add property for debounce timer ---
+	private searchDebounceTimer: number | null = null;
 
 	constructor(app: App, plugin: TextTransformer) {
 		super(app);
@@ -60,14 +60,13 @@ export class ModelSelectionModal extends Modal {
 		const searchSetting = new Setting(filterGrid).setName("Search").addText((text) => {
 			this.searchInput = text;
 			text.setPlaceholder("e.g., Llama, GPT, OpenRouter...").onChange((value) => {
-				// --- FIX: Implement debounce logic for search input ---
 				if (this.searchDebounceTimer) {
 					clearTimeout(this.searchDebounceTimer);
 				}
 				this.searchDebounceTimer = window.setTimeout(() => {
 					this.searchQuery = value.toLowerCase();
 					this.applyFiltersAndRender();
-				}, 200); // 250ms delay is a good balance between responsiveness and performance
+				}, 200); // 200ms delay is a good balance between responsiveness and performance
 			});
 			text.inputEl.addClass("tt-model-search-input");
 		});
@@ -92,7 +91,6 @@ export class ModelSelectionModal extends Modal {
 					this.allModels = this.plugin.favoritesService.enrichModelsWithFavorites(
 						this.allModels,
 					);
-					// Repopulate the filter dropdown with the new provider list.
 					this.populateProviderFilter();
 					this.applyFiltersAndRender();
 					notice.setMessage("✅ Models refreshed.");
@@ -106,16 +104,25 @@ export class ModelSelectionModal extends Modal {
 	}
 
 	private populateProviderFilter(): void {
-		const currentVal = this.providerDropdown.value;
-		const providers = ["All", ...new Set(this.allModels.map((m) => m.provider))];
-		this.providerDropdown.innerHTML = "";
-		providers.forEach((provider) => {
-			const option = this.providerDropdown.createEl("option", { text: provider });
-			option.value = provider;
-			this.providerDropdown.appendChild(option);
-		});
-		if (providers.includes(currentVal)) {
-			this.providerDropdown.value = currentVal;
+		// --- FIX: Temporarily disable the onchange handler to prevent loops ---
+		const originalOnChange = this.providerDropdown.onchange;
+		this.providerDropdown.onchange = null;
+
+		try {
+			const currentVal = this.providerDropdown.value;
+			const providers = ["All", ...new Set(this.allModels.map((m) => m.provider))];
+			this.providerDropdown.innerHTML = "";
+			providers.forEach((provider) => {
+				const option = this.providerDropdown.createEl("option", { text: provider });
+				option.value = provider;
+				this.providerDropdown.appendChild(option);
+			});
+			if (providers.includes(currentVal)) {
+				this.providerDropdown.value = currentVal;
+			}
+		} finally {
+			// --- FIX: Restore the onchange handler ---
+			this.providerDropdown.onchange = originalOnChange;
 		}
 	}
 
@@ -171,16 +178,6 @@ export class ModelSelectionModal extends Modal {
 				modelEl.title = model.description;
 			}
 
-			infoEl.addEventListener("click", async () => {
-				this.plugin.settings.selectedModelId = model.id;
-				await this.plugin.updateTemperatureForModel(model.id);
-
-				if (!this.plugin.favoritesService.isFavorite(model.id)) {
-					await this.plugin.favoritesService.addFavorite(model);
-				}
-				this.close();
-			});
-
 			const actionsEl = modelEl.createDiv({ cls: "tt-model-actions" });
 			const providerInfo = getProviderInfo(model.provider);
 			actionsEl.createDiv({
@@ -192,11 +189,13 @@ export class ModelSelectionModal extends Modal {
 				cls: "tt-model-favorite-button-container",
 			});
 			new Setting(favButtonContainer)
-				.addExtraButton((button) => {
+				.addButton((button) => {
 					button
 						.setIcon("star")
 						.setTooltip(model.isFavorite ? "Remove from favorites" : "Add to favorites")
-						.onClick(async () => {
+						.onClick(async (evt: MouseEvent) => {
+							evt.stopPropagation();
+
 							if (model.isFavorite) {
 								await this.plugin.favoritesService.removeFavorite(model.id);
 							} else {
@@ -216,10 +215,19 @@ export class ModelSelectionModal extends Modal {
 						});
 				})
 				.settingEl.removeClass("setting-item");
+
+			modelEl.addEventListener("click", async () => {
+				this.plugin.settings.selectedModelId = model.id;
+				await this.plugin.updateTemperatureForModel(model.id);
+
+				if (!this.plugin.favoritesService.isFavorite(model.id)) {
+					await this.plugin.favoritesService.addFavorite(model);
+				}
+				this.close();
+			});
 		}
 	}
 
-	// --- FIX: Add onClose to clear any pending debounced search ---
 	override onClose(): void {
 		super.onClose();
 		if (this.searchDebounceTimer) {
