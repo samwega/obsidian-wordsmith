@@ -53,69 +53,67 @@ export interface ModelTemperatureHint {
 export const UNKNOWN_MODEL_HINT: ModelTemperatureHint = {
 	min: 0.0,
 	max: 2.0,
-	default: 0.8,
+	default: 0.7,
 };
 
 export const KNOWN_MODEL_HINTS: Record<string, ModelTemperatureHint> = {
-	// OpenAI (Direct)
-	"gpt-4.1": { min: 0.0, max: 2.0, default: 1.0 },
-	"gpt-4o": { min: 0.0, max: 2.0, default: 1.0 },
-	"gpt-4.1-mini": { min: 0.0, max: 2.0, default: 1.0 },
-	"gpt-4.1-nano": { min: 0.0, max: 2.0, default: 1.0 },
-	"o4-mini-2025-04-16": { min: 0.0, max: 2.0, default: 1.0 },
-	"o3-2025-04-16": { min: 0.0, max: 2.0, default: 0.7 },
-	"gpt-4.5-preview-2025-02-27": { min: 0.0, max: 2.0, default: 0.7 },
+	// --- NOTE: Keys are substrings. The system finds the LONGEST matching key for a given model ID. ---
+	// --- This allows for broad matching (e.g., 'claude-3.5' matches 'anthropic/claude-3.5-sonnet'). ---
 
-	// Gemini (Direct)
-	"gemini-2.5-flash-preview-05-20": { min: 0.0, max: 2.0, default: 1.0 },
-	"gemini-2.5-pro-preview-06-05": { min: 0.0, max: 2.0, default: 1.0 },
-	"gemini-2.0-flash-lite-001": { min: 0.0, max: 2.0, default: 1.0 },
-	"gemma-3-27b-it": { min: 0.0, max: 2.0, default: 1.0 },
+	// Anthropic
+	claude: { min: 0.0, max: 1.0, default: 1.0 },
+	"claude-sonnet-4": { min: 0.0, max: 1.0, default: 0.8 },
+	"claude-opus": { min: 0.0, max: 1.0, default: 0.8 },
 
-	// OpenRouter - OpenAI
-	"openai/gpt-4.1": { min: 0.0, max: 2.0, default: 1.0 },
-	"openai/gpt-4o-2024-11-20": { min: 0.0, max: 2.0, default: 1.0 },
-	"openai/gpt-4.1-mini": { min: 0.0, max: 2.0, default: 1.0 },
-	"openai/gpt-4.1-nano": { min: 0.0, max: 2.0, default: 1.0 },
-	"openai/o4-mini": { min: 0.0, max: 2.0, default: 1.0 },
+	// Google
+	gemini: { min: 0.0, max: 2.0, default: 0.7 },
+	gemma: { min: 0.0, max: 2.0, default: 1.0 },
 
-	// OpenRouter - Google
-	"google/gemini-2.5-flash-preview-05-20": { min: 0.0, max: 2.0, default: 1.0 },
-	"google/gemini-2.5-pro-preview-06-05": { min: 0.0, max: 2.0, default: 1.0 },
-	"google/gemini-2.0-flash-lite-001": { min: 0.0, max: 2.0, default: 1.0 },
-	"google/gemma-3-27b-it:free": { min: 0.0, max: 2.0, default: 1.0 },
+	// OpenAI
+	"gpt-4": { min: 0.0, max: 2.0, default: 0.7 },
+	"gpt-4o": { min: 0.0, max: 2.0, default: 0.8 },
+	"o4-mini": { min: 0.0, max: 2.0, default: 0.7 },
+	o3: { min: 0.0, max: 2.0, default: 0.7 },
 
-	// OpenRouter - Anthropic
-	"anthropic/claude-3.5-sonnet": { min: 0.0, max: 1.0, default: 0.7 },
-	"anthropic/claude-3.7-sonnet": { min: 0.0, max: 1.0, default: 0.7 },
-	"anthropic/claude-sonnet-4": { min: 0.0, max: 1.0, default: 0.7 },
-	"anthropic/claude-opus-4": { min: 0.0, max: 1.0, default: 0.7 },
+	// Meta
+	"llama-4-maverick": { min: 0.0, max: 2.0, default: 0.65 },
+	"llama-4-scout": { min: 0.0, max: 2.0, default: 0.7 },
+	"llama-3.3-70b-instruct": { min: 0.0, max: 5.0, default: 0.7 },
+	"llama-3.1-405b-instruct": { min: 0.0, max: 2.0, default: 0.9 },
 
-	// OpenRouter - Others
-	"x-ai/grok-3-beta": { min: 0.0, max: 2.0, default: 0.7 },
-	"deepseek/deepseek-chat-v3-0324": { min: 0.0, max: 2.0, default: 1.0 },
-	"deepseek/deepseek-r1-0528": { min: 0.0, max: 2.0, default: 1.0 },
-	"qwen/qwen3-235b-a22b": { min: 0.0, max: 2.0, default: 0.7 },
-	"qwen/qwen3-32b": { min: 0.0, max: 2.0, default: 0.7 },
-	"meta-llama/llama-4-maverick": { min: 0.0, max: 1.0, default: 0.6 },
-	"meta-llama/llama-4-scout": { min: 0.0, max: 1.0, default: 0.6 },
-	"meta-llama/llama-3.3-70b-instruct": { min: 0.0, max: 5.0, default: 0.7 },
-	"meta-llama/llama-3.1-405b-instruct": { min: 0.0, max: 1.0, default: 0.7 },
-	"nvidia/llama-3.1-nemotron-ultra-253b-v1": { min: 0.0, max: 1.0, default: 0.0 },
-	"nousresearch/hermes-3-llama-3.1-70b": { min: 0.0, max: 1.0, default: 0.7 },
-	"nousresearch/hermes-3-llama-3.1-405b": { min: 0.0, max: 1.0, default: 0.7 },
-	"anthracite-org/magnum-v4-72b": { min: 0.0, max: 2.0, default: 0.7 },
-	"thedrummer/skyfall-36b-v2": { min: 0.0, max: 2.0, default: 0.7 },
-	"thedrummer/valkyrie-49b-v1": { min: 0.0, max: 2.0, default: 0.7 },
-	"thedrummer/anubis-pro-105b-v1": { min: 0.0, max: 2.0, default: 0.7 },
-	"neversleep/llama-3.1-lumimaid-70b": { min: 0.0, max: 2.0, default: 0.7 },
-	"cohere/command-a": { min: 0.0, max: 1.0, default: 0.3 },
-	"mistralai/mistral-large-2411": { min: 0.0, max: 2.0, default: 0.7 },
-	"alpindale/goliath-120b": { min: 0.0, max: 2.0, default: 0.7 },
+	// Mistral
+	"mistral-large-2411": { min: 0.0, max: 2.0, default: 0.85 },
+	"mistral-large-2407": { min: 0.0, max: 2.0, default: 0.35 },
+	magistral: { min: 0.0, max: 2.0, default: 0.7 },
 
-	// Local Ollama
-	llama3: { min: 0.0, max: 2.0, default: 0.8 },
-	mistral: { min: 0.0, max: 2.0, default: 0.8 },
+	// Cohere
+	"command-a": { min: 0.0, max: 2.0, default: 0.7 },
+	"command-r": { min: 0.0, max: 2.0, default: 0.85 },
+
+	// Other popular models by keyword
+	grok: { min: 0.0, max: 2.0, default: 1.0 },
+	"deepseek-chat-v3": { min: 0.0, max: 2.0, default: 0.3 },
+	"deepseek-r1": { min: 0.0, max: 2.0, default: 0.6 },
+	qwen: { min: 0.0, max: 2.0, default: 0.7 },
+	"eva-qwen-2.5-72b": { min: 0.0, max: 2.0, default: 0.8 },
+	"eva-llama-3.33-70b": { min: 0.0, max: 2.0, default: 1.0 },
+	"3.1-nemotron-70b": { min: 0.0, max: 2.0, default: 0.8 }, // `nemotron-ultra` will match this
+	"3.1-nemotron-ultra": { min: 0.0, max: 2.0, default: 0.6 },
+	"3.3-nemotron-super": { min: 0.0, max: 2.0, default: 0.6 },
+	"hermes-3-llama-3.1-70b": { min: 0.0, max: 2.0, default: 0.9 },
+	"hermes-3-llama-3.1-405b": { min: 0.0, max: 2.0, default: 0.8 },
+	"magnum-v4-72b": { min: 0.0, max: 2.0, default: 0.9 },
+	skyfall: { min: 0.0, max: 2.0, default: 0.8 },
+	valkyrie: { min: 0.0, max: 2.0, default: 0.7 },
+	anubis: { min: 0.0, max: 2.0, default: 0.75 },
+	"llama-3.1-lumimaid": { min: 0.0, max: 2.0, default: 0.85 },
+	"llama-3-lumimaid-70b": { min: 0.0, max: 2.0, default: 1.05 },
+	goliath: { min: 0.0, max: 2.0, default: 0.85 },
+	"sorcererlm-8x22b": { min: 0.0, max: 2.0, default: 1.0 },
+	"wizardlm-2-8x22b": { min: 0.0, max: 2.0, default: 1.0 },
+	"mercury-coder-small-beta": { min: 0.0, max: 2.0, default: 0.7 },
+	euryale: { min: 0.0, max: 2.0, default: 1.1 },
+	"deephermes-3-mistral-24b": { min: 0.0, max: 2.0, default: 0.25 },
 };
 
 // --- Core Settings Structure ---

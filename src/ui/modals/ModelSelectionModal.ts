@@ -1,5 +1,5 @@
 // src/ui/modals/ModelSelectionModal.ts
-import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
+import { App, ButtonComponent, Modal, Notice, Setting, TextComponent } from "obsidian";
 import { getProviderInfo } from "../../lib/provider-utils";
 import type { Model } from "../../lib/settings-data";
 import type TextTransformer from "../../main";
@@ -13,6 +13,8 @@ export class ModelSelectionModal extends Modal {
 
 	private modelListContainer!: HTMLDivElement;
 	private providerDropdown!: HTMLSelectElement;
+	private searchInput!: TextComponent;
+	private searchDebounceTimer: number | null = null; // --- FIX: Add property for debounce timer ---
 
 	constructor(app: App, plugin: TextTransformer) {
 		super(app);
@@ -29,12 +31,18 @@ export class ModelSelectionModal extends Modal {
 		this.renderFilters(contentEl);
 		this.modelListContainer = contentEl.createDiv({ cls: "tt-model-list-container" });
 
+		// Use a timeout to ensure the element is fully rendered and focusable.
+		setTimeout(() => {
+			this.searchInput?.inputEl.focus();
+		}, 0);
+
 		const loadingEl = this.modelListContainer.createEl("p", { text: "Fetching models..." });
 
 		try {
 			this.allModels = await this.plugin.modelService.getModels();
 			this.allModels = this.plugin.favoritesService.enrichModelsWithFavorites(this.allModels);
-			this.applyFiltersAndRender();
+			this.populateProviderFilter(); // Populate the dropdown once with all providers.
+			this.applyFiltersAndRender(); // Then, render the list based on default filters.
 		} catch (error) {
 			console.error("[WordSmith] Error fetching models for modal:", error);
 			this.modelListContainer.setText("Failed to load models. Check your provider settings.");
@@ -50,9 +58,16 @@ export class ModelSelectionModal extends Modal {
 		const providerFilterSetting = new Setting(filterGrid).setName("Filter by Provider");
 
 		const searchSetting = new Setting(filterGrid).setName("Search").addText((text) => {
+			this.searchInput = text;
 			text.setPlaceholder("e.g., Llama, GPT, OpenRouter...").onChange((value) => {
-				this.searchQuery = value.toLowerCase();
-				this.applyFiltersAndRender();
+				// --- FIX: Implement debounce logic for search input ---
+				if (this.searchDebounceTimer) {
+					clearTimeout(this.searchDebounceTimer);
+				}
+				this.searchDebounceTimer = window.setTimeout(() => {
+					this.searchQuery = value.toLowerCase();
+					this.applyFiltersAndRender();
+				}, 200); // 250ms delay is a good balance between responsiveness and performance
 			});
 			text.inputEl.addClass("tt-model-search-input");
 		});
@@ -77,6 +92,8 @@ export class ModelSelectionModal extends Modal {
 					this.allModels = this.plugin.favoritesService.enrichModelsWithFavorites(
 						this.allModels,
 					);
+					// Repopulate the filter dropdown with the new provider list.
+					this.populateProviderFilter();
 					this.applyFiltersAndRender();
 					notice.setMessage("✅ Models refreshed.");
 					setTimeout(() => notice.hide(), 2000);
@@ -128,7 +145,6 @@ export class ModelSelectionModal extends Modal {
 		});
 
 		this.filteredModels = models;
-		this.populateProviderFilter();
 		this.renderModelList();
 	}
 
@@ -152,7 +168,6 @@ export class ModelSelectionModal extends Modal {
 					text: model.description,
 					cls: "tt-model-description",
 				});
-				// Set hover tooltip on the entire list item for better UX
 				modelEl.title = model.description;
 			}
 
@@ -187,14 +202,28 @@ export class ModelSelectionModal extends Modal {
 							} else {
 								await this.plugin.favoritesService.addFavorite(model);
 							}
-							const modelInList = this.allModels.find((m) => m.id === model.id);
-							if (modelInList) {
-								modelInList.isFavorite = !modelInList.isFavorite;
+
+							const modelInAllModels = this.allModels.find((m) => m.id === model.id);
+							if (modelInAllModels) {
+								modelInAllModels.isFavorite = !modelInAllModels.isFavorite;
 							}
-							this.applyFiltersAndRender();
+
+							model.isFavorite = !model.isFavorite;
+							modelEl.classList.toggle("is-favorite", model.isFavorite);
+							button.setTooltip(
+								model.isFavorite ? "Remove from favorites" : "Add to favorites",
+							);
 						});
 				})
-				.settingEl.removeClass("setting-item"); // Remove default Setting styling
+				.settingEl.removeClass("setting-item");
+		}
+	}
+
+	// --- FIX: Add onClose to clear any pending debounced search ---
+	override onClose(): void {
+		super.onClose();
+		if (this.searchDebounceTimer) {
+			clearTimeout(this.searchDebounceTimer);
 		}
 	}
 }

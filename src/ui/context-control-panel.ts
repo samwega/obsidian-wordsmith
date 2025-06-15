@@ -154,9 +154,11 @@ export class ContextControlPanel extends ItemView {
 		let hint: ModelTemperatureHint | undefined;
 		const currentModelId = this.plugin.settings.selectedModelId;
 		if (currentModelId) {
+			// --- FIX: Simplify lookup logic ---
+			// The `apiId` is the part of the canonical ID after "//".
 			const apiId = currentModelId.split("//")[1];
-			// Check by API ID (e.g., 'gpt-4o') or by full local ID (e.g., 'llama3')
-			hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[currentModelId];
+			// Check for a hint using only the apiId.
+			hint = KNOWN_MODEL_HINTS[apiId];
 		}
 
 		// Use the explicit default hint if no specific hint is found.
@@ -169,7 +171,7 @@ export class ContextControlPanel extends ItemView {
 			.setName("Temperature")
 			.addSlider((slider) => {
 				slider
-					.setLimits(minTemp, maxTemp, 0.1)
+					.setLimits(minTemp, maxTemp, 0.05)
 					.setValue(this.plugin.settings.temperature)
 					.setDynamicTooltip()
 					.onChange(async (value) => {
