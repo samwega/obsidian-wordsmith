@@ -15,6 +15,7 @@ export class ModelSelectionModal extends Modal {
 	private providerDropdown!: HTMLSelectElement;
 	private searchInput!: TextComponent;
 	private searchDebounceTimer: number | null = null;
+	private isPopulatingFilter = false; // --- FIX: Use a guard flag to prevent event loops ---
 
 	constructor(app: App, plugin: TextTransformer) {
 		super(app);
@@ -75,6 +76,8 @@ export class ModelSelectionModal extends Modal {
 		this.providerDropdown = providerFilterSetting.controlEl.createEl("select");
 		this.providerDropdown.addClass("dropdown");
 		this.providerDropdown.onchange = (e: Event): void => {
+			// --- FIX: Check the guard flag before executing ---
+			if (this.isPopulatingFilter) return;
 			this.selectedProvider = (e.target as HTMLSelectElement).value;
 			this.applyFiltersAndRender();
 		};
@@ -104,10 +107,8 @@ export class ModelSelectionModal extends Modal {
 	}
 
 	private populateProviderFilter(): void {
-		// --- FIX: Temporarily disable the onchange handler to prevent loops ---
-		const originalOnChange = this.providerDropdown.onchange;
-		this.providerDropdown.onchange = null;
-
+		// --- FIX: Set the guard flag to prevent the onchange handler from firing ---
+		this.isPopulatingFilter = true;
 		try {
 			const currentVal = this.providerDropdown.value;
 			const providers = ["All", ...new Set(this.allModels.map((m) => m.provider))];
@@ -118,11 +119,12 @@ export class ModelSelectionModal extends Modal {
 				this.providerDropdown.appendChild(option);
 			});
 			if (providers.includes(currentVal)) {
+				// This programmatic change will no longer trigger the event handler
 				this.providerDropdown.value = currentVal;
 			}
 		} finally {
-			// --- FIX: Restore the onchange handler ---
-			this.providerDropdown.onchange = originalOnChange;
+			// --- FIX: Unset the guard flag after the operation is complete ---
+			this.isPopulatingFilter = false;
 		}
 	}
 
@@ -196,22 +198,23 @@ export class ModelSelectionModal extends Modal {
 						.onClick(async (evt: MouseEvent) => {
 							evt.stopPropagation();
 
+							// --- FIX: Update data and re-render to reflect changes immediately ---
 							if (model.isFavorite) {
 								await this.plugin.favoritesService.removeFavorite(model.id);
 							} else {
 								await this.plugin.favoritesService.addFavorite(model);
 							}
 
+							// Find the model in the master list and update its favorite status.
+							// This is the source of truth for the next render.
 							const modelInAllModels = this.allModels.find((m) => m.id === model.id);
 							if (modelInAllModels) {
 								modelInAllModels.isFavorite = !modelInAllModels.isFavorite;
 							}
 
-							model.isFavorite = !model.isFavorite;
-							modelEl.classList.toggle("is-favorite", model.isFavorite);
-							button.setTooltip(
-								model.isFavorite ? "Remove from favorites" : "Add to favorites",
-							);
+							// Re-run the filter/sort/render pipeline to update the entire view,
+							// which correctly handles re-ordering of favorited items.
+							this.applyFiltersAndRender();
 						});
 				})
 				.settingEl.removeClass("setting-item");
