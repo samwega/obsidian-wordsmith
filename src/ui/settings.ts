@@ -9,8 +9,9 @@ type SettingsTab = "prompts" | "providers" | "params";
 export class TextTransformerSettingsMenu extends PluginSettingTab {
 	plugin: TextTransformer;
 	private addPromptForm: HTMLDivElement | null = null;
-	private addPromptButtonSettingInstance: Setting | null = null;
-	private activeTab: SettingsTab = "prompts"; // Default to prompts as requested
+	private addTransformationPromptButton: Setting | null = null;
+	private addGenerationPromptButton: Setting | null = null;
+	private activeTab: SettingsTab = "prompts";
 
 	constructor(plugin: TextTransformer) {
 		super(plugin.app, plugin);
@@ -21,9 +22,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// Reset these on each display call to ensure clean state
+		// Reset state on each display call to ensure clean rendering
 		this.addPromptForm = null;
-		this.addPromptButtonSettingInstance = null;
+		this.addTransformationPromptButton = null;
+		this.addGenerationPromptButton = null;
 
 		containerEl.createEl("h2", { text: "WordSmith Settings" });
 
@@ -42,7 +44,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				this._renderApiModelSection(tabContentEl);
 				break;
 			default:
-				// Fallback to prompts tab if activeTab is somehow invalid
 				this._renderPromptManagementSection(tabContentEl);
 				break;
 		}
@@ -63,11 +64,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 			button.addEventListener("click", () => {
 				this.activeTab = tabId;
-				this.display(); // Re-render the whole settings tab
+				this.display();
 			});
 		};
 
-		// Render buttons in the requested order
 		renderTabButton("Prompt Management", "prompts", tabsContainer);
 		renderTabButton("Model Providers", "providers", tabsContainer);
 		renderTabButton("LLM Parameters", "params", tabsContainer);
@@ -77,7 +77,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		containerEl.createEl("h3", { text: "Model Providers" });
 		const desc = containerEl.createEl("p", { cls: "setting-item-description" });
 		desc.setText(
-			"Connect to any OpenAI-compatible API endpoint, including local servers like Ollama or LM Studio. Use the 'Quick Setup' buttons in the 'Add Provider' modal for common services.",
+			"Connect to any API endpoint, including local servers like Ollama or LM Studio.",
 		);
 
 		this.plugin.settings.customProviders.forEach((provider) => {
@@ -230,7 +230,11 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			const newText = textInput.value.trim();
 			if (!newName || !newText) return;
 
-			const existingPrompt = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
+			let existingPrompt = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
+			if (!existingPrompt) {
+				existingPrompt = this.plugin.settings.generationPrompts.find((p) => p.id === prompt.id);
+			}
+
 			if (existingPrompt) {
 				existingPrompt.name = newName;
 				existingPrompt.text = newText;
@@ -249,7 +253,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		return form;
 	}
 
-	private _createAddPromptForm(): HTMLDivElement {
+	private _createAddPromptForm(targetArray: "prompts" | "generationPrompts"): HTMLDivElement {
 		const form = document.createElement("div");
 		form.className = "add-prompt-form tt-add-prompt-form";
 
@@ -275,14 +279,21 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			const text = textInput.value.trim();
 			if (!name || !text) return;
 
-			this.plugin.settings.prompts.push({
+			const newPrompt: TextTransformerPrompt = {
 				id: `custom-${Date.now()}`,
 				name,
 				text,
 				isDefault: false,
 				enabled: true,
 				showInPromptPalette: true,
-			});
+			};
+
+			if (targetArray === "generationPrompts") {
+				this.plugin.settings.generationPrompts.push(newPrompt);
+			} else {
+				this.plugin.settings.prompts.push(newPrompt);
+			}
+
 			await this.plugin.saveSettings();
 			this._closePromptForm();
 			this.display();
@@ -300,7 +311,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	private _closePromptForm(): void {
 		this.addPromptForm?.remove();
 		this.addPromptForm = null;
-		this.addPromptButtonSettingInstance?.settingEl.show();
+		// Show both buttons again, as we don't know which one was hidden.
+		this.addTransformationPromptButton?.settingEl.show();
+		this.addGenerationPromptButton?.settingEl.show();
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
@@ -309,12 +322,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			cls: "prompt-management-section-container",
 		});
 
+		// --- Transformation Prompts ---
 		const defaultPrompts = this.plugin.settings.prompts.filter((p) => p.isDefault);
 		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
 
 		if (defaultPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", {
-				text: "Preset Prompts",
+				text: "Preset Transformation Prompts)",
 				cls: "tt-prompt-section-title",
 			});
 			const defaultPromptsGrid = promptManagementWrapper.createEl("div", {
@@ -328,7 +342,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		if (customPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 			promptManagementWrapper.createEl("div", {
-				text: "User Prompts",
+				text: "User Transformation Prompts)",
 				cls: "tt-prompt-section-title",
 			});
 			const customPromptsGrid = promptManagementWrapper.createEl("div", {
@@ -339,39 +353,52 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			);
 		}
 
-		if (this.addPromptForm) {
-			const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
-			if (addBtnContainer) {
-				promptManagementWrapper.insertBefore(this.addPromptForm, addBtnContainer);
-			} else {
-				promptManagementWrapper.appendChild(this.addPromptForm);
-			}
-		}
-
-		this.addPromptButtonSettingInstance = new Setting(promptManagementWrapper)
-			.setName("Add New Prompt")
-			.setDesc("Create a new custom prompt for your text transformations.")
+		this.addTransformationPromptButton = new Setting(promptManagementWrapper)
+			.setName("Add New Transformation Prompt")
+			.setDesc("Create a new custom prompt for transforming selected text.")
 			.addButton((button) => {
 				button.setButtonText("Add New Prompt").onClick(() => {
 					if (this.addPromptForm) this._closePromptForm();
-
-					this.addPromptForm = this._createAddPromptForm();
-					const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
-					if (addBtnContainer) {
-						addBtnContainer.insertAdjacentElement("beforebegin", this.addPromptForm);
-						addBtnContainer.hide();
-					} else {
-						promptManagementWrapper.appendChild(this.addPromptForm);
-					}
+					this.addPromptForm = this._createAddPromptForm("prompts");
+					this.addTransformationPromptButton?.settingEl.insertAdjacentElement(
+						"beforebegin",
+						this.addPromptForm,
+					);
+					this.addTransformationPromptButton?.settingEl.hide();
 				});
 			});
-		this.addPromptButtonSettingInstance.settingEl.classList.add("tt-add-prompt-button-container");
+		this.addTransformationPromptButton.settingEl.classList.add("tt-add-prompt-button-container");
 
-		if (this.addPromptForm) {
-			this.addPromptButtonSettingInstance?.settingEl.hide();
-		} else {
-			this.addPromptButtonSettingInstance?.settingEl.show();
-		}
+		// --- Divider ---
+		promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
+
+		// --- Generation Prompts ---
+		promptManagementWrapper.createEl("div", {
+			text: "User Generation Prompts",
+			cls: "tt-prompt-section-title",
+		});
+		const generationPromptsGrid = promptManagementWrapper.createEl("div", {
+			cls: "tt-prompts-grid",
+		});
+		this.plugin.settings.generationPrompts.forEach((prompt, index) =>
+			this._renderPromptItem(prompt, generationPromptsGrid, index),
+		);
+
+		this.addGenerationPromptButton = new Setting(promptManagementWrapper)
+			.setName("Add New Generation Prompt")
+			.setDesc("Create a new reusable prompt for ad-hoc text generation.")
+			.addButton((button) => {
+				button.setButtonText("Add New Prompt").onClick(() => {
+					if (this.addPromptForm) this._closePromptForm();
+					this.addPromptForm = this._createAddPromptForm("generationPrompts");
+					this.addGenerationPromptButton?.settingEl.insertAdjacentElement(
+						"beforebegin",
+						this.addPromptForm,
+					);
+					this.addGenerationPromptButton?.settingEl.hide();
+				});
+			});
+		this.addGenerationPromptButton.settingEl.classList.add("tt-add-prompt-button-container");
 	}
 
 	private _renderPromptItem(
@@ -417,17 +444,11 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 						if (this.addPromptForm) this._closePromptForm();
 
 						this.addPromptForm = this._createEditPromptForm(prompt);
-						const addBtnContainer = this.addPromptButtonSettingInstance?.settingEl;
-
-						if (addBtnContainer) {
-							gridContainer
-								.closest(".prompt-management-section-container")
-								?.insertBefore(this.addPromptForm, addBtnContainer);
-							addBtnContainer.hide();
-						} else {
-							gridContainer
-								.closest(".prompt-management-section-container")
-								?.appendChild(this.addPromptForm);
+						const container = gridContainer.closest(".prompt-management-section-container");
+						if (container) {
+							container.appendChild(this.addPromptForm);
+							this.addTransformationPromptButton?.settingEl.hide();
+							this.addGenerationPromptButton?.settingEl.hide();
 						}
 					});
 			});
@@ -435,9 +456,22 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				btn.setIcon("trash")
 					.setTooltip("Delete")
 					.onClick(async (): Promise<void> => {
-						const realIdx = this.plugin.settings.prompts.findIndex((p) => p.id === prompt.id);
+						let wasDeleted = false;
+						let realIdx = this.plugin.settings.prompts.findIndex((p) => p.id === prompt.id);
 						if (realIdx > -1) {
 							this.plugin.settings.prompts.splice(realIdx, 1);
+							wasDeleted = true;
+						} else {
+							realIdx = this.plugin.settings.generationPrompts.findIndex(
+								(p) => p.id === prompt.id,
+							);
+							if (realIdx > -1) {
+								this.plugin.settings.generationPrompts.splice(realIdx, 1);
+								wasDeleted = true;
+							}
+						}
+
+						if (wasDeleted) {
 							await this.plugin.saveSettings();
 							this.display();
 						}
@@ -447,9 +481,14 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		setting.addToggle((tg) => {
 			tg.setValue(prompt.enabled).onChange(async (value): Promise<void> => {
-				const p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
-				if (p) p.enabled = value;
-				await this.plugin.saveSettings();
+				let p = this.plugin.settings.prompts.find((p) => p.id === prompt.id);
+				if (!p) {
+					p = this.plugin.settings.generationPrompts.find((p) => p.id === prompt.id);
+				}
+				if (p) {
+					p.enabled = value;
+					await this.plugin.saveSettings();
+				}
 			});
 		});
 	}

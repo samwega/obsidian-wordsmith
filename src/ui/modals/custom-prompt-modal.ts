@@ -1,16 +1,30 @@
 // src/ui/modals/custom-prompt-modal.ts
-import { App, ButtonComponent, Modal, Notice, TextAreaComponent, ToggleComponent } from "obsidian";
+import {
+	App,
+	ButtonComponent,
+	Modal,
+	Notice,
+	Setting,
+	TextAreaComponent,
+	ToggleComponent,
+} from "obsidian";
 import type TextTransformer from "../../main";
 
 export class CustomPromptModal extends Modal {
-	private promptText = "";
+	private promptText: string;
 	private onSubmit: (promptText: string) => void;
 	private plugin: TextTransformer;
 
-	constructor(app: App, plugin: TextTransformer, onSubmit: (promptText: string) => void) {
+	constructor(
+		app: App,
+		plugin: TextTransformer,
+		onSubmit: (promptText: string) => void,
+		initialPromptText = "",
+	) {
 		super(app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
+		this.promptText = initialPromptText;
 	}
 
 	override onOpen(): void {
@@ -45,6 +59,47 @@ export class CustomPromptModal extends Modal {
 				evt.preventDefault();
 				this.submitForm();
 			}
+		});
+
+		// --- NEW "Insert Prompt" Dropdown ---
+		const insertPromptSetting = new Setting(contentEl)
+			.setName("Modular Generation User Prompt Constructor")
+			.setDesc(
+				"You can compose your prompt out of multiple saved generation prompts, like LEGO blocks.",
+			);
+
+		insertPromptSetting.addDropdown((dropdown) => {
+			dropdown.addOption("", "--- Select prompt to insert ---"); // Placeholder
+			const savedPrompts = this.plugin.settings.generationPrompts.filter((p) => p.enabled);
+
+			savedPrompts.forEach((prompt) => {
+				dropdown.addOption(prompt.id, prompt.name);
+			});
+
+			dropdown.onChange(async (value) => {
+				if (!value) return; // Ignore selection of the placeholder
+
+				const selectedPrompt = this.plugin.settings.generationPrompts.find(
+					(p) => p.id === value,
+				);
+				if (selectedPrompt) {
+					const currentText = textArea.getValue();
+					const separator = currentText.trim() === "" ? "" : "\n\n";
+					const newText = currentText + separator + selectedPrompt.text;
+
+					textArea.setValue(newText);
+					this.promptText = newText; // Update internal state
+
+					// Move cursor to the end and focus
+					setTimeout(() => {
+						textArea.inputEl.focus();
+						textArea.inputEl.selectionStart = newText.length;
+						textArea.inputEl.selectionEnd = newText.length;
+					}, 50);
+				}
+
+				dropdown.setValue(""); // Reset dropdown to placeholder after insertion
+			});
 		});
 
 		const buttonContainer = contentEl.createDiv({

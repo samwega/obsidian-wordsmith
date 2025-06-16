@@ -14,19 +14,19 @@ const QUICK_SETUP_PROVIDERS: QuickSetupProvider[] = [
 	{ name: "OpenAI", endpoint: "https://api.openai.com/v1", apiKeyRequired: true, isLocal: false },
 	{
 		name: "Anthropic",
-		endpoint: "https://api.anthropic.com/v1",
+		endpoint: "https://api.anthropic.com/v1/messages",
+		apiKeyRequired: true,
+		isLocal: false,
+	},
+	{
+		name: "Google AI Studio",
+		endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
 		apiKeyRequired: true,
 		isLocal: false,
 	},
 	{
 		name: "OpenRouter",
 		endpoint: "https://openrouter.ai/api/v1",
-		apiKeyRequired: true,
-		isLocal: false,
-	},
-	{
-		name: "AI Studio",
-		endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
 		apiKeyRequired: true,
 		isLocal: false,
 	},
@@ -91,7 +91,7 @@ export class CustomProviderModal extends Modal {
 	private renderQuickSetup(container: HTMLElement): void {
 		const quickSetupContainer = container.createDiv({ cls: "tt-quick-setup-container" });
 		quickSetupContainer.createEl("p", {
-			text: "Quick Setup (optional)",
+			text: "Quick Setup",
 			cls: "tt-quick-setup-title",
 		});
 

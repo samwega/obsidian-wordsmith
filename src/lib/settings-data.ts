@@ -136,6 +136,7 @@ export interface TextTransformerSettings {
 
 	// Prompt management
 	prompts: TextTransformerPrompt[];
+	generationPrompts: TextTransformerPrompt[];
 	alwaysShowPromptSelection: boolean;
 	translationLanguage: string;
 	saveToClipboard: boolean;
@@ -269,6 +270,7 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	max_tokens: 8192,
 
 	prompts: JSON.parse(JSON.stringify(DEFAULT_TEXT_TRANSFORMER_PROMPTS)),
+	generationPrompts: [],
 	alwaysShowPromptSelection: false,
 	translationLanguage: "English",
 	saveToClipboard: false,

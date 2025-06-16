@@ -31,71 +31,83 @@ export async function chatCompletionRequest(
 	);
 
 	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
-
 	const messages: Array<{ role: string; content: string }> = [];
 
-	// The 'system' role is not consistently supported across all OpenAI-compatible APIs.
-	// Models from major providers (OpenAI, Anthropic, Google, Meta, Mistral, Cohere) are
-	// specifically tuned for it. Many other models (especially local ones) respond more
-	// reliably when system instructions are part of the first user message. This heuristic
-	// checks the model's origin to decide the format for maximum performance and compatibility.
-	const isOfficialOpenAIEndpoint = options.apiUrl.includes("api.openai.com");
-	const isKnownOpenAIModel =
-		options.modelId.startsWith("openai/") || options.modelId.startsWith("gpt-");
-	const isKnownAnthropicModel = options.modelId.startsWith("anthropic/");
-	const isKnownGeminiModel =
-		options.modelId.startsWith("google/") || options.modelId.startsWith("gemini");
-	const isKnownLlamaModel = options.modelId.startsWith("meta-llama/");
-	const isKnownMistralModel = options.modelId.startsWith("mistralai/");
-	const isKnownCohereModel = options.modelId.startsWith("cohere/");
+	// --- NEW SIMPLIFIED LOGIC ---
+	const isDirectAnthropicApi = options.apiUrl.includes("api.anthropic.com");
 
-	const shouldUseSeparateSystemPrompt =
-		isOfficialOpenAIEndpoint ||
-		isKnownOpenAIModel ||
-		isKnownAnthropicModel ||
-		isKnownGeminiModel ||
-		isKnownLlamaModel ||
-		isKnownMistralModel ||
-		isKnownCohereModel;
+	// An endpoint is considered "known compatible" if it's OpenAI or OpenRouter.
+	// These services are expected to correctly handle the standard 'system' role.
+	const isKnownCompatibleProvider =
+		options.apiUrl.includes("api.openai.com") || options.apiUrl.includes("openrouter.ai");
 
-	if (systemMessageContent && shouldUseSeparateSystemPrompt) {
-		messages.push({ role: "system", content: systemMessageContent });
+	// 1. Determine the message structure based on the API target
+	if (isDirectAnthropicApi) {
+		// Direct Anthropic calls: System prompt is a top-level parameter, not in messages.
+		messages.push({ role: "user", content: userContent });
+	} else if (isKnownCompatibleProvider) {
+		// OpenAI & OpenRouter: Use the standard format with a separate system message if content exists.
+		if (systemMessageContent) {
+			messages.push({ role: "system", content: systemMessageContent });
+		}
 		messages.push({ role: "user", content: userContent });
 	} else {
-		// For other providers/models, combine into a single user message for max compatibility.
+		// All others (local models, unknown providers): Combine for safety.
 		const combinedContent = [systemMessageContent, userContent].filter(Boolean).join("\n\n");
 		messages.push({ role: "user", content: combinedContent });
 	}
 
-	const requestBody = {
+	// 2. Construct the request body
+	const requestBody: { [key: string]: unknown } = {
 		model: options.modelId,
 		messages: messages,
 		temperature: settings.temperature,
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
-		frequency_penalty: prompt.frequency_penalty ?? settings.frequency_penalty,
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
-		presence_penalty: prompt.presence_penalty ?? settings.presence_penalty,
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		max_tokens: settings.max_tokens,
 		...(options.additionalRequestBodyParams || {}),
 	};
 
+	// 3. Add API-specific parameters
+	if (isDirectAnthropicApi) {
+		// Add top-level 'system' parameter for direct Anthropic calls.
+		if (systemMessageContent) {
+			requestBody.system = systemMessageContent;
+		}
+	} else {
+		// Add frequency/presence penalty for OpenAI-compatible APIs.
+		// These are not supported by Anthropic's Messages API.
+		// biome-ignore lint/style/useNamingConvention: API requires snake_case
+		requestBody.frequency_penalty = prompt.frequency_penalty ?? settings.frequency_penalty;
+		// biome-ignore lint/style/useNamingConvention: API requires snake_case
+		requestBody.presence_penalty = prompt.presence_penalty ?? settings.presence_penalty;
+	}
+
 	if (plugin.runtimeDebugMode) {
 		console.debug("[WordSmith plugin] Chat Completion Request Body:", requestBody);
 	}
 
+	// 4. Perform the request with API-specific headers
 	let response: RequestUrlResponse;
 	try {
+		const requestHeaders: Record<string, string> = {
+			"content-type": "application/json",
+			...options.additionalHeaders,
+		};
+
+		if (isDirectAnthropicApi) {
+			requestHeaders["anthropic-version"] = "2023-06-01";
+			requestHeaders["x-api-key"] = options.apiKey;
+		} else {
+			requestHeaders.authorization = `Bearer ${options.apiKey}`;
+		}
+
 		response = await requestUrl({
 			url: options.apiUrl,
 			method: "POST",
-			contentType: "application/json",
-			headers: {
-				authorization: `Bearer ${options.apiKey}`,
-				...options.additionalHeaders,
-			},
+			headers: requestHeaders,
 			body: JSON.stringify(requestBody),
 		});
+
 		if (plugin.runtimeDebugMode) {
 			console.debug("[WordSmith plugin] Chat Completion Response:", response);
 		}
@@ -109,9 +121,14 @@ export async function chatCompletionRequest(
 		return;
 	}
 
-	const newText = response.json?.choices?.[0].message.content;
-	if (!newText) {
-		logError(response);
+	// 5. Parse the response based on the API target
+	const newText = isDirectAnthropicApi
+		? response.json?.content?.[0]?.text
+		: response.json?.choices?.[0].message.content;
+
+	if (newText === undefined) {
+		// Check for undefined specifically, as "" is a valid response
+		logError(response.json || "API response was empty or malformed.");
 		return;
 	}
 

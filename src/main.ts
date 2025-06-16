@@ -76,14 +76,45 @@ export default class TextTransformer extends Plugin {
 			icon: "settings-2",
 		});
 
+		// In onload(), find and update this command
 		this.addCommand({
 			id: "generate-text-with-ad-hoc-prompt-suggestion",
 			name: "Prompt Based Context Aware Generation at Cursor",
 			icon: "wand-2",
 			editorCallback: (editor: Editor): void => {
-				new CustomPromptModal(this.app, this, async (promptText) => {
-					await generateTextAndApplyAsSuggestionCM6(this, editor, promptText);
-				}).open();
+				// --- NEW WORKFLOW LOGIC ---
+				const savedPrompts = this.settings.generationPrompts.filter((p) => p.enabled);
+
+				// Create a special "Empty Prompt" object to act as the first choice
+				const emptyPrompt: TextTransformerPrompt = {
+					id: "empty-prompt-sentinel",
+					name: "Start with an Empty Prompt",
+					text: "",
+					isDefault: true, // Use isDefault to help sort it to the top if needed
+					enabled: true,
+					showInPromptPalette: true,
+				};
+
+				const promptsForPalette = [emptyPrompt, ...savedPrompts];
+
+				// Open the palette with the combined list
+				new PromptPaletteModal(
+					this.app,
+					promptsForPalette,
+					// onChoose callback:
+					(chosenPrompt: TextTransformerPrompt) => {
+						// Open the final generation modal, pre-filling the text from the chosen prompt.
+						// If the "Empty Prompt" was chosen, chosenPrompt.text will be an empty string.
+						new CustomPromptModal(
+							this.app,
+							this,
+							async (finalPromptText) => {
+								await generateTextAndApplyAsSuggestionCM6(this, editor, finalPromptText);
+							},
+							chosenPrompt.text,
+						).open(); // Pass the text to the constructor
+					},
+				).open();
 			},
 		});
 

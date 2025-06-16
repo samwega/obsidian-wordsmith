@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 3.0.0
+**Current Version:** 3.1.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -53,6 +53,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
     - [API Key Setup, AI Providers \& Models Info](#api-key-setup-ai-providers--models-info)
   - [Release History](#release-history)
     - [w͜s What's New in v3.0.0 - 400+ Models \& Local AI Provider Support](#w͜s-whats-new-in-v300---400-models--local-ai-provider-support)
+      - [Minor Versions of v.3.1.x](#minor-versions-of-v31x)
     - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w͜s-whats-new-in-v220---knowledge-graph-generation)
       - [Minor Versions of v.2.2.x](#minor-versions-of-v22x)
     - [w͜s What's New in v2.1.0 - Context Panel Save State Across Sessions](#w͜s-whats-new-in-v210---context-panel-save-state-across-sessions)
@@ -141,6 +142,21 @@ Key features and improvements include:
 
 ![WordSmith Model Selection Modal](https://github.com/user-attachments/assets/8b2bec9c-27c2-43dc-b1f5-eb5716d324e8)
 
+#### Minor Versions of v.3.1.x
+
+* **3.1.0**—Prompt Constructor Update
+
+This release introduces a powerful new **Modular Prompt Constructor** for ad-hoc text generation, transforming it from a simple input box into a flexible workspace for building complex prompts. Alongside this major feature, version 3.1.0 brings significant under-the-hood improvements to model management, performance, and API reliability.
+
+* **Feat: Modular Generation Prompt System:** The "Prompt Based Context Aware Generation" command has been completely revamped. You now have a library of **User Generation Prompts** at your fingertips.
+  * **Palette-First Workflow:** The generation command now opens a palette, allowing you to select a saved prompt as your starting point or begin with a blank slate.
+  * **In-Modal Prompt Composition:** A new "Insert Saved Prompt" dropdown inside the generation modal lets you append any of your saved prompts to the text area. Combine prompts like Lego blocks to build the perfect instruction for any task, on the fly.
+* **Improved Model Selection & Caching:** The "Browse Models" modal is now faster and more responsive. It uses an intelligent caching strategy to load your model list instantly while refreshing it in the background, eliminating the initial loading delay.
+* **Advanced Temperature Management:** WordSmith now automatically adjusts the temperature slider's range and default value based on the selected model. We've researched and embedded optimal default temperatures for dozens of popular models to give you better results out of the box.
+* **Enhanced API Reliability:**
+  * **Fixed Anthropic API Integration:** Direct connections to Anthropic's API now use the correct request format and endpoint, ensuring full compatibility.
+  * **Smarter API Logic:** The underlying logic for communicating with different providers (OpenAI, OpenRouter, Anthropic, Google, local servers) has been simplified and made more robust, correctly leveraging each service's capabilities.
+* **Refined UI & Efficiency:** Various UI elements have been polished for a smoother and more intuitive user experience.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
