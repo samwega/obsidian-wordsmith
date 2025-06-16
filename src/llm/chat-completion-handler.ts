@@ -99,9 +99,7 @@ export async function chatCompletionRequest(
 	} else {
 		// Add frequency/presence penalty for OpenAI-compatible APIs.
 		// These are not supported by Anthropic's Messages API.
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.frequency_penalty = prompt.frequency_penalty ?? settings.frequency_penalty;
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.presence_penalty = prompt.presence_penalty ?? settings.presence_penalty;
 	}
 
