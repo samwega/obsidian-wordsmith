@@ -4,7 +4,7 @@
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
-**Review and accept or reject individual AI suggestions inline** directly in your editor. Create custom prompts, leverage a dynamic provider framework to access **over 400 models** from OpenAI, Anthropic, Google, OpenRouter, and even local AI servers like Ollama & LM Studio, and benefit from advanced context control—all fully keyboard-driven. Use your own API keys and only spend what you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
+**Review and accept or reject individual AI suggestions inline** directly in your editor. Leverage a modular user prompt construction and mangement System, powered by a dynamic provider framework giving you access to **over 400 models** from OpenAI, Anthropic, Google, OpenRouter, and even local AI servers like Ollama & LM Studio, and benefit from advanced context control—all fully keyboard-driven. Use your own API keys and only spend what you use, plus a [coffee for me](https://revolut.me/alexanderglavan) if you love my first plugin!
 
 Initially forked from the narrowly focused [obsidian-proofreader](https://github.com/chrisgrieser/obsidian-proofreader) by Christopher Grieser, WordSmith has evolved into a feature-complete AI writing assistant.
 
