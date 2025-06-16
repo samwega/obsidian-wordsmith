@@ -96,11 +96,11 @@ export default class TextTransformer extends Plugin {
 
 				new PromptPaletteModal(this.app, {
 					prompts: promptsForPalette,
-					onChoose: (chosenPrompt: TextTransformerPrompt) => {
+					onChoose: (chosenPrompt: TextTransformerPrompt): void => {
 						new CustomPromptModal(this.app, {
 							plugin: this,
 							initialPromptText: chosenPrompt.text,
-							onSubmit: async (finalPromptText) => {
+							onSubmit: async (finalPromptText): Promise<void> => {
 								await generateTextAndApplyAsSuggestionCM6(this, editor, finalPromptText);
 							},
 						}).open();
@@ -145,7 +145,7 @@ export default class TextTransformer extends Plugin {
 				return new Promise<void>((resolve, reject) => {
 					new PromptPaletteModal(this.app, {
 						prompts: enabledPrompts,
-						onChoose: async (prompt: TextTransformerPrompt) => {
+						onChoose: async (prompt: TextTransformerPrompt): Promise<void> => {
 							try {
 								await textTransformerTextCM6(this, editor, prompt, activeFile);
 								resolve();
@@ -155,7 +155,7 @@ export default class TextTransformer extends Plugin {
 								reject(error);
 							}
 						},
-						onCancel: () => {
+						onCancel: (): void => {
 							resolve();
 						},
 					}).open();

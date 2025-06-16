@@ -86,9 +86,7 @@ export async function chatCompletionRequest(
 			requestBody.system = systemMessageContent;
 		}
 	} else {
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.frequency_penalty = prompt.frequency_penalty ?? settings.frequency_penalty;
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.presence_penalty = prompt.presence_penalty ?? settings.presence_penalty;
 	}
 
