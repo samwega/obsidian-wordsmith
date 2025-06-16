@@ -328,7 +328,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		if (defaultPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", {
-				text: "Preset Transformation Prompts)",
+				text: "Preset Transformation Prompts",
 				cls: "tt-prompt-section-title",
 			});
 			const defaultPromptsGrid = promptManagementWrapper.createEl("div", {
@@ -342,7 +342,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		if (customPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 			promptManagementWrapper.createEl("div", {
-				text: "User Transformation Prompts)",
+				text: "User Transformation Prompts",
 				cls: "tt-prompt-section-title",
 			});
 			const customPromptsGrid = promptManagementWrapper.createEl("div", {
