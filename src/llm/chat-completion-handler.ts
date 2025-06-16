@@ -6,23 +6,46 @@ import { logError } from "../lib/utils";
 import type TextTransformer from "../main";
 import { buildPromptComponents } from "./prompt-builder";
 
-interface ChatCompletionOptions {
+/**
+ * Defines the consolidated parameters for a chat completion request.
+ * This pattern improves readability and makes the function signature stable.
+ */
+export interface ChatCompletionRequestParams {
+	settings: TextTransformerSettings;
+	prompt: TextTransformerPrompt;
+	isGenerationTask: boolean;
+
+	// API details
 	apiUrl: string;
 	apiKey: string;
 	modelId: string;
 	additionalHeaders?: Record<string, string>;
 	additionalRequestBodyParams?: Record<string, unknown>;
+
+	// Optional parameters that depend on the task
+	oldText?: string;
+	assembledContext?: AssembledContextForLLM;
 }
 
 export async function chatCompletionRequest(
 	plugin: TextTransformer,
-	settings: TextTransformerSettings,
-	oldText: string,
-	prompt: TextTransformerPrompt,
-	assembledContext: AssembledContextForLLM | undefined,
-	isGenerationTask: boolean,
-	options: ChatCompletionOptions,
+	params: ChatCompletionRequestParams,
 ): Promise<{ newText: string } | undefined> {
+	// Destructure all parameters from the params object for use in the function.
+	// This keeps the rest of the function's logic identical to the previous version.
+	const {
+		settings,
+		prompt,
+		isGenerationTask,
+		apiUrl,
+		apiKey,
+		modelId,
+		additionalHeaders,
+		additionalRequestBodyParams,
+		oldText = "", // Provide a safe default for generation tasks
+		assembledContext,
+	} = params;
+
 	const { systemInstructions, userContent, contextBlock } = buildPromptComponents(
 		assembledContext,
 		prompt,
@@ -34,12 +57,12 @@ export async function chatCompletionRequest(
 	const messages: Array<{ role: string; content: string }> = [];
 
 	// --- NEW SIMPLIFIED LOGIC ---
-	const isDirectAnthropicApi = options.apiUrl.includes("api.anthropic.com");
+	const isDirectAnthropicApi = apiUrl.includes("api.anthropic.com");
 
 	// An endpoint is considered "known compatible" if it's OpenAI or OpenRouter.
 	// These services are expected to correctly handle the standard 'system' role.
 	const isKnownCompatibleProvider =
-		options.apiUrl.includes("api.openai.com") || options.apiUrl.includes("openrouter.ai");
+		apiUrl.includes("api.openai.com") || apiUrl.includes("openrouter.ai");
 
 	// 1. Determine the message structure based on the API target
 	if (isDirectAnthropicApi) {
@@ -59,12 +82,12 @@ export async function chatCompletionRequest(
 
 	// 2. Construct the request body
 	const requestBody: { [key: string]: unknown } = {
-		model: options.modelId,
+		model: modelId,
 		messages: messages,
 		temperature: settings.temperature,
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		max_tokens: settings.max_tokens,
-		...(options.additionalRequestBodyParams || {}),
+		...(additionalRequestBodyParams || {}),
 	};
 
 	// 3. Add API-specific parameters
@@ -91,18 +114,18 @@ export async function chatCompletionRequest(
 	try {
 		const requestHeaders: Record<string, string> = {
 			"content-type": "application/json",
-			...options.additionalHeaders,
+			...additionalHeaders,
 		};
 
 		if (isDirectAnthropicApi) {
 			requestHeaders["anthropic-version"] = "2023-06-01";
-			requestHeaders["x-api-key"] = options.apiKey;
+			requestHeaders["x-api-key"] = apiKey;
 		} else {
-			requestHeaders.authorization = `Bearer ${options.apiKey}`;
+			requestHeaders.authorization = `Bearer ${apiKey}`;
 		}
 
 		response = await requestUrl({
-			url: options.apiUrl,
+			url: apiUrl,
 			method: "POST",
 			headers: requestHeaders,
 			body: JSON.stringify(requestBody),

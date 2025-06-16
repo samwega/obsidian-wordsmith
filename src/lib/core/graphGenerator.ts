@@ -13,7 +13,7 @@ import type TextTransformer from "../../main";
 import { SingleInputModal } from "../../ui/modals/single-input-modal";
 
 import { chatCompletionRequest } from "../../llm/chat-completion-handler";
-import { geminiRequest } from "../../llm/gemini"; // --- FIX: Import Gemini handler ---
+import { geminiRequest } from "../../llm/gemini";
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
 import { formatDateForFilename, getCmEditorView, logError } from "../utils";
@@ -371,15 +371,14 @@ export async function generateGraphAndCreateCanvas(
 				notice.hide();
 				return;
 			}
-			response = await chatCompletionRequest(
-				plugin,
+			// --- REFACTORED CALL ---
+			response = await chatCompletionRequest(plugin, {
 				settings,
-				"",
-				adHocPrompt,
-				gatheredContext,
-				true,
-				requestOptions,
-			);
+				prompt: adHocPrompt,
+				isGenerationTask: true,
+				assembledContext: gatheredContext,
+				...requestOptions,
+			});
 		}
 		// --- END FIX ---
 	} catch (error) {

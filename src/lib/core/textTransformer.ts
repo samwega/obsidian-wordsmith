@@ -20,7 +20,6 @@ import {
 import type { TextTransformerPrompt } from "../settings-data";
 import { getCmEditorView, logError } from "../utils";
 
-// --- FIX: Add 'export' keyword back ---
 export interface AssembledContextForLLM {
 	customContext?: string;
 	referencedNotesContent?: string;
@@ -227,15 +226,14 @@ export async function generateTextAndApplyAsSuggestionCM6(
 				notice.hide();
 				return;
 			}
-			response = await chatCompletionRequest(
-				plugin,
+			// --- REFACTORED CALL ---
+			response = await chatCompletionRequest(plugin, {
 				settings,
-				"",
-				adHocPrompt,
-				additionalContextForAI,
-				true,
-				requestOptions,
-			);
+				prompt: adHocPrompt,
+				isGenerationTask: true,
+				assembledContext: additionalContextForAI,
+				...requestOptions,
+			});
 		}
 
 		notice.hide();
@@ -379,15 +377,15 @@ async function validateAndApplyAIDrivenChanges(
 				notice.hide();
 				return false;
 			}
-			response = await chatCompletionRequest(
-				plugin,
+			// --- REFACTORED CALL ---
+			response = await chatCompletionRequest(plugin, {
 				settings,
-				originalText,
-				currentPrompt,
-				additionalContextForAI,
-				false,
-				requestOptions,
-			);
+				prompt: currentPrompt,
+				isGenerationTask: false,
+				oldText: originalText,
+				assembledContext: additionalContextForAI,
+				...requestOptions,
+			});
 		}
 
 		notice.hide();
