@@ -158,6 +158,12 @@ This release introduces a powerful **Modular Prompt Constructor** for text gener
   * **Smarter API Logic:** The underlying logic for communicating with different providers (OpenAI, OpenRouter, Anthropic, Google, local servers) has been simplified and made more robust, correctly leveraging each service's capabilities.
 * **Refined UI & Efficiency:** Various UI elements have been polished for a smoother and more intuitive user experience.
 
+**3.1.1**—Refactors the `chatCompletionRequest` function to use a single `ChatCompletionRequestParams` options object instead of a long list of individual parameters. This change improves code quality by:
+
+- Increasing readability and self-documentation at call sites.
+- Enhancing type safety and eliminating the risk of parameter-swapping bugs.
+- Making the function signature more robust and easier to extend in the future.
+
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
 This is a major feature release that introduces a powerful new way to visualize your ideas. With the new **Knowledge Graph Generator**, you can now transform your notes and research into beautiful, editable Obsidian Canvases.
