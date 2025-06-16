@@ -10,21 +10,22 @@ import {
 } from "obsidian";
 import type TextTransformer from "../../main";
 
+export interface CustomPromptModalOptions {
+	plugin: TextTransformer;
+	onSubmit: (promptText: string) => void;
+	initialPromptText?: string;
+}
+
 export class CustomPromptModal extends Modal {
 	private promptText: string;
 	private onSubmit: (promptText: string) => void;
 	private plugin: TextTransformer;
 
-	constructor(
-		app: App,
-		plugin: TextTransformer,
-		onSubmit: (promptText: string) => void,
-		initialPromptText = "",
-	) {
+	constructor(app: App, options: CustomPromptModalOptions) {
 		super(app);
-		this.plugin = plugin;
-		this.onSubmit = onSubmit;
-		this.promptText = initialPromptText;
+		this.plugin = options.plugin;
+		this.onSubmit = options.onSubmit;
+		this.promptText = options.initialPromptText || "";
 	}
 
 	override onOpen(): void {

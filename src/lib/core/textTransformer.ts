@@ -26,6 +26,18 @@ export interface AssembledContextForLLM {
 	editorContextContent?: string;
 }
 
+/**
+ * Defines the consolidated parameters for the AI change validation and application function.
+ */
+interface ValidationAndApplyParams {
+	editor: Editor;
+	originalText: string;
+	scope: "Selection" | "Paragraph";
+	promptInfo: TextTransformerPrompt;
+	scopeRangeCm: { from: number; to: number };
+	file: TFile;
+}
+
 export async function gatherContextForAI(
 	plugin: TextTransformer,
 	cmView: EditorView,
@@ -210,23 +222,20 @@ export async function generateTextAndApplyAsSuggestionCM6(
 
 		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
-			response = await geminiRequest(
-				plugin,
+			response = await geminiRequest(plugin, {
 				settings,
-				"",
-				adHocPrompt,
-				additionalContextForAI,
-				true,
+				prompt: adHocPrompt,
+				isGenerationTask: true,
 				provider,
 				modelApiId,
-			);
+				assembledContext: additionalContextForAI,
+			});
 		} else {
 			const requestOptions = getChatCompletionsRequestOptions(plugin);
 			if (!requestOptions) {
 				notice.hide();
 				return;
 			}
-			// --- REFACTORED CALL ---
 			response = await chatCompletionRequest(plugin, {
 				settings,
 				prompt: adHocPrompt,
@@ -300,13 +309,10 @@ export async function generateTextAndApplyAsSuggestionCM6(
 
 async function validateAndApplyAIDrivenChanges(
 	plugin: TextTransformer,
-	editor: Editor,
-	originalText: string,
-	scope: "Selection" | "Paragraph",
-	promptInfo: TextTransformerPrompt,
-	scopeRangeCm: { from: number; to: number },
-	file: TFile,
+	params: ValidationAndApplyParams,
 ): Promise<boolean> {
+	const { editor, originalText, scope, promptInfo, scopeRangeCm, file } = params;
+
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		new Notice("WordSmith requires a modern editor version.");
@@ -361,23 +367,21 @@ async function validateAndApplyAIDrivenChanges(
 
 		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
-			response = await geminiRequest(
-				plugin,
+			response = await geminiRequest(plugin, {
 				settings,
-				originalText,
-				currentPrompt,
-				additionalContextForAI,
-				false,
+				prompt: currentPrompt,
+				isGenerationTask: false,
 				provider,
 				modelApiId,
-			);
+				oldText: originalText,
+				assembledContext: additionalContextForAI,
+			});
 		} else {
 			const requestOptions = getChatCompletionsRequestOptions(plugin);
 			if (!requestOptions) {
 				notice.hide();
 				return false;
 			}
-			// --- REFACTORED CALL ---
 			response = await chatCompletionRequest(plugin, {
 				settings,
 				prompt: currentPrompt,
@@ -558,13 +562,12 @@ export async function textTransformerTextCM6(
 		rangeCm = { from: currentCmSelection.from, to: currentCmSelection.to };
 	}
 
-	await validateAndApplyAIDrivenChanges(
-		plugin,
+	await validateAndApplyAIDrivenChanges(plugin, {
 		editor,
 		originalText,
-		textScope,
-		prompt,
-		rangeCm,
+		scope: textScope,
+		promptInfo: prompt,
+		scopeRangeCm: rangeCm,
 		file,
-	);
+	});
 }

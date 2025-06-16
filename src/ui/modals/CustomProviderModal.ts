@@ -44,29 +44,29 @@ const QUICK_SETUP_PROVIDERS: QuickSetupProvider[] = [
 	},
 ];
 
+export interface CustomProviderModalOptions {
+	plugin: TextTransformer;
+	provider: CustomProvider | null;
+	onSave: (provider: CustomProvider) => void;
+}
+
 export class CustomProviderModal extends Modal {
 	private provider: CustomProvider;
 	private onSave: (provider: CustomProvider) => void;
 	private isEditMode: boolean;
 	private plugin: TextTransformer;
 
-	// --- FIX: Use non-null assertion for properties initialized in onOpen ---
 	private nameInput!: TextComponent;
 	private endpointInput!: TextComponent;
 	private apiKeyInput!: TextComponent;
 
-	constructor(
-		app: App,
-		plugin: TextTransformer,
-		provider: CustomProvider | null,
-		onSave: (provider: CustomProvider) => void,
-	) {
+	constructor(app: App, options: CustomProviderModalOptions) {
 		super(app);
-		this.plugin = plugin;
-		this.onSave = onSave;
-		this.isEditMode = provider !== null;
+		this.plugin = options.plugin;
+		this.onSave = options.onSave;
+		this.isEditMode = options.provider !== null;
 		this.provider =
-			provider ||
+			options.provider ||
 			({
 				id: `custom-provider-${Date.now()}`,
 				name: "",

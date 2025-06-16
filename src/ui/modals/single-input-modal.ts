@@ -1,6 +1,14 @@
 // src/ui/modals/single-input-modal.ts
 import { App, Modal, Setting } from "obsidian";
 
+export interface SingleInputModalOptions {
+	title: string;
+	placeholder: string;
+	initialValue: string;
+	onSubmit: (result: string) => void;
+	onCancel: () => void;
+}
+
 export class SingleInputModal extends Modal {
 	private result: string;
 	private readonly onSubmit: (result: string) => void;
@@ -10,21 +18,14 @@ export class SingleInputModal extends Modal {
 	private readonly initialValue: string;
 	private submitted = false;
 
-	constructor(
-		app: App,
-		title: string,
-		placeholder: string,
-		initialValue: string,
-		onSubmit: (result: string) => void,
-		onCancel: () => void,
-	) {
+	constructor(app: App, options: SingleInputModalOptions) {
 		super(app);
-		this.inputTitle = title;
-		this.inputPlaceholder = placeholder;
-		this.initialValue = initialValue;
-		this.onSubmit = onSubmit;
-		this.onCancel = onCancel;
-		this.result = initialValue;
+		this.inputTitle = options.title;
+		this.inputPlaceholder = options.placeholder;
+		this.initialValue = options.initialValue;
+		this.onSubmit = options.onSubmit;
+		this.onCancel = options.onCancel;
+		this.result = options.initialValue;
 	}
 
 	override onOpen(): void {

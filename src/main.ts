@@ -76,45 +76,36 @@ export default class TextTransformer extends Plugin {
 			icon: "settings-2",
 		});
 
-		// In onload(), find and update this command
 		this.addCommand({
 			id: "generate-text-with-ad-hoc-prompt-suggestion",
 			name: "Prompt Based Context Aware Generation at Cursor",
 			icon: "wand-2",
 			editorCallback: (editor: Editor): void => {
-				// --- NEW WORKFLOW LOGIC ---
 				const savedPrompts = this.settings.generationPrompts.filter((p) => p.enabled);
 
-				// Create a special "Empty Prompt" object to act as the first choice
 				const emptyPrompt: TextTransformerPrompt = {
 					id: "empty-prompt-sentinel",
 					name: "Start with an Empty Prompt",
 					text: "",
-					isDefault: true, // Use isDefault to help sort it to the top if needed
+					isDefault: true,
 					enabled: true,
 					showInPromptPalette: true,
 				};
 
 				const promptsForPalette = [emptyPrompt, ...savedPrompts];
 
-				// Open the palette with the combined list
-				new PromptPaletteModal(
-					this.app,
-					promptsForPalette,
-					// onChoose callback:
-					(chosenPrompt: TextTransformerPrompt) => {
-						// Open the final generation modal, pre-filling the text from the chosen prompt.
-						// If the "Empty Prompt" was chosen, chosenPrompt.text will be an empty string.
-						new CustomPromptModal(
-							this.app,
-							this,
-							async (finalPromptText) => {
+				new PromptPaletteModal(this.app, {
+					prompts: promptsForPalette,
+					onChoose: (chosenPrompt: TextTransformerPrompt) => {
+						new CustomPromptModal(this.app, {
+							plugin: this,
+							initialPromptText: chosenPrompt.text,
+							onSubmit: async (finalPromptText) => {
 								await generateTextAndApplyAsSuggestionCM6(this, editor, finalPromptText);
 							},
-							chosenPrompt.text,
-						).open(); // Pass the text to the constructor
+						}).open();
 					},
-				).open();
+				}).open();
 			},
 		});
 
@@ -152,10 +143,9 @@ export default class TextTransformer extends Plugin {
 				}
 
 				return new Promise<void>((resolve, reject) => {
-					const modal = new PromptPaletteModal(
-						this.app,
-						enabledPrompts,
-						async (prompt: TextTransformerPrompt) => {
+					new PromptPaletteModal(this.app, {
+						prompts: enabledPrompts,
+						onChoose: async (prompt: TextTransformerPrompt) => {
 							try {
 								await textTransformerTextCM6(this, editor, prompt, activeFile);
 								resolve();
@@ -165,11 +155,10 @@ export default class TextTransformer extends Plugin {
 								reject(error);
 							}
 						},
-						() => {
+						onCancel: () => {
 							resolve();
 						},
-					);
-					modal.open();
+					}).open();
 				});
 			},
 			icon: "crown",
@@ -295,21 +284,15 @@ export default class TextTransformer extends Plugin {
 	async updateTemperatureForModel(modelId: string): Promise<void> {
 		if (!modelId) return;
 
-		// Parse the API ID from the full canonical ID (e.g., "OpenRouter//anthropic/claude-3.5-sonnet")
 		const apiId = modelId.split("//")[1];
-
-		// Also check for local models that might not have a provider prefix in their ID
 		const hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[modelId];
 
 		if (hint) {
-			// If a known hint is found, update the global temperature to its default.
 			this.settings.temperature = hint.default;
 		} else {
-			// If no hint is found, set to the sane default temperature.
 			this.settings.temperature = UNKNOWN_MODEL_HINT.default;
 		}
 
-		// Save settings to persist the potential change and trigger a UI update.
 		await this.saveSettings();
 	}
 
@@ -353,8 +336,6 @@ export default class TextTransformer extends Plugin {
 
 		this.settings = Object.assign({}, defaultSettings, loadedData);
 
-		// --- MIGRATION LOGIC ---
-		// Migration: Rename "Google/Gemini" provider to "AI Studio" for consistency
 		if (this.settings.customProviders) {
 			let wasMigrated = false;
 			this.settings.customProviders.forEach((provider) => {
@@ -367,7 +348,6 @@ export default class TextTransformer extends Plugin {
 				console.log("WordSmith: Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
 			}
 		}
-		// --- END MIGRATION LOGIC ---
 
 		if (loadedData && Array.isArray(loadedData.prompts) && loadedData.prompts.length > 0) {
 			const processedDefaultPromptsMap = new Map<string, TextTransformerPrompt>();
@@ -379,7 +359,6 @@ export default class TextTransformer extends Plugin {
 						(dp) => dp.id === loadedPrompt.id,
 					);
 					if (defaultDefinition) {
-						// Create an update object and only add properties that are defined.
 						const updates: Partial<TextTransformerPrompt> = {};
 						if (typeof loadedPrompt.enabled === "boolean") {
 							updates.enabled = loadedPrompt.enabled;

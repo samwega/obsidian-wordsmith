@@ -22,7 +22,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// Reset state on each display call to ensure clean rendering
 		this.addPromptForm = null;
 		this.addTransformationPromptButton = null;
 		this.addGenerationPromptButton = null;
@@ -95,11 +94,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 						.setButtonText("Edit")
 						.setTooltip("Edit Provider Settings")
 						.onClick(() => {
-							new CustomProviderModal(
-								this.app,
-								this.plugin,
-								provider,
-								async (updatedProvider) => {
+							new CustomProviderModal(this.app, {
+								plugin: this.plugin,
+								provider: provider,
+								onSave: async (updatedProvider) => {
 									const index = this.plugin.settings.customProviders.findIndex(
 										(p) => p.id === updatedProvider.id,
 									);
@@ -109,7 +107,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 										this.display();
 									}
 								},
-							).open();
+							}).open();
 						});
 				})
 				.addButton((button) => {
@@ -128,10 +126,14 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		new Setting(containerEl).addButton((button) =>
 			button.setButtonText("Add Provider").onClick(() => {
-				new CustomProviderModal(this.app, this.plugin, null, async (newProvider) => {
-					this.plugin.settings.customProviders.push(newProvider);
-					await this.plugin.saveSettings();
-					this.display();
+				new CustomProviderModal(this.app, {
+					plugin: this.plugin,
+					provider: null,
+					onSave: async (newProvider) => {
+						this.plugin.settings.customProviders.push(newProvider);
+						await this.plugin.saveSettings();
+						this.display();
+					},
 				}).open();
 			}),
 		);
@@ -311,7 +313,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	private _closePromptForm(): void {
 		this.addPromptForm?.remove();
 		this.addPromptForm = null;
-		// Show both buttons again, as we don't know which one was hidden.
 		this.addTransformationPromptButton?.settingEl.show();
 		this.addGenerationPromptButton?.settingEl.show();
 	}
@@ -322,7 +323,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			cls: "prompt-management-section-container",
 		});
 
-		// --- Transformation Prompts ---
 		const defaultPrompts = this.plugin.settings.prompts.filter((p) => p.isDefault);
 		const customPrompts = this.plugin.settings.prompts.filter((p) => !p.isDefault);
 
@@ -369,10 +369,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		this.addTransformationPromptButton.settingEl.classList.add("tt-add-prompt-button-container");
 
-		// --- Divider ---
 		promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 
-		// --- Generation Prompts ---
 		promptManagementWrapper.createEl("div", {
 			text: "User Generation Prompts",
 			cls: "tt-prompt-section-title",

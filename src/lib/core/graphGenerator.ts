@@ -10,7 +10,7 @@ import {
 import { App, Editor, Notice, normalizePath } from "obsidian";
 
 import type TextTransformer from "../../main";
-import { SingleInputModal } from "../../ui/modals/single-input-modal";
+import { SingleInputModal, SingleInputModalOptions } from "../../ui/modals/single-input-modal";
 
 import { chatCompletionRequest } from "../../llm/chat-completion-handler";
 import { geminiRequest } from "../../llm/gemini";
@@ -19,7 +19,6 @@ import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
 import { formatDateForFilename, getCmEditorView, logError } from "../utils";
 import { gatherContextForAI } from "./textTransformer";
 
-// ... unchanged helper functions (calculateNodeHeight, promptForBaseName, etc.) ...
 const CANVAS_NODE_WIDTH = 480;
 const CANVAS_NODE_PADDING = 30;
 const D3_SIMULATION_TICKS = 400;
@@ -62,14 +61,14 @@ function calculateNodeHeight(text: string, width: number): number {
 function promptForBaseName(app: App): Promise<string | null> {
 	return new Promise((resolve) => {
 		const defaultDateName = `${formatDateForFilename(new Date())} `;
-		new SingleInputModal(
-			app,
-			"Enter a name for the knowledge graph canvas",
-			"My Knowledge Graph",
-			defaultDateName,
-			(result) => resolve(result),
-			() => resolve(null),
-		).open();
+		const modalOptions: SingleInputModalOptions = {
+			title: "Enter a name for the knowledge graph canvas",
+			placeholder: "My Knowledge Graph",
+			initialValue: defaultDateName,
+			onSubmit: (result) => resolve(result),
+			onCancel: () => resolve(null),
+		};
+		new SingleInputModal(app, modalOptions).open();
 	});
 }
 
@@ -324,7 +323,6 @@ export async function generateGraphAndCreateCanvas(
 
 	const notice = new Notice("Gathering context and preparing graph data...", 0);
 
-	// --- FIX: Request Routing Logic ---
 	const { customProviders, selectedModelId } = settings;
 	if (!selectedModelId) {
 		new Notice("No model selected. Please select one in the context panel.", 6000);
@@ -338,10 +336,9 @@ export async function generateGraphAndCreateCanvas(
 		notice.hide();
 		return;
 	}
-	// --- END FIX ---
 
 	const gatheredContext = await gatherContextForAI(plugin, cm, "generation");
-	const promptComponents = buildGraphPrompt(gatheredContext);
+	const promptComponents = buildGraphPrompt({ assembledContext: gatheredContext });
 	const adHocPrompt: (typeof plugin.settings.prompts)[number] = {
 		id: "graph-generation",
 		name: "Graph Generation",
@@ -352,26 +349,22 @@ export async function generateGraphAndCreateCanvas(
 
 	let response: { newText: string } | undefined;
 	try {
-		// --- FIX: Request Routing Logic ---
 		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 		if (isGeminiProvider) {
-			response = await geminiRequest(
-				plugin,
+			response = await geminiRequest(plugin, {
 				settings,
-				"",
-				adHocPrompt,
-				gatheredContext,
-				true,
+				prompt: adHocPrompt,
+				isGenerationTask: true,
 				provider,
 				modelApiId,
-			);
+				assembledContext: gatheredContext,
+			});
 		} else {
 			const requestOptions = getGraphChatCompletionsRequestOptions(plugin);
 			if (!requestOptions) {
 				notice.hide();
 				return;
 			}
-			// --- REFACTORED CALL ---
 			response = await chatCompletionRequest(plugin, {
 				settings,
 				prompt: adHocPrompt,
@@ -380,7 +373,6 @@ export async function generateGraphAndCreateCanvas(
 				...requestOptions,
 			});
 		}
-		// --- END FIX ---
 	} catch (error) {
 		notice.hide();
 		logError(error);

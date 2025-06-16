@@ -32,7 +32,6 @@ export async function chatCompletionRequest(
 	params: ChatCompletionRequestParams,
 ): Promise<{ newText: string } | undefined> {
 	// Destructure all parameters from the params object for use in the function.
-	// This keeps the rest of the function's logic identical to the previous version.
 	const {
 		settings,
 		prompt,
@@ -46,41 +45,33 @@ export async function chatCompletionRequest(
 		assembledContext,
 	} = params;
 
-	const { systemInstructions, userContent, contextBlock } = buildPromptComponents(
-		assembledContext,
+	// --- FIX: Correctly call buildPromptComponents with the new options object signature ---
+	const { systemInstructions, userContent, contextBlock } = buildPromptComponents({
 		prompt,
 		isGenerationTask,
 		oldText,
-	);
+		...(assembledContext && { assembledContext }),
+	});
 
 	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
 	const messages: Array<{ role: string; content: string }> = [];
 
-	// --- NEW SIMPLIFIED LOGIC ---
 	const isDirectAnthropicApi = apiUrl.includes("api.anthropic.com");
-
-	// An endpoint is considered "known compatible" if it's OpenAI or OpenRouter.
-	// These services are expected to correctly handle the standard 'system' role.
 	const isKnownCompatibleProvider =
 		apiUrl.includes("api.openai.com") || apiUrl.includes("openrouter.ai");
 
-	// 1. Determine the message structure based on the API target
 	if (isDirectAnthropicApi) {
-		// Direct Anthropic calls: System prompt is a top-level parameter, not in messages.
 		messages.push({ role: "user", content: userContent });
 	} else if (isKnownCompatibleProvider) {
-		// OpenAI & OpenRouter: Use the standard format with a separate system message if content exists.
 		if (systemMessageContent) {
 			messages.push({ role: "system", content: systemMessageContent });
 		}
 		messages.push({ role: "user", content: userContent });
 	} else {
-		// All others (local models, unknown providers): Combine for safety.
 		const combinedContent = [systemMessageContent, userContent].filter(Boolean).join("\n\n");
 		messages.push({ role: "user", content: combinedContent });
 	}
 
-	// 2. Construct the request body
 	const requestBody: { [key: string]: unknown } = {
 		model: modelId,
 		messages: messages,
@@ -90,16 +81,14 @@ export async function chatCompletionRequest(
 		...(additionalRequestBodyParams || {}),
 	};
 
-	// 3. Add API-specific parameters
 	if (isDirectAnthropicApi) {
-		// Add top-level 'system' parameter for direct Anthropic calls.
 		if (systemMessageContent) {
 			requestBody.system = systemMessageContent;
 		}
 	} else {
-		// Add frequency/presence penalty for OpenAI-compatible APIs.
-		// These are not supported by Anthropic's Messages API.
+		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.frequency_penalty = prompt.frequency_penalty ?? settings.frequency_penalty;
+		// biome-ignore lint/style/useNamingConvention: API requires snake_case
 		requestBody.presence_penalty = prompt.presence_penalty ?? settings.presence_penalty;
 	}
 
@@ -107,7 +96,6 @@ export async function chatCompletionRequest(
 		console.debug("[WordSmith plugin] Chat Completion Request Body:", requestBody);
 	}
 
-	// 4. Perform the request with API-specific headers
 	let response: RequestUrlResponse;
 	try {
 		const requestHeaders: Record<string, string> = {
@@ -142,13 +130,11 @@ export async function chatCompletionRequest(
 		return;
 	}
 
-	// 5. Parse the response based on the API target
 	const newText = isDirectAnthropicApi
 		? response.json?.content?.[0]?.text
 		: response.json?.choices?.[0].message.content;
 
 	if (newText === undefined) {
-		// Check for undefined specifically, as "" is a valid response
 		logError(response.json || "API response was empty or malformed.");
 		return;
 	}

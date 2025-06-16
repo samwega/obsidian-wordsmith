@@ -17,13 +17,29 @@ export interface PromptComponents {
 }
 
 /**
+ * Defines the parameters for building a knowledge graph prompt.
+ */
+export interface BuildGraphPromptParams {
+	assembledContext?: AssembledContextForLLM;
+}
+
+/**
+ * Defines the parameters for building a standard generation or transformation prompt.
+ */
+export interface BuildPromptParams {
+	prompt: TextTransformerPrompt;
+	isGenerationTask: boolean;
+	assembledContext?: AssembledContextForLLM;
+	oldText?: string;
+}
+
+/**
  * Builds the LLM prompt for knowledge graph generation.
- * @param assembledContext The context gathered from the UI and editor.
+ * @param params The consolidated parameters for the prompt.
  * @returns A `PromptComponents` object containing the structured parts of the prompt.
  */
-export function buildGraphPrompt(
-	assembledContext: AssembledContextForLLM | undefined,
-): PromptComponents {
+export function buildGraphPrompt(params: BuildGraphPromptParams): PromptComponents {
+	const { assembledContext } = params;
 	const userInstruction = `### CORE DIRECTIVE
 You are a Knowledge Graph Extraction Expert. Your sole task is to analyze the provided text(s), extract the most essential concepts and output a valid JSON object representing a knowledge graph of its main entities and their relationships. The entities/concepts should be selected to help elucidate the subject matter.
 
@@ -121,21 +137,23 @@ The following text blocks are your source material.
  * Builds the distinct components of an LLM prompt based on the task and provided context.
  * This centralizes the logic, which can then be formatted by callers for specific API requirements.
  *
- * @param assembledContext The context gathered from the UI and editor.
- * @param prompt The user's specific prompt object.
- * @param isGenerationTask A flag indicating if the task is generation or transformation.
- * @param oldText The original text for transformation tasks.
+ * @param params The consolidated parameters for the prompt.
  * @returns A `PromptComponents` object containing the structured parts of the prompt.
  */
-export function buildPromptComponents(
-	assembledContext: AssembledContextForLLM | undefined,
-	prompt: TextTransformerPrompt,
-	isGenerationTask: boolean,
-	oldText: string,
-): PromptComponents {
+export function buildPromptComponents(params: BuildPromptParams): PromptComponents {
+	const {
+		prompt,
+		isGenerationTask,
+		assembledContext,
+		oldText = "", // Provide a safe default
+	} = params;
+
 	// --- SPECIAL CASE: Graph Generation ---
 	if (prompt.id === "graph-generation") {
-		const graphComponents = buildGraphPrompt(assembledContext);
+		// --- FIX: Conditionally add assembledContext to avoid exactOptionalPropertyTypes error ---
+		const graphComponents = buildGraphPrompt({
+			...(assembledContext && { assembledContext }),
+		});
 		return {
 			systemInstructions: graphComponents.systemInstructions,
 			userContent: prompt.text,

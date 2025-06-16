@@ -10,29 +10,57 @@ import { logError } from "../lib/utils";
 import type TextTransformer from "../main";
 import { buildPromptComponents } from "./prompt-builder";
 
+/**
+ * Defines the consolidated parameters for a Gemini API request.
+ */
+export interface GeminiRequestParams {
+	settings: TextTransformerSettings;
+	prompt: TextTransformerPrompt;
+	isGenerationTask: boolean;
+	provider: CustomProvider;
+	modelApiId: string;
+	oldText?: string;
+	assembledContext?: AssembledContextForLLM;
+}
+
 export async function geminiRequest(
 	plugin: TextTransformer,
-	settings: TextTransformerSettings,
-	oldText: string,
-	prompt: TextTransformerPrompt,
-	assembledContext: AssembledContextForLLM | undefined,
-	isGenerationTask: boolean,
-	provider: CustomProvider,
-	modelApiId: string,
+	params: GeminiRequestParams,
 ): Promise<{ newText: string } | undefined> {
+	// Destructure all parameters from the params object.
+	const {
+		settings,
+		prompt,
+		isGenerationTask,
+		provider,
+		modelApiId,
+		oldText = "", // Provide a safe default for generation tasks
+		assembledContext,
+	} = params;
+
 	if (!provider.apiKey) {
 		new Notice("Gemini API key is missing for the selected provider.", 6000);
 		return;
 	}
 
-	const { systemInstructions, userContent, contextBlock } = buildPromptComponents(
-		assembledContext,
+	const isGeminiModel = modelApiId.includes("gemini");
+
+	const { systemInstructions, userContent, contextBlock } = buildPromptComponents({
 		prompt,
 		isGenerationTask,
 		oldText,
-	);
+		...(assembledContext && { assembledContext }),
+	});
 
-	const systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
+	let finalUserContent = userContent;
+	let systemMessageContent = [systemInstructions, contextBlock].filter(Boolean).join("\n\n");
+
+	// For non-Gemini models, combine system instructions into the user content block
+	// as they do not support the top-level `systemInstruction` parameter.
+	if (!isGeminiModel && systemMessageContent) {
+		finalUserContent = `${systemMessageContent}\n\n${userContent}`;
+		systemMessageContent = ""; // Clear it so it's not used later
+	}
 
 	// Strip "google/" prefix from model ID if present, as Gemini API expects just the model name
 	const cleanModelId = modelApiId.startsWith("google/") ? modelApiId.slice(7) : modelApiId;
@@ -44,7 +72,7 @@ export async function geminiRequest(
 		generationConfig: Record<string, unknown>;
 		safetySettings: Record<string, string>[];
 	} = {
-		contents: [{ role: "user", parts: [{ text: userContent }] }],
+		contents: [{ role: "user", parts: [{ text: finalUserContent }] }],
 		generationConfig: {
 			temperature: settings.temperature,
 			maxOutputTokens: settings.max_tokens,
@@ -57,7 +85,8 @@ export async function geminiRequest(
 		],
 	};
 
-	if (systemMessageContent) {
+	// Only add the 'systemInstruction' block if it's a Gemini model and there's content for it.
+	if (isGeminiModel && systemMessageContent) {
 		requestBody.systemInstruction = {
 			parts: [{ text: systemMessageContent }],
 		};
