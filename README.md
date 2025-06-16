@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 3.1.0
+**Current Version:** 3.1.1
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -158,7 +158,7 @@ This release introduces a powerful **Modular Prompt Constructor** for text gener
   * **Smarter API Logic:** The underlying logic for communicating with different providers (OpenAI, OpenRouter, Anthropic, Google, local servers) has been simplified and made more robust, correctly leveraging each service's capabilities.
 * **Refined UI & Efficiency:** Various UI elements have been polished for a smoother and more intuitive user experience.
 
-**3.1.1**—Refactors the `chatCompletionRequest` function to use a single `ChatCompletionRequestParams` options object instead of a long list of individual parameters. This change improves code quality by:
+**3.1.1**—This version includes a significant under-the-hood architectural refactoring to enhance the plugin's stability, maintainability, and developer ergonomics. Core logic functions and UI components that previously used long, ordered lists of parameters have been updated to use a modern "Options Object" pattern. This extensive refactoring brings:
 
 - Increasing readability and self-documentation at call sites.
 - Enhancing type safety and eliminating the risk of parameter-swapping bugs.
