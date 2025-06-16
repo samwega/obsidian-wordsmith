@@ -97,7 +97,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 							new CustomProviderModal(this.app, {
 								plugin: this.plugin,
 								provider: provider,
-								onSave: async (updatedProvider) => {
+								onSave: async (updatedProvider): Promise<void> => {
 									const index = this.plugin.settings.customProviders.findIndex(
 										(p) => p.id === updatedProvider.id,
 									);
@@ -129,7 +129,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				new CustomProviderModal(this.app, {
 					plugin: this.plugin,
 					provider: null,
-					onSave: async (newProvider) => {
+					onSave: async (newProvider): Promise<void> => {
 						this.plugin.settings.customProviders.push(newProvider);
 						await this.plugin.saveSettings();
 						this.display();
