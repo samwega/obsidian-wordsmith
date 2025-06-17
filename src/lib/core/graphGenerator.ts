@@ -17,7 +17,7 @@ import { geminiRequest } from "../../llm/gemini";
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
 import { formatDateForFilename, getCmEditorView, logError } from "../utils";
-import { gatherContextForAI } from "./textTransformer";
+import { AssembledContextForLLM, gatherContextForAI } from "./textTransformer";
 
 const CANVAS_NODE_WIDTH = 480;
 const CANVAS_NODE_PADDING = 30;
@@ -304,11 +304,153 @@ function getGraphChatCompletionsRequestOptions(plugin: TextTransformer): {
 	return chatOptions;
 }
 
+/**
+ * Handles the API request and validation for graph data.
+ * @throws An error if the API call, JSON parsing, or validation fails.
+ */
+async function fetchAndValidateGraphData(
+	plugin: TextTransformer,
+	assembledContext: AssembledContextForLLM,
+): Promise<LlmKnowledgeGraph> {
+	const { settings } = plugin;
+	const { customProviders, selectedModelId } = settings;
+
+	const [providerName, modelApiId] = selectedModelId.split("//");
+	const provider = customProviders.find((p) => p.name === providerName);
+	if (!provider) {
+		// This check is technically redundant due to earlier checks, but good for safety.
+		throw new Error(`Provider "${providerName}" is not configured or disabled.`);
+	}
+
+	const promptComponents = buildGraphPrompt({ assembledContext });
+	const adHocPrompt: (typeof settings.prompts)[number] = {
+		id: "graph-generation",
+		name: "Graph Generation",
+		text: promptComponents.userContent,
+		isDefault: false,
+		enabled: true,
+	};
+
+	let response: { newText: string } | undefined;
+	const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
+
+	if (isGeminiProvider) {
+		response = await geminiRequest(plugin, {
+			settings,
+			prompt: adHocPrompt,
+			isGenerationTask: true,
+			provider,
+			modelApiId,
+			assembledContext,
+		});
+	} else {
+		const requestOptions = getGraphChatCompletionsRequestOptions(plugin);
+		if (!requestOptions) {
+			throw new Error("Could not construct valid request options for graph generation.");
+		}
+		response = await chatCompletionRequest(plugin, {
+			settings,
+			prompt: adHocPrompt,
+			isGenerationTask: true,
+			assembledContext,
+			...requestOptions,
+		});
+	}
+
+	if (!response?.newText) {
+		throw new Error("AI did not return any data for the graph.");
+	}
+
+	if (plugin.runtimeDebugMode) {
+		console.debug("[WordSmith plugin] Graph Generation: Raw LLM Response Text", response.newText);
+	}
+
+	const rawResponseText = response.newText.trim();
+	const jsonRegex = /```json\n([\s\S]*?)\n```/;
+	const match = rawResponseText.match(jsonRegex);
+	const jsonToParse = match ? match[1] : rawResponseText;
+	const parsedJson = JSON.parse(jsonToParse);
+
+	return validateLlmResponse(parsedJson);
+}
+
+/**
+ * Takes validated graph data and creates the canvas file in the vault.
+ */
+async function createCanvasFileFromGraph(
+	plugin: TextTransformer,
+	editor: Editor,
+	baseName: string,
+	graph: LlmKnowledgeGraph,
+): Promise<void> {
+	const { app, settings, manifest } = plugin;
+
+	const nodesWithDimensions: LayoutNode[] = graph.nodes.map((node) => ({
+		...node,
+		width: CANVAS_NODE_WIDTH,
+		height: calculateNodeHeight(`## ${node.label}\n\n${node.description}`, CANVAS_NODE_WIDTH),
+	}));
+
+	const nodesWithLayout = calculateLayout(nodesWithDimensions, graph.edges);
+	const { hubNodeIds, hubColor } = determineHubNodesAndColor(graph.edges);
+	const canvasJsonString = constructCanvasJson(nodesWithLayout, graph.edges, hubNodeIds, hubColor);
+	const finalFilename = generateUniqueFilename(baseName);
+	const filePath = normalizePath(`${settings.graphAssetPath}/${finalFilename}`);
+
+	if (!(await app.vault.adapter.exists(settings.graphAssetPath))) {
+		await app.vault.createFolder(settings.graphAssetPath);
+	}
+	const newFile = await app.vault.create(filePath, canvasJsonString);
+
+	const [providerName] = settings.selectedModelId.split("//");
+
+	// --- REFACTOR START ---
+	// Extract complex async calls and potentially null values into variables
+	// to simplify the final object creation for the type checker.
+	const contextPanel = plugin.getContextPanel();
+	const structuredCustomContext = contextPanel
+		? await contextPanel.getStructuredCustomContext()
+		: null;
+	const resolvedWikilinks =
+		structuredCustomContext?.referencedNotes.map((n) => n.sourcePath) ?? [];
+
+	const editorView = getCmEditorView(editor);
+	let customContextText: string | null = null;
+	if (editorView) {
+		// Only gather context if the editor view exists, avoiding the `!` operator.
+		const gatheredContext = await gatherContextForAI(plugin, editorView, "generation");
+		customContextText = gatheredContext.customContext ?? null;
+	}
+
+	// Now, create the metadata object from the simplified, pre-calculated variables.
+	const metadata: GraphCanvasMetadata = {
+		version: manifest.version,
+		createdAt: new Date().toISOString(),
+		modelProvider: providerName,
+		modelId: settings.selectedModelId,
+		contextSnapshot: {
+			resolvedWikilinks: resolvedWikilinks,
+			customContextText: customContextText,
+		},
+	};
+	// --- REFACTOR END ---
+
+	await app.fileManager.processFrontMatter(newFile, (frontmatter) => {
+		Object.assign(frontmatter, metadata);
+	});
+
+	editor.replaceSelection(`\n![[${newFile.path}]]\n`);
+	new Notice(`✅ Knowledge graph '${finalFilename}' created and embedded.`, 5000);
+}
+
+/**
+ * Main orchestrator for the knowledge graph generation workflow.
+ */
 export async function generateGraphAndCreateCanvas(
 	plugin: TextTransformer,
 	editor: Editor,
 ): Promise<void> {
-	const { app, settings, manifest } = plugin;
+	const { app, settings } = plugin;
 	const cm = getCmEditorView(editor);
 	if (!cm) {
 		new Notice("WordSmith requires a modern editor version.");
@@ -321,145 +463,26 @@ export async function generateGraphAndCreateCanvas(
 		return;
 	}
 
-	const notice = new Notice("Gathering context and preparing graph data...", 0);
-
-	const { customProviders, selectedModelId } = settings;
-	if (!selectedModelId) {
+	if (!settings.selectedModelId) {
 		new Notice("No model selected. Please select one in the context panel.", 6000);
-		notice.hide();
-		return;
-	}
-	const [providerName, modelApiId] = selectedModelId.split("//");
-	const provider = customProviders.find((p) => p.name === providerName);
-	if (!provider || !provider.isEnabled) {
-		new Notice(`Provider "${providerName}" is not configured or disabled.`, 6000);
-		notice.hide();
 		return;
 	}
 
-	const gatheredContext = await gatherContextForAI(plugin, cm, "generation");
-	const promptComponents = buildGraphPrompt({ assembledContext: gatheredContext });
-	const adHocPrompt: (typeof plugin.settings.prompts)[number] = {
-		id: "graph-generation",
-		name: "Graph Generation",
-		text: promptComponents.userContent,
-		isDefault: false,
-		enabled: true,
-	};
-
-	let response: { newText: string } | undefined;
+	const notice = new Notice("Gathering context and preparing graph data...", 0);
 	try {
-		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
-		if (isGeminiProvider) {
-			response = await geminiRequest(plugin, {
-				settings,
-				prompt: adHocPrompt,
-				isGenerationTask: true,
-				provider,
-				modelApiId,
-				assembledContext: gatheredContext,
-			});
-		} else {
-			const requestOptions = getGraphChatCompletionsRequestOptions(plugin);
-			if (!requestOptions) {
-				notice.hide();
-				return;
-			}
-			response = await chatCompletionRequest(plugin, {
-				settings,
-				prompt: adHocPrompt,
-				isGenerationTask: true,
-				assembledContext: gatheredContext,
-				...requestOptions,
-			});
-		}
-	} catch (error) {
-		notice.hide();
-		logError(error);
-		return;
-	}
+		const gatheredContext = await gatherContextForAI(plugin, cm, "generation");
 
-	if (!response?.newText) {
-		notice.hide();
-		new Notice("AI did not return any data for the graph.", 6000);
-		return;
-	}
-
-	if (plugin.runtimeDebugMode) {
-		console.debug("[WordSmith plugin] Graph Generation: Raw LLM Response Text", response.newText);
-	}
-
-	let validatedGraph: LlmKnowledgeGraph;
-	let nodesWithLayout: LayoutNode[];
-	try {
-		notice.setMessage("Parsing and validating graph data...");
-		const rawResponseText = response.newText.trim();
-		const jsonRegex = /```json\n([\s\S]*?)\n```/;
-		const match = rawResponseText.match(jsonRegex);
-		const jsonToParse = match ? match[1] : rawResponseText;
-		const parsedJson = JSON.parse(jsonToParse);
-		validatedGraph = validateLlmResponse(parsedJson);
-
-		notice.setMessage("Measuring text and preparing nodes...");
-		const nodesWithDimensions: LayoutNode[] = validatedGraph.nodes.map((node) => ({
-			...node,
-			width: CANVAS_NODE_WIDTH,
-			height: calculateNodeHeight(`## ${node.label}\n\n${node.description}`, CANVAS_NODE_WIDTH),
-		}));
+		notice.setMessage("Requesting graph data from AI...");
+		const validatedGraph = await fetchAndValidateGraphData(plugin, gatheredContext);
 
 		notice.setMessage("Calculating graph layout...");
-		nodesWithLayout = calculateLayout(nodesWithDimensions, validatedGraph.edges);
+		await createCanvasFileFromGraph(plugin, editor, baseName, validatedGraph);
+
+		notice.hide();
 	} catch (error) {
 		notice.hide();
-		new Notice(
-			`Failed to process graph data: ${error instanceof Error ? error.message : "Unknown error"}`,
-			8000,
-		);
-		console.error("WordSmith Graph Generation Error:", error);
-		console.error("Invalid LLM Response:", response.newText);
-		return;
-	}
-
-	notice.setMessage("Saving canvas and embedding link...");
-	const { hubNodeIds, hubColor } = determineHubNodesAndColor(validatedGraph.edges);
-	const canvasJsonString = constructCanvasJson(
-		nodesWithLayout,
-		validatedGraph.edges,
-		hubNodeIds,
-		hubColor,
-	);
-	const finalFilename = generateUniqueFilename(baseName);
-	const filePath = normalizePath(`${settings.graphAssetPath}/${finalFilename}`);
-
-	try {
-		if (!(await app.vault.adapter.exists(settings.graphAssetPath))) {
-			await app.vault.createFolder(settings.graphAssetPath);
-		}
-		const newFile = await app.vault.create(filePath, canvasJsonString);
-
-		const metadata: GraphCanvasMetadata = {
-			version: manifest.version,
-			createdAt: new Date().toISOString(),
-			modelProvider: providerName,
-			modelId: settings.selectedModelId,
-			contextSnapshot: {
-				resolvedWikilinks:
-					(await plugin.getContextPanel()?.getStructuredCustomContext())?.referencedNotes.map(
-						(n) => n.sourcePath,
-					) ?? [],
-				customContextText: gatheredContext.customContext ?? null,
-			},
-		};
-		await app.fileManager.processFrontMatter(newFile, (frontmatter) => {
-			Object.assign(frontmatter, metadata);
-		});
-
-		editor.replaceSelection(`\n![[${newFile.path}]]\n`);
-		notice.hide();
-		new Notice(`✅ Knowledge graph '${finalFilename}' created and embedded.`, 5000);
-	} catch (error) {
-		notice.hide();
+		const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+		new Notice(`Failed to generate graph: ${errorMessage}`, 8000);
 		logError(error);
-		new Notice("Failed to save the canvas file.", 6000);
 	}
 }

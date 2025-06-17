@@ -9,7 +9,13 @@ import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context
 
 import { chatCompletionRequest } from "../../llm/chat-completion-handler";
 import { geminiRequest } from "../../llm/gemini";
-import { GENERATION_TARGET_CURSOR_MARKER, NEWLINE_REMOVE_SYMBOL } from "../constants";
+import {
+	AITaskScope,
+	AITaskType,
+	GENERATION_TARGET_CURSOR_MARKER,
+	NEWLINE_REMOVE_SYMBOL,
+} from "../constants";
+import type { AITaskScopeType, AITaskType as AITaskTypeType } from "../constants";
 import {
 	SuggestionMark,
 	clearAllSuggestionsEffect,
@@ -26,22 +32,10 @@ export interface AssembledContextForLLM {
 	editorContextContent?: string;
 }
 
-/**
- * Defines the consolidated parameters for the AI change validation and application function.
- */
-interface ValidationAndApplyParams {
-	editor: Editor;
-	originalText: string;
-	scope: "Selection" | "Paragraph";
-	promptInfo: TextTransformerPrompt;
-	scopeRangeCm: { from: number; to: number };
-	file: TFile;
-}
-
 export async function gatherContextForAI(
 	plugin: TextTransformer,
 	cmView: EditorView,
-	taskType: "generation" | "transformation",
+	taskType: AITaskTypeType,
 	scopeDetails?: { range: { from: number; to: number }; originalText: string },
 ): Promise<AssembledContextForLLM> {
 	const { app, settings } = plugin;
@@ -82,7 +76,7 @@ export async function gatherContextForAI(
 		let startLineNum: number;
 		let endLineNum: number;
 
-		if (taskType === "generation") {
+		if (taskType === AITaskType.Generation) {
 			const cursorLineNum = doc.lineAt(cursorOffset).number;
 			startLineNum = Math.max(1, cursorLineNum - linesToInclude);
 			endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
@@ -101,7 +95,11 @@ export async function gatherContextForAI(
 			const line = doc.line(i);
 			let lineText = line.text;
 
-			if (taskType === "generation" && cursorOffset >= line.from && cursorOffset <= line.to) {
+			if (
+				taskType === AITaskType.Generation &&
+				cursorOffset >= line.from &&
+				cursorOffset <= line.to
+			) {
 				const charPosInLine = cursorOffset - line.from;
 				lineText =
 					lineText.substring(0, charPosInLine) +
@@ -116,7 +114,7 @@ export async function gatherContextForAI(
 		assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Current Note Context End ---`;
 	} else if (settings.useWholeNoteContext && currentFile) {
 		let fileContent = await app.vault.cachedRead(currentFile);
-		if (taskType === "generation") {
+		if (taskType === AITaskType.Generation) {
 			const cursorOffset = cmView.state.selection.main.head;
 			const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
 			fileContent =
@@ -206,7 +204,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 
 	const cursorOffset = cm.state.selection.main.head;
-	const additionalContextForAI = await gatherContextForAI(plugin, cm, "generation");
+	const additionalContextForAI = await gatherContextForAI(plugin, cm, AITaskType.Generation);
 
 	const adHocPrompt: TextTransformerPrompt = {
 		id: "ad-hoc-generation",
@@ -307,209 +305,166 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 }
 
-async function validateAndApplyAIDrivenChanges(
+/**
+ * Handles the API request for an AI transformation.
+ * @returns The AI's response or undefined if the request fails pre-flight checks.
+ */
+async function fetchAiTransformation(
 	plugin: TextTransformer,
-	params: ValidationAndApplyParams,
-): Promise<boolean> {
-	const { editor, originalText, scope, promptInfo, scopeRangeCm, file } = params;
-
-	const cm = getCmEditorView(editor);
-	if (!cm) {
-		new Notice("WordSmith requires a modern editor version.");
-		return false;
-	}
-
-	const existingSuggestions = cm.state.field(suggestionStateField, false);
-	if (existingSuggestions && existingSuggestions.length > 0) {
-		new Notice(
-			`${scope} already has active suggestions. Please accept or reject them first.`,
-			6000,
-		);
-		return false;
-	}
-
-	if (originalText.trim() === "") {
-		new Notice(`${scope} is empty.`);
-		return false;
-	}
-
+	prompt: TextTransformerPrompt,
+	originalText: string,
+	assembledContext: AssembledContextForLLM,
+): Promise<{ newText: string } | undefined> {
 	const { settings } = plugin;
 	const { customProviders, selectedModelId } = settings;
+
 	if (!selectedModelId) {
 		new Notice("No model selected. Please select one in the context panel.", 6000);
-		return false;
+		return;
 	}
 	const [providerName, modelApiId] = selectedModelId.split("//");
 	const provider = customProviders.find((p) => p.name === providerName);
 	if (!provider || !provider.isEnabled) {
 		new Notice(`Provider "${providerName}" is not configured or disabled.`, 6000);
-		return false;
+		return;
 	}
 
-	const fileBeforePath = file.path;
-	const notice = new Notice(`🤖 Transforming ${scope.toLowerCase()}...`, 0);
-
-	const currentPrompt: TextTransformerPrompt = { ...promptInfo };
-	if (currentPrompt.id === "translate") {
-		currentPrompt.text = currentPrompt.text.replace(
-			"{language}",
-			plugin.settings.translationLanguage?.trim() || "English",
-		);
-	}
-
-	try {
-		const additionalContextForAI = await gatherContextForAI(plugin, cm, "transformation", {
-			range: scopeRangeCm,
-			originalText,
+	const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
+	if (isGeminiProvider) {
+		return geminiRequest(plugin, {
+			settings,
+			prompt,
+			isGenerationTask: false,
+			provider,
+			modelApiId,
+			oldText: originalText,
+			assembledContext,
 		});
+	}
 
-		let response: { newText: string } | undefined;
+	const requestOptions = getChatCompletionsRequestOptions(plugin);
+	if (!requestOptions) {
+		return;
+	}
+	return chatCompletionRequest(plugin, {
+		settings,
+		prompt,
+		isGenerationTask: false,
+		oldText: originalText,
+		assembledContext,
+		...requestOptions,
+	});
+}
 
-		const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
-		if (isGeminiProvider) {
-			response = await geminiRequest(plugin, {
-				settings,
-				prompt: currentPrompt,
-				isGenerationTask: false,
-				provider,
-				modelApiId,
-				oldText: originalText,
-				assembledContext: additionalContextForAI,
-			});
+/**
+ * Diffs the AI's response with the original text and applies the changes as suggestions in the editor.
+ */
+function applyTransformationAsSuggestions(
+	cm: EditorView,
+	originalText: string,
+	newText: string,
+	scopeRangeCm: { from: number; to: number },
+): void {
+	const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
+	const normalizedNewText = newText.replace(/\r\n|\r/g, "\n");
+
+	const diffResult = diffWordsWithSpace(normalizedOriginalText, normalizedNewText);
+	if (!diffResult.some((part) => part.added || part.removed)) {
+		new Notice("✅ No changes suggested by AI.", 4000);
+		return;
+	}
+
+	const suggestionMarksToApply: SuggestionMark[] = [];
+	let currentOffsetInOriginalDocSegment = 0;
+
+	for (const part of diffResult) {
+		const partValue = part.value;
+
+		if (part.added) {
+			let currentPosInPartValue = 0;
+			while (currentPosInPartValue < partValue.length) {
+				const markAnchorPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
+				let ghostTextSegment = "";
+				let isNewlineSeg = false;
+
+				if (partValue.startsWith("\n", currentPosInPartValue)) {
+					ghostTextSegment = "\n";
+					isNewlineSeg = true;
+					currentPosInPartValue += 1;
+				} else {
+					const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
+					const endOfTextSegment =
+						nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
+					ghostTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+					currentPosInPartValue = endOfTextSegment;
+				}
+
+				if (ghostTextSegment.length > 0) {
+					suggestionMarksToApply.push({
+						id: generateSuggestionId(),
+						from: markAnchorPosInDoc,
+						to: markAnchorPosInDoc,
+						type: "added",
+						ghostText: ghostTextSegment,
+						isNewlineChange: isNewlineSeg,
+						newlineChar: isNewlineSeg ? "\n" : undefined,
+					});
+				}
+			}
+		} else if (part.removed) {
+			let currentPosInPartValue = 0;
+			while (currentPosInPartValue < partValue.length) {
+				const markStartPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
+				let removedTextSegment = "";
+				let isNewlineSeg = false;
+
+				if (partValue.startsWith("\n", currentPosInPartValue)) {
+					removedTextSegment = "\n";
+					isNewlineSeg = true;
+					currentPosInPartValue += 1;
+				} else {
+					const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
+					const endOfTextSegment =
+						nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
+					removedTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
+					currentPosInPartValue = endOfTextSegment;
+				}
+
+				if (removedTextSegment.length > 0) {
+					const markEndPosInDoc = markStartPosInDoc + removedTextSegment.length;
+					suggestionMarksToApply.push({
+						id: generateSuggestionId(),
+						from: markStartPosInDoc,
+						to: markEndPosInDoc,
+						type: "removed",
+						isNewlineChange: isNewlineSeg,
+						newlineChar: isNewlineSeg ? "\n" : undefined,
+						ghostText: isNewlineSeg ? NEWLINE_REMOVE_SYMBOL : "",
+					});
+					currentOffsetInOriginalDocSegment += removedTextSegment.length;
+				}
+			}
 		} else {
-			const requestOptions = getChatCompletionsRequestOptions(plugin);
-			if (!requestOptions) {
-				notice.hide();
-				return false;
-			}
-			response = await chatCompletionRequest(plugin, {
-				settings,
-				prompt: currentPrompt,
-				isGenerationTask: false,
-				oldText: originalText,
-				assembledContext: additionalContextForAI,
-				...requestOptions,
-			});
+			currentOffsetInOriginalDocSegment += partValue.length;
 		}
-
-		notice.hide();
-		if (fileBeforePath !== plugin.app.workspace.getActiveFile()?.path) {
-			new Notice("⚠️ Active file changed during transformation. Aborting.", 5000);
-			return false;
-		}
-
-		const { newText: newTextFromAI } = response || {};
-		if (!newTextFromAI) {
-			new Notice("AI did not return new text.", 5000);
-			return false;
-		}
-
-		const normalizedOriginalText = originalText.replace(/\r\n|\r/g, "\n");
-		const normalizedNewTextFromAI = newTextFromAI.replace(/\r\n|\r/g, "\n");
-
-		const diffResult = diffWordsWithSpace(normalizedOriginalText, normalizedNewTextFromAI);
-		if (!diffResult.some((part) => part.added || part.removed)) {
-			new Notice("✅ No changes suggested by AI.", 4000);
-			return false;
-		}
-
-		const suggestionMarksToApply: SuggestionMark[] = [];
-		let currentOffsetInOriginalDocSegment = 0;
-
-		for (const part of diffResult) {
-			const partValue = part.value;
-
-			if (part.added) {
-				let currentPosInPartValue = 0;
-				while (currentPosInPartValue < partValue.length) {
-					const markAnchorPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
-					let ghostTextSegment = "";
-					let isNewlineSeg = false;
-
-					if (partValue.startsWith("\n", currentPosInPartValue)) {
-						ghostTextSegment = "\n";
-						isNewlineSeg = true;
-						currentPosInPartValue += 1;
-					} else {
-						const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
-						const endOfTextSegment =
-							nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
-						ghostTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
-						currentPosInPartValue = endOfTextSegment;
-					}
-
-					if (ghostTextSegment.length > 0) {
-						suggestionMarksToApply.push({
-							id: generateSuggestionId(),
-							from: markAnchorPosInDoc,
-							to: markAnchorPosInDoc,
-							type: "added",
-							ghostText: ghostTextSegment,
-							isNewlineChange: isNewlineSeg,
-							newlineChar: isNewlineSeg ? "\n" : undefined,
-						});
-					}
-				}
-			} else if (part.removed) {
-				let currentPosInPartValue = 0;
-				while (currentPosInPartValue < partValue.length) {
-					const markStartPosInDoc = scopeRangeCm.from + currentOffsetInOriginalDocSegment;
-					let removedTextSegment = "";
-					let isNewlineSeg = false;
-
-					if (partValue.startsWith("\n", currentPosInPartValue)) {
-						removedTextSegment = "\n";
-						isNewlineSeg = true;
-						currentPosInPartValue += 1;
-					} else {
-						const nextNewlineIndex = partValue.indexOf("\n", currentPosInPartValue);
-						const endOfTextSegment =
-							nextNewlineIndex === -1 ? partValue.length : nextNewlineIndex;
-						removedTextSegment = partValue.substring(currentPosInPartValue, endOfTextSegment);
-						currentPosInPartValue = endOfTextSegment;
-					}
-
-					if (removedTextSegment.length > 0) {
-						const markEndPosInDoc = markStartPosInDoc + removedTextSegment.length;
-						suggestionMarksToApply.push({
-							id: generateSuggestionId(),
-							from: markStartPosInDoc,
-							to: markEndPosInDoc,
-							type: "removed",
-							isNewlineChange: isNewlineSeg,
-							newlineChar: isNewlineSeg ? "\n" : undefined,
-							ghostText: isNewlineSeg ? NEWLINE_REMOVE_SYMBOL : "",
-						});
-						currentOffsetInOriginalDocSegment += removedTextSegment.length;
-					}
-				}
-			} else {
-				currentOffsetInOriginalDocSegment += partValue.length;
-			}
-		}
-
-		cm.dispatch({
-			effects: [
-				clearAllSuggestionsEffect.of(null),
-				setSuggestionsEffect.of(suggestionMarksToApply),
-			],
-			selection:
-				suggestionMarksToApply.length > 0
-					? EditorSelection.cursor(suggestionMarksToApply[0].from)
-					: EditorSelection.cursor(scopeRangeCm.from),
-			scrollIntoView: true,
-		});
-
-		new Notice(
-			`✅ ${suggestionMarksToApply.length} suggestion${suggestionMarksToApply.length === 1 ? "" : "s"} applied.`,
-			5000,
-		);
-		return true;
-	} catch (error) {
-		notice.hide();
-		logError(error);
-		return false;
 	}
+
+	cm.dispatch({
+		effects: [
+			clearAllSuggestionsEffect.of(null),
+			setSuggestionsEffect.of(suggestionMarksToApply),
+		],
+		selection:
+			suggestionMarksToApply.length > 0
+				? EditorSelection.cursor(suggestionMarksToApply[0].from)
+				: EditorSelection.cursor(scopeRangeCm.from),
+		scrollIntoView: true,
+	});
+
+	new Notice(
+		`✅ ${suggestionMarksToApply.length} suggestion${suggestionMarksToApply.length === 1 ? "" : "s"} applied.`,
+		5000,
+	);
 }
 
 export async function textTransformerTextCM6(
@@ -528,8 +483,15 @@ export async function textTransformerTextCM6(
 		return;
 	}
 
+	const existingSuggestions = cm.state.field(suggestionStateField, false);
+	if (existingSuggestions && existingSuggestions.length > 0) {
+		new Notice("There are already active suggestions. Please accept or reject them first.", 6000);
+		return;
+	}
+
+	// 1. Determine Scope
 	let originalText: string;
-	let textScope: "Selection" | "Paragraph";
+	let textScope: AITaskScopeType;
 	let rangeCm: { from: number; to: number };
 	const currentCmSelection = cm.state.selection.main;
 
@@ -555,19 +517,64 @@ export async function textTransformerTextCM6(
 		}
 		rangeCm = { from: paraStartLine.from, to: paraEndLine.to };
 		originalText = cm.state.sliceDoc(rangeCm.from, rangeCm.to);
-		textScope = "Paragraph";
+		textScope = AITaskScope.Paragraph;
 	} else {
 		originalText = cm.state.sliceDoc(currentCmSelection.from, currentCmSelection.to);
-		textScope = "Selection";
+		textScope = AITaskScope.Selection;
 		rangeCm = { from: currentCmSelection.from, to: currentCmSelection.to };
 	}
 
-	await validateAndApplyAIDrivenChanges(plugin, {
-		editor,
-		originalText,
-		scope: textScope,
-		promptInfo: prompt,
-		scopeRangeCm: rangeCm,
-		file,
-	});
+	if (originalText.trim() === "") {
+		new Notice(`${textScope} is empty.`);
+		return;
+	}
+
+	// 2. Prepare and Orchestrate
+	const notice = new Notice(`🤖 Transforming ${textScope.toLowerCase()}...`, 0);
+	const fileBeforePath = file.path;
+
+	try {
+		const currentPrompt: TextTransformerPrompt = { ...prompt };
+		if (currentPrompt.id === "translate") {
+			currentPrompt.text = currentPrompt.text.replace(
+				"{language}",
+				plugin.settings.translationLanguage?.trim() || "English",
+			);
+		}
+
+		const additionalContextForAI = await gatherContextForAI(
+			plugin,
+			cm,
+			AITaskType.Transformation,
+			{
+				range: rangeCm,
+				originalText,
+			},
+		);
+
+		const response = await fetchAiTransformation(
+			plugin,
+			currentPrompt,
+			originalText,
+			additionalContextForAI,
+		);
+
+		notice.hide();
+
+		if (fileBeforePath !== plugin.app.workspace.getActiveFile()?.path) {
+			new Notice("⚠️ Active file changed during transformation. Aborting.", 5000);
+			return;
+		}
+
+		const { newText: newTextFromAI } = response || {};
+		if (!newTextFromAI) {
+			new Notice("AI did not return new text.", 5000);
+			return;
+		}
+
+		applyTransformationAsSuggestions(cm, originalText, newTextFromAI, rangeCm);
+	} catch (error) {
+		notice.hide();
+		logError(error);
+	}
 }

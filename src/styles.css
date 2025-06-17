@@ -462,10 +462,29 @@ body.theme-light .text-transformer-removed-active {
 	justify-content: right;
 	padding: 12px 5px;
 }
-.tt-model-list-container {
-	max-height: 55vh;
+
+/* --- Virtual List for Model Selection Modal --- */
+.tt-virtual-list-container {
+	position: relative;
 	overflow-y: auto;
+	height: 55vh;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
 }
+
+.tt-virtual-list-sizer {
+	position: relative;
+	width: 100%;
+	height: 0; /* Will be set by JS */
+}
+
+.tt-virtual-list-items {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+}
+
 .tt-model-list-item {
 	display: flex;
 	justify-content: space-between;
@@ -474,7 +493,10 @@ body.theme-light .text-transformer-removed-active {
 	border-bottom: 1px solid var(--background-modifier-border-hover);
 	cursor: pointer;
 	border-left: 2px solid transparent;
+	height: 56px;
+	box-sizing: border-box;
 }
+
 .tt-model-list-item:not(.is-selected):hover {
 	background-color: var(--background-modifier-hover);
 }

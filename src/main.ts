@@ -1,6 +1,7 @@
 // src/main.ts
 import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
+import { SuggestionAction } from "./lib/constants";
 import { generateGraphAndCreateCanvas } from "./lib/core/graphGenerator";
 import {
 	generateTextAndApplyAsSuggestionCM6,
@@ -66,6 +67,12 @@ export default class TextTransformer extends Plugin {
 
 		this.registerView(CONTEXT_CONTROL_VIEW_TYPE, (leaf) => new ContextControlPanel(leaf, this));
 
+		this._registerCommands();
+
+		console.info(this.manifest.name + " Plugin loaded successfully.");
+	}
+
+	private _registerCommands(): void {
 		this.addCommand({
 			id: "open-context-control-panel",
 			name: "Open AI Context Control Panel",
@@ -169,7 +176,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, "accept");
+					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.Accept);
 				} else {
 					new Notice("No active file.");
 				}
@@ -182,7 +189,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, "reject");
+					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.Reject);
 				} else {
 					new Notice("No active file.");
 				}
@@ -195,7 +202,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, "accept");
+					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.Accept);
 				} else {
 					new Notice("No active file.");
 				}
@@ -208,7 +215,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, "reject");
+					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.Reject);
 				} else {
 					new Notice("No active file.");
 				}
@@ -246,8 +253,6 @@ export default class TextTransformer extends Plugin {
 			},
 			icon: "arrow-up-circle",
 		});
-
-		console.info(this.manifest.name + " Plugin loaded successfully.");
 	}
 
 	async activateView(): Promise<void> {

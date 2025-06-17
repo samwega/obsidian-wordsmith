@@ -4,6 +4,9 @@ import { getProviderInfo } from "../../lib/provider-utils";
 import type { Model } from "../../lib/settings-data";
 import type TextTransformer from "../../main";
 
+const ITEM_HEIGHT = 56; // The fixed height of a single model item in pixels
+const VISIBLE_ITEMS_BUFFER = 5; // Render a few extra items above/below the viewport
+
 export class ModelSelectionModal extends Modal {
 	private plugin: TextTransformer;
 	private allModels: Model[] = [];
@@ -11,44 +14,68 @@ export class ModelSelectionModal extends Modal {
 	private selectedProvider = "All";
 	private searchQuery = "";
 
-	private modelListContainer!: HTMLDivElement;
+	// --- UI Elements ---
 	private providerDropdown!: HTMLSelectElement;
 	private searchInput!: TextComponent;
 	private searchDebounceTimer: number | null = null;
-	private isPopulatingFilter = false; // --- FIX: Use a guard flag to prevent event loops ---
+	private isPopulatingFilter = false;
+
+	// --- Virtualization Elements ---
+	private listContainerEl!: HTMLDivElement;
+	private listSizerEl!: HTMLDivElement;
+	private listItemsEl!: HTMLDivElement;
+	private isScrolling = false;
 
 	constructor(app: App, plugin: TextTransformer) {
 		super(app);
 		this.plugin = plugin;
 	}
 
-	override async onOpen(): Promise<void> {
-		this.modalEl.addClass("tt-model-selection-modal"); // Apply class to the root modal element
+	override onOpen(): void {
+		this.modalEl.addClass("tt-model-selection-modal");
 		const { contentEl } = this;
 		contentEl.empty();
 
 		contentEl.createEl("h2", { text: "Browse Models" });
 
 		this.renderFilters(contentEl);
-		this.modelListContainer = contentEl.createDiv({ cls: "tt-model-list-container" });
+		this.setupVirtualList(contentEl);
 
-		// Use a timeout to ensure the element is fully rendered and focusable.
 		setTimeout(() => {
 			this.searchInput?.inputEl.focus();
 		}, 0);
 
-		const loadingEl = this.modelListContainer.createEl("p", { text: "Fetching models..." });
+		this.listItemsEl.createEl("p", { text: "Fetching models..." });
 
+		this.loadAndRenderModels();
+	}
+
+	private setupVirtualList(container: HTMLElement): void {
+		this.listContainerEl = container.createDiv({ cls: "tt-virtual-list-container" });
+		this.listSizerEl = this.listContainerEl.createDiv({ cls: "tt-virtual-list-sizer" });
+		this.listItemsEl = this.listContainerEl.createDiv({ cls: "tt-virtual-list-items" });
+
+		this.listContainerEl.addEventListener("scroll", () => {
+			if (!this.isScrolling) {
+				window.requestAnimationFrame(() => {
+					this.renderVisibleItems();
+					this.isScrolling = false;
+				});
+				this.isScrolling = true;
+			}
+		});
+	}
+
+	private async loadAndRenderModels(): Promise<void> {
 		try {
 			this.allModels = await this.plugin.modelService.getModels();
 			this.allModels = this.plugin.favoritesService.enrichModelsWithFavorites(this.allModels);
-			this.populateProviderFilter(); // Populate the dropdown once with all providers.
-			this.applyFiltersAndRender(); // Then, render the list based on default filters.
+			this.populateProviderFilter();
+			this.applyFiltersAndRender();
 		} catch (error) {
 			console.error("[WordSmith] Error fetching models for modal:", error);
-			this.modelListContainer.setText("Failed to load models. Check your provider settings.");
-		} finally {
-			loadingEl.remove();
+			this.listItemsEl.empty();
+			this.listItemsEl.setText("Failed to load models. Check your provider settings.");
 		}
 	}
 
@@ -67,7 +94,7 @@ export class ModelSelectionModal extends Modal {
 				this.searchDebounceTimer = window.setTimeout(() => {
 					this.searchQuery = value.toLowerCase();
 					this.applyFiltersAndRender();
-				}, 200); // 200ms delay is a good balance between responsiveness and performance
+				}, 200);
 			});
 			text.inputEl.addClass("tt-model-search-input");
 		});
@@ -76,7 +103,6 @@ export class ModelSelectionModal extends Modal {
 		this.providerDropdown = providerFilterSetting.controlEl.createEl("select");
 		this.providerDropdown.addClass("dropdown");
 		this.providerDropdown.onchange = (e: Event): void => {
-			// --- FIX: Check the guard flag before executing ---
 			if (this.isPopulatingFilter) return;
 			this.selectedProvider = (e.target as HTMLSelectElement).value;
 			this.applyFiltersAndRender();
@@ -89,6 +115,10 @@ export class ModelSelectionModal extends Modal {
 			.setTooltip("Bypass cache and fetch the latest models from all providers")
 			.onClick(async () => {
 				const notice = new Notice("Refreshing model list...", 0);
+				// Show loading state *inside* the virtual list structure
+				this.listItemsEl.empty();
+				this.listSizerEl.style.height = "0px";
+				this.listItemsEl.createEl("p", { text: "Refreshing..." });
 				try {
 					this.allModels = await this.plugin.modelService.getModels(true);
 					this.allModels = this.plugin.favoritesService.enrichModelsWithFavorites(
@@ -100,6 +130,8 @@ export class ModelSelectionModal extends Modal {
 					setTimeout(() => notice.hide(), 2000);
 				} catch (error) {
 					console.error("[WordSmith] Error refreshing models:", error);
+					this.listItemsEl.empty();
+					this.listItemsEl.setText("Failed to refresh models.");
 					notice.setMessage("Failed to refresh models.");
 					setTimeout(() => notice.hide(), 3000);
 				}
@@ -107,7 +139,6 @@ export class ModelSelectionModal extends Modal {
 	}
 
 	private populateProviderFilter(): void {
-		// --- FIX: Set the guard flag to prevent the onchange handler from firing ---
 		this.isPopulatingFilter = true;
 		try {
 			const currentVal = this.providerDropdown.value;
@@ -119,11 +150,9 @@ export class ModelSelectionModal extends Modal {
 				this.providerDropdown.appendChild(option);
 			});
 			if (providers.includes(currentVal)) {
-				// This programmatic change will no longer trigger the event handler
 				this.providerDropdown.value = currentVal;
 			}
 		} finally {
-			// --- FIX: Unset the guard flag after the operation is complete ---
 			this.isPopulatingFilter = false;
 		}
 	}
@@ -146,89 +175,106 @@ export class ModelSelectionModal extends Modal {
 		models.sort((a, b) => {
 			if (a.isFavorite && !b.isFavorite) return -1;
 			if (!a.isFavorite && b.isFavorite) return 1;
-
 			const providerCompare = a.provider.localeCompare(b.provider);
 			if (providerCompare !== 0) return providerCompare;
-
 			return a.name.localeCompare(b.name);
 		});
 
 		this.filteredModels = models;
-		this.renderModelList();
+
+		// Reset scroll and render the initial visible items
+		this.listContainerEl.scrollTop = 0;
+		this.renderVisibleItems();
 	}
 
-	private renderModelList(): void {
-		this.modelListContainer.empty();
-		if (this.filteredModels.length === 0) {
-			this.modelListContainer.createEl("p", { text: "No models match your criteria." });
+	private renderVisibleItems(): void {
+		const totalItems = this.filteredModels.length;
+		this.listSizerEl.style.height = `${totalItems * ITEM_HEIGHT}px`;
+
+		// Always clear the currently rendered items before adding new ones
+		this.listItemsEl.empty();
+
+		if (totalItems === 0) {
+			this.listItemsEl.createEl("p", { text: "No models match your criteria." });
 			return;
 		}
 
-		for (const model of this.filteredModels) {
-			const modelEl = this.modelListContainer.createDiv({ cls: "tt-model-list-item" });
-			if (model.isFavorite) modelEl.addClass("is-favorite");
-			if (this.plugin.settings.selectedModelId === model.id) modelEl.addClass("is-selected");
+		const containerHeight = this.listContainerEl.clientHeight;
+		const scrollTop = this.listContainerEl.scrollTop;
 
-			const infoEl = modelEl.createDiv({ cls: "tt-model-info" });
-			infoEl.createEl("div", { text: model.name, cls: "tt-model-name" });
+		const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - VISIBLE_ITEMS_BUFFER);
+		const endIndex = Math.min(
+			totalItems,
+			Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + VISIBLE_ITEMS_BUFFER,
+		);
 
-			if (model.description) {
-				infoEl.createEl("div", {
-					text: model.description,
-					cls: "tt-model-description",
-				});
-				modelEl.title = model.description;
-			}
+		this.listItemsEl.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
 
-			const actionsEl = modelEl.createDiv({ cls: "tt-model-actions" });
-			const providerInfo = getProviderInfo(model.provider);
-			actionsEl.createDiv({
-				text: `${providerInfo.symbol} ${model.provider}`,
-				cls: "tt-provider-tag",
-			});
-
-			const favButtonContainer = actionsEl.createDiv({
-				cls: "tt-model-favorite-button-container",
-			});
-			new Setting(favButtonContainer)
-				.addButton((button) => {
-					button
-						.setIcon("star")
-						.setTooltip(model.isFavorite ? "Remove from favorites" : "Add to favorites")
-						.onClick(async (evt: MouseEvent) => {
-							evt.stopPropagation();
-
-							// --- FIX: Update data and re-render to reflect changes immediately ---
-							if (model.isFavorite) {
-								await this.plugin.favoritesService.removeFavorite(model.id);
-							} else {
-								await this.plugin.favoritesService.addFavorite(model);
-							}
-
-							// Find the model in the master list and update its favorite status.
-							// This is the source of truth for the next render.
-							const modelInAllModels = this.allModels.find((m) => m.id === model.id);
-							if (modelInAllModels) {
-								modelInAllModels.isFavorite = !modelInAllModels.isFavorite;
-							}
-
-							// Re-run the filter/sort/render pipeline to update the entire view,
-							// which correctly handles re-ordering of favorited items.
-							this.applyFiltersAndRender();
-						});
-				})
-				.settingEl.removeClass("setting-item");
-
-			modelEl.addEventListener("click", async () => {
-				this.plugin.settings.selectedModelId = model.id;
-				await this.plugin.updateTemperatureForModel(model.id);
-
-				if (!this.plugin.favoritesService.isFavorite(model.id)) {
-					await this.plugin.favoritesService.addFavorite(model);
-				}
-				this.close();
-			});
+		for (let i = startIndex; i < endIndex; i++) {
+			const model = this.filteredModels[i];
+			const modelEl = this._renderItem(model);
+			this.listItemsEl.appendChild(modelEl);
 		}
+	}
+
+	private _renderItem(model: Model): HTMLElement {
+		const modelEl = document.createElement("div");
+		modelEl.className = "tt-model-list-item";
+		if (model.isFavorite) modelEl.addClass("is-favorite");
+		if (this.plugin.settings.selectedModelId === model.id) modelEl.addClass("is-selected");
+
+		const infoEl = modelEl.createDiv({ cls: "tt-model-info" });
+		infoEl.createEl("div", { text: model.name, cls: "tt-model-name" });
+
+		if (model.description) {
+			infoEl.createEl("div", {
+				text: model.description,
+				cls: "tt-model-description",
+			});
+			modelEl.title = model.description;
+		}
+
+		const actionsEl = modelEl.createDiv({ cls: "tt-model-actions" });
+		const providerInfo = getProviderInfo(model.provider);
+		actionsEl.createDiv({
+			text: `${providerInfo.symbol} ${model.provider}`,
+			cls: "tt-provider-tag",
+		});
+
+		const favButtonContainer = actionsEl.createDiv({
+			cls: "tt-model-favorite-button-container",
+		});
+		new Setting(favButtonContainer)
+			.addButton((button) => {
+				button
+					.setIcon("star")
+					.setTooltip(model.isFavorite ? "Remove from favorites" : "Add to favorites")
+					.onClick(async (evt: MouseEvent) => {
+						evt.stopPropagation();
+						if (model.isFavorite) {
+							await this.plugin.favoritesService.removeFavorite(model.id);
+						} else {
+							await this.plugin.favoritesService.addFavorite(model);
+						}
+						const modelInAllModels = this.allModels.find((m) => m.id === model.id);
+						if (modelInAllModels) {
+							modelInAllModels.isFavorite = !modelInAllModels.isFavorite;
+						}
+						this.applyFiltersAndRender();
+					});
+			})
+			.settingEl.removeClass("setting-item");
+
+		modelEl.addEventListener("click", async () => {
+			this.plugin.settings.selectedModelId = model.id;
+			await this.plugin.updateTemperatureForModel(model.id);
+			if (!this.plugin.favoritesService.isFavorite(model.id)) {
+				await this.plugin.favoritesService.addFavorite(model);
+			}
+			this.close();
+		});
+
+		return modelEl;
 	}
 
 	override onClose(): void {

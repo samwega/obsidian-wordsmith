@@ -334,14 +334,43 @@ export class ContextControlPanel extends ItemView {
 		return super.onClose();
 	}
 
+	private async _resolveWikilinkToNoteData(
+		linkPath: string,
+		originalWikilink: string,
+		aliasText?: string,
+	): Promise<ReferencedNoteData> {
+		const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPath, "");
+		const noteData: ReferencedNoteData = {
+			originalWikilink,
+			linkText: linkPath,
+			sourcePath: file instanceof TFile ? file.path : "[NOT FOUND]",
+			content: "", // Default empty content
+			...(aliasText !== undefined && { aliasText }),
+		};
+
+		if (file instanceof TFile) {
+			try {
+				noteData.content = await this.plugin.app.vault.cachedRead(file);
+			} catch (error) {
+				noteData.content = `[Error reading note: ${error instanceof Error ? error.message : "Unknown error"}]`;
+			}
+		} else {
+			noteData.content = "[This note could not be found.]";
+		}
+
+		return noteData;
+	}
+
 	async getStructuredCustomContext(): Promise<StructuredCustomContext> {
 		const { settings } = this.plugin;
 		if (!settings.useCustomContext || !settings.customContextText) {
 			return { rawText: settings.customContextText || "", referencedNotes: [] };
 		}
+
 		const textToProcess = settings.customContextText;
 		const wikilinkRegex = /\[\[([^\]]+?)\]\]/g;
 		const uniqueReferencedNotes = new Map<string, Promise<ReferencedNoteData>>();
+		const promises: Promise<ReferencedNoteData>[] = [];
 
 		if (!this.plugin || !this.plugin.app) {
 			console.error(
@@ -349,6 +378,7 @@ export class ContextControlPanel extends ItemView {
 			);
 			return { rawText: textToProcess, referencedNotes: [] };
 		}
+
 		let match: RegExpExecArray | null = null;
 		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while loop condition for brevity
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
@@ -357,52 +387,19 @@ export class ContextControlPanel extends ItemView {
 			const parts = linkFullText.split("|");
 			const linkPathOnly = parts[0].trim();
 			const aliasText = parts.length > 1 ? parts[1].trim() : undefined;
+
 			if (!uniqueReferencedNotes.has(linkPathOnly)) {
-				const promise = (async (): Promise<ReferencedNoteData> => {
-					const file = this.plugin.app.metadataCache.getFirstLinkpathDest(linkPathOnly, "");
-					if (file instanceof TFile) {
-						try {
-							const content = await this.plugin.app.vault.cachedRead(file);
-							const noteData: ReferencedNoteData = {
-								originalWikilink,
-								linkText: linkPathOnly,
-								sourcePath: file.path,
-								content,
-							};
-							if (aliasText !== undefined) {
-								noteData.aliasText = aliasText;
-							}
-							return noteData;
-						} catch (error) {
-							const noteData: ReferencedNoteData = {
-								originalWikilink,
-								linkText: linkPathOnly,
-								sourcePath: file.path,
-								content: `[Error reading note: ${error instanceof Error ? error.message : "Unknown error"}]`,
-							};
-							if (aliasText !== undefined) {
-								noteData.aliasText = aliasText;
-							}
-							return noteData;
-						}
-					} else {
-						const noteData: ReferencedNoteData = {
-							originalWikilink,
-							linkText: linkPathOnly,
-							sourcePath: "[NOT FOUND]",
-							content: "[This note could not be found.]",
-						};
-						if (aliasText !== undefined) {
-							noteData.aliasText = aliasText;
-						}
-						return noteData;
-					}
-				})();
+				const promise = this._resolveWikilinkToNoteData(
+					linkPathOnly,
+					originalWikilink,
+					aliasText,
+				);
 				uniqueReferencedNotes.set(linkPathOnly, promise);
+				promises.push(promise);
 			}
 		}
 
-		const resolvedNotes = await Promise.all(Array.from(uniqueReferencedNotes.values()));
+		const resolvedNotes = await Promise.all(promises);
 		return { rawText: textToProcess, referencedNotes: resolvedNotes };
 	}
 }

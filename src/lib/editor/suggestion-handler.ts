@@ -4,6 +4,8 @@ import { EditorView } from "@codemirror/view";
 import { Editor, Notice, TFile } from "obsidian";
 
 import type TextTransformer from "../../main";
+import { SuggestionAction } from "../constants";
+import type { SuggestionActionType } from "../constants";
 import { getCmEditorView } from "../utils";
 import {
 	ParagraphRange,
@@ -20,7 +22,6 @@ import {
 
 const SCROLL_COMFORT_ZONE_PX = 200;
 
-type SuggestionAction = "accept" | "reject";
 export type TextChangeSpec = { from: number; to: number; insert: string }; // Exporting for use in function return type
 
 function showNotice(message: string, duration = 3000): void {
@@ -36,9 +37,9 @@ function createScrollEffect(position: number): StateEffect<unknown> {
 
 function createTextChangeSpec(
 	mark: SuggestionMark,
-	action: SuggestionAction,
+	action: SuggestionActionType,
 ): TextChangeSpec | undefined {
-	if (action === "accept") {
+	if (action === SuggestionAction.Accept) {
 		if (mark.type === "added") {
 			const textToInsert =
 				mark.isNewlineChange && mark.newlineChar ? mark.newlineChar : (mark.ghostText ?? "");
@@ -160,7 +161,7 @@ function findNextSuggestionMark(cm: EditorView, fromPos?: number): SuggestionMar
 
 function createResolutionTransaction(
 	targetMark: SuggestionMark,
-	action: SuggestionAction,
+	action: SuggestionActionType,
 	shouldForceResolve: boolean, // This seems to control scrolling, not used for cursor logic directly
 ): TransactionSpec {
 	const textChangeSpec = createTextChangeSpec(targetMark, action);
@@ -209,7 +210,7 @@ function createResolutionTransaction(
  */
 function createBulkResolutionComponents(
 	marksToResolve: readonly SuggestionMark[],
-	action: SuggestionAction,
+	action: SuggestionActionType,
 ): {
 	changes: TextChangeSpec[];
 	effects: StateEffect<{ id: string }>[];
@@ -237,7 +238,7 @@ function createBulkResolutionComponents(
 		const textChange = createTextChangeSpec(mark, action); // textChange.{from,to,insert} are relative to original doc
 		if (textChange) {
 			changesArray.push(textChange);
-			if (action === "accept") {
+			if (action === SuggestionAction.Accept) {
 				// Track the 'from' and 'insert.length' of the latest change being made.
 				lastChangeOriginalFrom = textChange.from;
 				lastChangeInsertionLength = textChange.insert?.length ?? 0;
@@ -262,7 +263,7 @@ function createBulkResolutionComponents(
 
 function handleResolutionFeedback(
 	cm: EditorView,
-	action: SuggestionAction,
+	action: SuggestionActionType,
 	resolvedMarkFrom: number, // Original 'from' of the resolved mark/set of marks
 ): void {
 	const marksAfterResolution = cm.state.field(suggestionStateField, false) || [];
@@ -288,7 +289,7 @@ export function resolveNextSuggestionCM6(
 	_plugin: TextTransformer,
 	editor: Editor,
 	_file: TFile, // Not used, consider removing if not planned for future
-	action: SuggestionAction,
+	action: SuggestionActionType,
 ): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -345,7 +346,7 @@ function handleParagraphNavigationAndGetScope(
 	cm: EditorView,
 	initialSelection: EditorSelection, // Pass the whole EditorSelection
 	allMarks: readonly SuggestionMark[],
-	action: SuggestionAction,
+	action: SuggestionActionType,
 ): {
 	operationRange: ParagraphRange;
 	marksInScope: SuggestionMark[];
@@ -442,7 +443,7 @@ export function resolveSuggestionsInSelectionCM6(
 	_plugin: TextTransformer,
 	editor: Editor,
 	_file: TFile, // Not used currently
-	action: SuggestionAction,
+	action: SuggestionActionType,
 ): void {
 	const cm = getCmEditorView(editor);
 	if (!cm) {
@@ -491,7 +492,7 @@ export function resolveSuggestionsInSelectionCM6(
 	const changeSet = ChangeSet.of(components.changes, originalDocLength);
 
 	if (
-		action === "accept" &&
+		action === SuggestionAction.Accept &&
 		components.lastChangeOriginalFrom !== null &&
 		components.lastChangeInsertionLength !== null
 	) {
