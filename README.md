@@ -52,7 +52,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
     - [Customizing Prompts](#customizing-prompts)
     - [API Key Setup, AI Providers \& Models Info](#api-key-setup-ai-providers--models-info)
   - [Release History](#release-history)
-    - [w͜s Verion 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu](#w͜s-verion-320---new-feature-current-section-by-markdown-header-option-in-context-menu)
+    - [w͜s Version 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu](#w͜s-verion-320---new-feature-current-section-by-markdown-header-option-in-context-menu)
     - [w͜s Version v3.0.0 - New Feature: 400+ Models \& Local AI Provider Support](#w͜s-version-v300---new-feature-400-models--local-ai-provider-support)
       - [Minor Versions of v.3.1.x](#minor-versions-of-v31x)
     - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w͜s-whats-new-in-v220---knowledge-graph-generation)
@@ -127,7 +127,7 @@ The setup is very simple and intuitive—go to the WordSmith Settigns, select th
 
 ## Release History
 
-### w͜s Verion 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu
+### w͜s Version 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu
 
 Introducing a powerful new **Section** context mode, perfect for topic-focused tasks. This new option intelligently sends the content from the current markdown header to the next, ensuring relevant AI responses. In line with this addition, the Context Control Panel's UI has been significantly streamlined for clarity and simplicity. The former expandable description area has been removed in favor of a cleaner layout, with concise and helpful tooltips now located directly on each toggle button for improved discoverability. This redesign declutters the panel, making it faster and more intuitive to control exactly what context the AI receives for any given task.
 
