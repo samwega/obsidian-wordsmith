@@ -39,7 +39,7 @@ function createTextChangeSpec(
 	mark: SuggestionMark,
 	action: SuggestionActionType,
 ): TextChangeSpec | undefined {
-	if (action === SuggestionAction.Accept) {
+	if (action === SuggestionAction.accept) {
 		if (mark.type === "added") {
 			const textToInsert =
 				mark.isNewlineChange && mark.newlineChar ? mark.newlineChar : (mark.ghostText ?? "");
@@ -238,7 +238,7 @@ function createBulkResolutionComponents(
 		const textChange = createTextChangeSpec(mark, action); // textChange.{from,to,insert} are relative to original doc
 		if (textChange) {
 			changesArray.push(textChange);
-			if (action === SuggestionAction.Accept) {
+			if (action === SuggestionAction.accept) {
 				// Track the 'from' and 'insert.length' of the latest change being made.
 				lastChangeOriginalFrom = textChange.from;
 				lastChangeInsertionLength = textChange.insert?.length ?? 0;
@@ -492,7 +492,7 @@ export function resolveSuggestionsInSelectionCM6(
 	const changeSet = ChangeSet.of(components.changes, originalDocLength);
 
 	if (
-		action === SuggestionAction.Accept &&
+		action === SuggestionAction.accept &&
 		components.lastChangeOriginalFrom !== null &&
 		components.lastChangeInsertionLength !== null
 	) {

@@ -97,7 +97,7 @@ export async function gatherContextForAI(
 
 		let sectionContent = doc.sliceString(startPos, endPos);
 
-		if (taskType === AITaskType.Generation) {
+		if (taskType === AITaskType.generation) {
 			// Adjust cursor position to be relative to the section start
 			const relativeCursorOffset = cursorOffset - startPos;
 			const safeCursorOffset = Math.min(relativeCursorOffset, sectionContent.length);
@@ -114,7 +114,7 @@ export async function gatherContextForAI(
 		let startLineNum: number;
 		let endLineNum: number;
 
-		if (taskType === AITaskType.Generation) {
+		if (taskType === AITaskType.generation) {
 			const cursorLineNum = doc.lineAt(cursorOffset).number;
 			startLineNum = Math.max(1, cursorLineNum - linesToInclude);
 			endLineNum = Math.min(doc.lines, cursorLineNum + linesToInclude);
@@ -134,7 +134,7 @@ export async function gatherContextForAI(
 			let lineText = line.text;
 
 			if (
-				taskType === AITaskType.Generation &&
+				taskType === AITaskType.generation &&
 				cursorOffset >= line.from &&
 				cursorOffset <= line.to
 			) {
@@ -152,7 +152,7 @@ export async function gatherContextForAI(
 		assembledContext.editorContextContent = `--- Current Note Context Start ---\nFilename: ${currentFile.name}\n${dynamicContextAccumulator}\n--- Current Note Context End ---`;
 	} else if (settings.useWholeNoteContext && currentFile) {
 		let fileContent = await app.vault.cachedRead(currentFile);
-		if (taskType === AITaskType.Generation) {
+		if (taskType === AITaskType.generation) {
 			const cursorOffset = cmView.state.selection.main.head;
 			const safeCursorOffset = Math.min(cursorOffset, fileContent.length);
 			fileContent =
@@ -242,7 +242,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 	}
 
 	const cursorOffset = cm.state.selection.main.head;
-	const additionalContextForAI = await gatherContextForAI(plugin, cm, AITaskType.Generation);
+	const additionalContextForAI = await gatherContextForAI(plugin, cm, AITaskType.generation);
 
 	const adHocPrompt: TextTransformerPrompt = {
 		id: "ad-hoc-generation",
@@ -555,10 +555,10 @@ export async function textTransformerTextCM6(
 		}
 		rangeCm = { from: paraStartLine.from, to: paraEndLine.to };
 		originalText = cm.state.sliceDoc(rangeCm.from, rangeCm.to);
-		textScope = AITaskScope.Paragraph;
+		textScope = AITaskScope.paragraph;
 	} else {
 		originalText = cm.state.sliceDoc(currentCmSelection.from, currentCmSelection.to);
-		textScope = AITaskScope.Selection;
+		textScope = AITaskScope.selection;
 		rangeCm = { from: currentCmSelection.from, to: currentCmSelection.to };
 	}
 
@@ -583,7 +583,7 @@ export async function textTransformerTextCM6(
 		const additionalContextForAI = await gatherContextForAI(
 			plugin,
 			cm,
-			AITaskType.Transformation,
+			AITaskType.transformation,
 			{
 				range: rangeCm,
 				originalText,

@@ -176,7 +176,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.Accept);
+					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.accept);
 				} else {
 					new Notice("No active file.");
 				}
@@ -189,7 +189,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.Reject);
+					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.reject);
 				} else {
 					new Notice("No active file.");
 				}
@@ -202,7 +202,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.Accept);
+					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.accept);
 				} else {
 					new Notice("No active file.");
 				}
@@ -215,7 +215,7 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor): void => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.Reject);
+					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.reject);
 				} else {
 					new Notice("No active file.");
 				}
