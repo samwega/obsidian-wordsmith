@@ -33,10 +33,6 @@ export interface TextTransformerPrompt {
 	text: string;
 	isDefault: boolean;
 	enabled: boolean;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	frequency_penalty?: number;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	presence_penalty?: number;
 	showInPromptPalette?: boolean;
 }
 
@@ -127,10 +123,6 @@ export interface TextTransformerSettings {
 
 	// LLM parameters
 	temperature: number;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	frequency_penalty: number;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	presence_penalty: number;
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: number;
 
@@ -262,10 +254,6 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	selectedModelId: "",
 	favoriteModels: [],
 	temperature: 1.0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	frequency_penalty: 0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
-	presence_penalty: 0,
 	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
 	max_tokens: 8192,
 

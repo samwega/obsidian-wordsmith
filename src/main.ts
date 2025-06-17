@@ -320,10 +320,6 @@ export default class TextTransformer extends Plugin {
 			showInPromptPalette:
 				typeof combined.showInPromptPalette === "boolean" ? combined.showInPromptPalette : true,
 		};
-		if (typeof combined.frequency_penalty !== "undefined")
-			newPrompt.frequency_penalty = combined.frequency_penalty;
-		if (typeof combined.presence_penalty !== "undefined")
-			newPrompt.presence_penalty = combined.presence_penalty;
 
 		return newPrompt;
 	}

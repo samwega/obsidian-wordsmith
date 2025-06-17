@@ -45,7 +45,6 @@ export async function chatCompletionRequest(
 		assembledContext,
 	} = params;
 
-	// --- FIX: Correctly call buildPromptComponents with the new options object signature ---
 	const { systemInstructions, userContent, contextBlock } = buildPromptComponents({
 		prompt,
 		isGenerationTask,
@@ -81,13 +80,8 @@ export async function chatCompletionRequest(
 		...(additionalRequestBodyParams || {}),
 	};
 
-	if (isDirectAnthropicApi) {
-		if (systemMessageContent) {
-			requestBody.system = systemMessageContent;
-		}
-	} else {
-		requestBody.frequency_penalty = prompt.frequency_penalty ?? settings.frequency_penalty;
-		requestBody.presence_penalty = prompt.presence_penalty ?? settings.presence_penalty;
+	if (isDirectAnthropicApi && systemMessageContent) {
+		requestBody.system = systemMessageContent;
 	}
 
 	if (plugin.runtimeDebugMode) {
