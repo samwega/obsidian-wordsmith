@@ -10,8 +10,7 @@ import {
 	WorkspaceLeaf,
 	setIcon,
 } from "obsidian";
-import { getProviderInfo } from "../lib/provider-utils";
-import { KNOWN_MODEL_HINTS, ModelTemperatureHint, UNKNOWN_MODEL_HINT } from "../lib/settings-data";
+import { getProviderInfo, getTemperatureHintForModel } from "../lib/provider-utils";
 import type TextTransformer from "../main";
 import { ModelSelectionModal } from "./modals/ModelSelectionModal";
 import { WikilinkSuggestModal } from "./modals/wikilink-suggest-modal";
@@ -151,19 +150,7 @@ export class ContextControlPanel extends ItemView {
 		const sliderSettingEl = this.contentEl.querySelector(".ccp-temperature-slider-setting");
 		sliderSettingEl?.remove();
 
-		let hint: ModelTemperatureHint | undefined;
-		const currentModelId = this.plugin.settings.selectedModelId;
-		if (currentModelId) {
-			// --- FIX: Simplify lookup logic ---
-			// The `apiId` is the part of the canonical ID after "//".
-			const apiId = currentModelId.split("//")[1];
-			// Check for a hint using only the apiId.
-			hint = KNOWN_MODEL_HINTS[apiId];
-		}
-
-		// Use the explicit default hint if no specific hint is found.
-		const effectiveHint = hint || UNKNOWN_MODEL_HINT;
-
+		const effectiveHint = getTemperatureHintForModel(this.plugin.settings.selectedModelId);
 		const minTemp = effectiveHint.min;
 		const maxTemp = effectiveHint.max;
 

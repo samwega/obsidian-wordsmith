@@ -143,22 +143,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		containerEl.createEl("h3", { text: "LLM Parameters" });
 
 		new Setting(containerEl)
-			.setName("Temperature")
-			.setDesc(
-				"Controls the creativity of the AI. Lower values make the output more deterministic and focused. Higher values increase randomness and exploration. High values may be prone to errors. Most models use a range of 0 to 2,, others 0 to 1 or something different. Defaults vary by model, most default to 1, others 0.7, 0.6, 0.3, even 0. Unfortunately, the API call to update models does not include any temperature information - I have included the ranges for 3 dozen popular models, so the range and default value will automatically change based on the model you select. However, for most other models, the temperature resets to a sane 0.8 and a range of 0 to 2 which should be ok for most models, but you might need to check the documentation for the model you are using to determine the range and default value.",
-			)
-			.addSlider((slider) => {
-				slider
-					.setLimits(0.0, 2.0, 0.1)
-					.setValue(this.plugin.settings.temperature)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.temperature = value;
-						await this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
 			.setName("Max Output Tokens")
 			.setDesc(
 				"Set the maximum number of tokens the AI can generate in a single response. Higher values allow for longer, more complex outputs (like knowledge graphs) but may increase cost and latency.",

@@ -15,13 +15,12 @@ import {
 } from "./lib/editor/suggestion-handler";
 import { textTransformerSuggestionExtensions } from "./lib/editor/suggestion-state";
 
+import { getTemperatureHintForModel } from "./lib/provider-utils";
 import {
 	DEFAULT_SETTINGS,
 	DEFAULT_TEXT_TRANSFORMER_PROMPTS,
-	KNOWN_MODEL_HINTS,
 	TextTransformerPrompt,
 	TextTransformerSettings,
-	UNKNOWN_MODEL_HINT,
 } from "./lib/settings-data";
 
 // --- Service Imports ---
@@ -284,14 +283,8 @@ export default class TextTransformer extends Plugin {
 	async updateTemperatureForModel(modelId: string): Promise<void> {
 		if (!modelId) return;
 
-		const apiId = modelId.split("//")[1];
-		const hint = KNOWN_MODEL_HINTS[apiId] || KNOWN_MODEL_HINTS[modelId];
-
-		if (hint) {
-			this.settings.temperature = hint.default;
-		} else {
-			this.settings.temperature = UNKNOWN_MODEL_HINT.default;
-		}
+		const hint = getTemperatureHintForModel(modelId);
+		this.settings.temperature = hint.default;
 
 		await this.saveSettings();
 	}

@@ -2,7 +2,7 @@
 	"id": "wordsmith",
 	"name": "WordSmith",
 	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, seamless, keyboard-first workflow. Supports ALL remote and local models.",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"minAppVersion": "1.5.8",
 	"isDesktopOnly": false,
 	"author": "Alexander Glavan",

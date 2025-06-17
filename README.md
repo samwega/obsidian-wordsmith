@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 3.1.1
+**Current Version:** 3.1.2
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -163,6 +163,7 @@ This release introduces a powerful **Modular Prompt Constructor** for text gener
 - Increasing readability and self-documentation at call sites.
 - Enhancing type safety and eliminating the risk of parameter-swapping bugs.
 - Making the function signature more robust and easier to extend in the future.
+**3.1.2**—Refactoring and cleanup, UI improvements, minor bug fix.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
