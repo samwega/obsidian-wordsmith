@@ -336,7 +336,6 @@ body.theme-light .text-transformer-removed-active {
 }
 
 .ccp-context-options-header {
-	cursor: pointer;
 	display: flex;
 	align-items: center;
 	margin-top: 15px;
@@ -350,9 +349,9 @@ body.theme-light .text-transformer-removed-active {
 }
 
 .ccp-subtitle {
-	font-weight: bold;
-	font-size: var(--font-ui-small);
-	color: var(--text-muted);
+	font-weight: 600;
+	font-size: var(--font-ui-medium);
+	color: var(--text-normal);
 }
 
 .ccp-description-container {

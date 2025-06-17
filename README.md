@@ -1,6 +1,6 @@
 # WordSmith - AI Writing Assistant for Obsidian
 
-**Current Version:** 3.1.2
+**Current Version:** 3.2.0
 
 WordSmith is the ultimate AI-powered writing assistant for Obsidian—your all-in-one tool for seamless editing, contextual content generation, effortless refinement, and knowledge graphs generation, right inside your notes. It excels at **stylistic improvements**, **proofreading**, **translation**, and **prompt-based generation**—all *context-aware*!
 
@@ -52,7 +52,8 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
     - [Customizing Prompts](#customizing-prompts)
     - [API Key Setup, AI Providers \& Models Info](#api-key-setup-ai-providers--models-info)
   - [Release History](#release-history)
-    - [w͜s What's New in v3.0.0 - 400+ Models \& Local AI Provider Support](#w͜s-whats-new-in-v300---400-models--local-ai-provider-support)
+    - [w͜s Verion 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu](#w͜s-verion-320---new-feature-current-section-by-markdown-header-option-in-context-menu)
+    - [w͜s Version v3.0.0 - New Feature: 400+ Models \& Local AI Provider Support](#w͜s-version-v300---new-feature-400-models--local-ai-provider-support)
       - [Minor Versions of v.3.1.x](#minor-versions-of-v31x)
     - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w͜s-whats-new-in-v220---knowledge-graph-generation)
       - [Minor Versions of v.2.2.x](#minor-versions-of-v22x)
@@ -126,7 +127,11 @@ The setup is very simple and intuitive—go to the WordSmith Settigns, select th
 
 ## Release History
 
-### w͜s What's New in v3.0.0 - 400+ Models & Local AI Provider Support
+### w͜s Verion 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu
+
+Introducing a powerful new **Section** context mode, perfect for topic-focused tasks. This new option intelligently sends the content from the current markdown header to the next, ensuring relevant AI responses. In line with this addition, the Context Control Panel's UI has been significantly streamlined for clarity and simplicity. The former expandable description area has been removed in favor of a cleaner layout, with concise and helpful tooltips now located directly on each toggle button for improved discoverability. This redesign declutters the panel, making it faster and more intuitive to control exactly what context the AI receives for any given task.
+
+### w͜s Version v3.0.0 - New Feature: 400+ Models & Local AI Provider Support
 
 This major release introduces a complete architectural overhaul brings Dynamic AI Model Providers to WordSmith. The hardcoded model list has been replaced with a dynamic, provider-agnostic framework. This unlocks access to **over 400 models** from top-tier services like **OpenAI, Anthropic, Google, and OpenRouter**, others you wish to add, and crucially, brings first-class support for running AI completely offline with **local servers like Ollama and LM Studio**. You now have ultimate control over your AI toolkit.
 

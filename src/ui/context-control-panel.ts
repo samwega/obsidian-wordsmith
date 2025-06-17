@@ -34,10 +34,8 @@ export class ContextControlPanel extends ItemView {
 	private plugin: TextTransformer;
 	private dynamicContextToggleComponent: ToggleComponent | null = null;
 	private wholeNoteContextToggleComponent: ToggleComponent | null = null;
+	private headerContextToggleComponent: ToggleComponent | null = null;
 	private dynamicContextLinesSetting: Setting | null = null;
-	private descriptionContainer: HTMLDivElement | null = null;
-	private descriptionIndicator: HTMLSpanElement | null = null;
-	private isDescriptionExpanded = false;
 	private customContextTextAreaContainer: HTMLDivElement | null = null;
 	private customContextTextArea: TextAreaComponent | null = null;
 	private justInsertedLink = false;
@@ -72,7 +70,6 @@ export class ContextControlPanel extends ItemView {
 		this._renderHeader(contentEl);
 		await this.updateView(); // Initial render of dynamic controls
 
-		this._renderDescriptionSection(contentEl);
 		this._renderContextToggles(contentEl);
 		this._renderCustomContextArea(contentEl);
 	}
@@ -172,62 +169,41 @@ export class ContextControlPanel extends ItemView {
 		header?.insertAdjacentElement("afterend", temperatureSetting.settingEl);
 	}
 
-	private _renderDescriptionSection(container: HTMLElement): void {
-		const contextOptionsHeader = container.createDiv({ cls: "ccp-context-options-header" });
-		this.descriptionIndicator = contextOptionsHeader.createEl("span", {
-			text: this.isDescriptionExpanded ? "🞃 " : "‣ ",
-			cls: "ccp-description-indicator",
-		});
-		contextOptionsHeader.createEl("div", { text: "Context Options:", cls: "ccp-subtitle" });
-		this.descriptionContainer = container.createDiv({ cls: "ccp-description-container" });
-		if (this.isDescriptionExpanded) this.descriptionContainer.classList.add("is-visible");
-		this.descriptionContainer.createEl("p", {
-			text: "Configure how AI understands your note's context. This is crucial for relevant and accurate transformations or generations. Keep in mind this can get expensive, depending on the size of your context.",
-			cls: "ccp-description-p1",
-		});
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Dynamic: Uses text immediately around your selection/cursor. Good for local edits.",
-			cls: "ccp-description-paragraph",
-		});
-		this.descriptionContainer.createEl("p", {
-			text: "  ‣ Lines: represents how many lines before and after the selection are included with Dynamic Context. These can be blank lines or whole paragraphs.",
-			cls: "ccp-description-paragraph",
-		});
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Full Note: Sends the whole note. Best for summaries or global changes, but costs more.",
-			cls: "ccp-description-paragraph",
-		});
-		this.descriptionContainer.createEl("p", {
-			text: "⏺ Custom: Paste specific text (like rules or style guides) for the AI to consider. Type '[[' to link notes (their content will be embedded). Try <RULE: Spell everything backwards.>",
-			cls: "ccp-description-paragraph",
-		});
-		contextOptionsHeader.addEventListener("click", () => {
-			this.isDescriptionExpanded = !this.isDescriptionExpanded;
-			if (this.descriptionContainer && this.descriptionIndicator) {
-				this.descriptionContainer.classList.toggle("is-visible", this.isDescriptionExpanded);
-				this.descriptionIndicator.setText(this.isDescriptionExpanded ? "🞃 " : "‣ ");
-			}
-		});
-	}
-
 	private _renderContextToggles(container: HTMLElement): void {
+		const titleEl = container.createEl("h4", { text: "Include Context:", cls: "ccp-subtitle" });
+		titleEl.setAttribute(
+			"aria-label",
+			"Configure what contextual information is sent to the AI with your text.",
+		);
+		titleEl.addClass("ccp-context-options-header");
+
+		// --- Dynamic Context ---
 		new Setting(container).setName("Dynamic").addToggle((toggle) => {
 			this.dynamicContextToggleComponent = toggle;
+			toggle.toggleEl.setAttribute(
+				"aria-label",
+				"Sends text immediately around your cursor/selection. Good for local edits.",
+			);
 			toggle.setValue(this.plugin.settings.useDynamicContext).onChange(async (value) => {
 				this.plugin.settings.useDynamicContext = value;
 				if (value) {
+					this.plugin.settings.useHeaderContext = false;
 					this.plugin.settings.useWholeNoteContext = false;
-					if (this.wholeNoteContextToggleComponent) {
-						this.wholeNoteContextToggleComponent.setValue(false);
-					}
+					this.headerContextToggleComponent?.setValue(false);
+					this.wholeNoteContextToggleComponent?.setValue(false);
 				}
 				this.dynamicContextLinesSetting?.settingEl.classList.toggle("is-visible", value);
 				await this.plugin.saveSettings();
 			});
 		});
+
 		this.dynamicContextLinesSetting = new Setting(container)
 			.setName("‣  Lines")
 			.addText((text) => {
+				text.inputEl.setAttribute(
+					"aria-label",
+					"Number of lines before and after selection to include as context.",
+				);
 				text
 					.setPlaceholder(this.plugin.settings.dynamicContextLineCount.toString())
 					.setValue(this.plugin.settings.dynamicContextLineCount.toString())
@@ -246,27 +222,59 @@ export class ContextControlPanel extends ItemView {
 				text.inputEl.max = "21";
 				text.inputEl.classList.add("ccp-dynamic-lines-input");
 			});
-		this.dynamicContextLinesSetting.settingEl.classList.add("ccp-dynamic-lines-setting");
+		this.dynamicContextLinesSetting.settingEl.addClass("ccp-dynamic-lines-setting");
 		this.dynamicContextLinesSetting.nameEl.classList.add("ccp-dynamic-lines-setting-name");
 		this.dynamicContextLinesSetting.settingEl.classList.toggle(
 			"is-visible",
 			this.plugin.settings.useDynamicContext,
 		);
-		new Setting(container).setName("Full note").addToggle((toggle) => {
-			this.wholeNoteContextToggleComponent = toggle;
-			toggle.setValue(this.plugin.settings.useWholeNoteContext).onChange(async (value) => {
-				this.plugin.settings.useWholeNoteContext = value;
+
+		// --- Section Context ---
+		new Setting(container).setName("Section").addToggle((toggle) => {
+			this.headerContextToggleComponent = toggle;
+			toggle.toggleEl.setAttribute(
+				"aria-label",
+				"Sends text from the current header to the next. Ideal for topic-focused tasks.",
+			);
+			toggle.setValue(this.plugin.settings.useHeaderContext).onChange(async (value) => {
+				this.plugin.settings.useHeaderContext = value;
 				if (value) {
 					this.plugin.settings.useDynamicContext = false;
-					if (this.dynamicContextToggleComponent) {
-						this.dynamicContextToggleComponent.setValue(false);
-					}
+					this.plugin.settings.useWholeNoteContext = false;
+					this.dynamicContextToggleComponent?.setValue(false);
+					this.wholeNoteContextToggleComponent?.setValue(false);
 					this.dynamicContextLinesSetting?.settingEl.classList.remove("is-visible");
 				}
 				await this.plugin.saveSettings();
 			});
 		});
-		new Setting(container).setName("Custom").addToggle((toggle) =>
+
+		// --- Full Note Context ---
+		new Setting(container).setName("Full note").addToggle((toggle) => {
+			this.wholeNoteContextToggleComponent = toggle;
+			toggle.toggleEl.setAttribute(
+				"aria-label",
+				"Sends the entire note. Best for summaries or global changes, but can be expensive.",
+			);
+			toggle.setValue(this.plugin.settings.useWholeNoteContext).onChange(async (value) => {
+				this.plugin.settings.useWholeNoteContext = value;
+				if (value) {
+					this.plugin.settings.useDynamicContext = false;
+					this.plugin.settings.useHeaderContext = false;
+					this.dynamicContextToggleComponent?.setValue(false);
+					this.headerContextToggleComponent?.setValue(false);
+					this.dynamicContextLinesSetting?.settingEl.classList.remove("is-visible");
+				}
+				await this.plugin.saveSettings();
+			});
+		});
+
+		// --- Custom Context ---
+		new Setting(container).setName("Custom").addToggle((toggle) => {
+			toggle.toggleEl.setAttribute(
+				"aria-label",
+				"Sends only the text you provide below. Type '[[' to link and embed other notes.",
+			);
 			toggle.setValue(this.plugin.settings.useCustomContext).onChange(async (value) => {
 				this.plugin.settings.useCustomContext = value;
 				this.customContextTextAreaContainer?.classList.toggle("is-visible", value);
@@ -274,8 +282,8 @@ export class ContextControlPanel extends ItemView {
 					this.customContextTextArea.inputEl.focus();
 				}
 				await this.plugin.saveSettings();
-			}),
-		);
+			});
+		});
 	}
 
 	private _renderCustomContextArea(container: HTMLElement): void {
@@ -326,9 +334,8 @@ export class ContextControlPanel extends ItemView {
 	override onClose(): Promise<void> {
 		this.dynamicContextToggleComponent = null;
 		this.wholeNoteContextToggleComponent = null;
+		this.headerContextToggleComponent = null;
 		this.dynamicContextLinesSetting = null;
-		this.descriptionContainer = null;
-		this.descriptionIndicator = null;
 		this.customContextTextAreaContainer = null;
 		this.customContextTextArea = null;
 		return super.onClose();

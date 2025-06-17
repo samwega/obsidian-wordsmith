@@ -137,6 +137,7 @@ export interface TextTransformerSettings {
 	useWholeNoteContext: boolean;
 	useCustomContext: boolean;
 	useDynamicContext: boolean;
+	useHeaderContext: boolean;
 	dynamicContextLineCount: number;
 	customContextText: string;
 
@@ -266,6 +267,7 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	useWholeNoteContext: false,
 	useCustomContext: false,
 	useDynamicContext: false,
+	useHeaderContext: false,
 	dynamicContextLineCount: 3,
 	customContextText: "",
 

@@ -70,7 +70,45 @@ export async function gatherContextForAI(
 
 	const doc = cmView.state.doc;
 
-	if (settings.useDynamicContext && currentFile) {
+	if (settings.useHeaderContext && currentFile) {
+		const fileCache = app.metadataCache.getFileCache(currentFile);
+		const headings = fileCache?.headings ?? [];
+		const cursorOffset = cmView.state.selection.main.head;
+
+		let startPos = 0;
+		let endPos = doc.length;
+
+		// Find the heading immediately preceding the cursor
+		const currentHeading = headings.filter((h) => h.position.start.offset <= cursorOffset).pop();
+
+		if (currentHeading) {
+			startPos = currentHeading.position.start.offset;
+
+			// Find the next heading of the same or higher level
+			const currentHeadingIndex = headings.findIndex((h) => h === currentHeading);
+			const nextHeading = headings
+				.slice(currentHeadingIndex + 1)
+				.find((h) => h.level <= currentHeading.level);
+
+			if (nextHeading) {
+				endPos = nextHeading.position.start.offset;
+			}
+		}
+
+		let sectionContent = doc.sliceString(startPos, endPos);
+
+		if (taskType === AITaskType.Generation) {
+			// Adjust cursor position to be relative to the section start
+			const relativeCursorOffset = cursorOffset - startPos;
+			const safeCursorOffset = Math.min(relativeCursorOffset, sectionContent.length);
+			sectionContent =
+				sectionContent.substring(0, safeCursorOffset) +
+				GENERATION_TARGET_CURSOR_MARKER +
+				sectionContent.substring(safeCursorOffset);
+		}
+
+		assembledContext.editorContextContent = `--- Current Note Context (Section) Start ---\nFilename: ${currentFile.name}\n${sectionContent}\n--- Current Note Context (Section) End ---`;
+	} else if (settings.useDynamicContext && currentFile) {
 		const linesToInclude = settings.dynamicContextLineCount;
 		const cursorOffset = cmView.state.selection.main.head;
 		let startLineNum: number;
