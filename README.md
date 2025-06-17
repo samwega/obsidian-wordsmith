@@ -163,7 +163,7 @@ This release introduces a powerful **Modular Prompt Constructor** for text gener
 - Increasing readability and self-documentation at call sites.
 - Enhancing type safety and eliminating the risk of parameter-swapping bugs.
 - Making the function signature more robust and easier to extend in the future.
-**3.1.2**—Refactoring and cleanup, UI improvements, minor bug fix.
+**3.1.2**—Extensive refactoring and cleanup; Typescript consolidation; improved model selection loading logic, significantly improve startup time; UI improvements; minor bug fixes.
 
 ### w͜s What's New in v2.2.0 - Knowledge Graph Generation
 
