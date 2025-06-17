@@ -52,7 +52,7 @@ Initially forked from the narrowly focused [obsidian-proofreader](https://github
     - [Customizing Prompts](#customizing-prompts)
     - [API Key Setup, AI Providers \& Models Info](#api-key-setup-ai-providers--models-info)
   - [Release History](#release-history)
-    - [w͜s Version 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu](#w͜s-verion-320---new-feature-current-section-by-markdown-header-option-in-context-menu)
+    - [w͜s Version 3.2.0 - New Feature: Current Section (by markdown header) Option in Context Menu](#w͜s-version-320---new-feature-current-section-by-markdown-header-option-in-context-menu)
     - [w͜s Version v3.0.0 - New Feature: 400+ Models \& Local AI Provider Support](#w͜s-version-v300---new-feature-400-models--local-ai-provider-support)
       - [Minor Versions of v.3.1.x](#minor-versions-of-v31x)
     - [w͜s What's New in v2.2.0 - Knowledge Graph Generation](#w͜s-whats-new-in-v220---knowledge-graph-generation)

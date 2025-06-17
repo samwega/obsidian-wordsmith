@@ -2,293 +2,301 @@
 	"pluginInfo": {
 		"id": "wordsmith",
 		"name": "WordSmith",
-		"version": "3.1.2",
-		"description": "An AI-powered writing assistant for Obsidian featuring inline suggestions, contextual content generation, and knowledge graph creation, supporting a wide range of models and providers.",
+		"version": "3.2.0+",
+		"description": "An AI-powered writing assistant for Obsidian featuring context-aware, inline, reviewable suggestions, a dynamic provider framework for accessing hundreds of models (including local), and knowledge graph generation.",
 		"author": "samwega"
 	},
 	"architecture": {
-		"designPrinciples": [
-			"Modularity and Separation of Concerns: Logic is clearly divided into Services, UI Components, LLM Handlers, and Editor Integration.",
-			"Service-Oriented Architecture: Core functionalities like model fetching, provider management, and favorites are encapsulated in dedicated services (`ModelService`, `CustomProviderService`, `FavoritesService`).",
-			"State Management Decoupling: Editor-specific state (suggestions) is managed via a CodeMirror `StateField`, while persistent settings are handled by the main plugin class, and UI state is managed within respective components.",
-			"API Abstraction: LLM interactions are routed through specific handlers (`chatCompletionRequest`, `geminiRequest`) and a centralized `prompt-builder`, abstracting away provider-specific details from the core feature logic.",
-			"Extensibility: The custom provider system allows users to add new API endpoints without code changes. The prompt management system allows for deep user customization."
-		],
-		"coreModules": {
-			"main": {
-				"file": "src/main.ts",
-				"description": "The plugin's entry point. Responsible for lifecycle management (`onload`/`onunload`), service initialization, settings management, and registration of all commands, views, and editor extensions."
-			},
-			"services": {
-				"file": "src/services/",
-				"description": "Handles background logic, API interactions, and data management, decoupled from the UI.",
-				"components": ["ModelService", "CustomProviderService", "FavoritesService"]
-			},
-			"llmIntegration": {
-				"file": "src/llm/",
-				"description": "Manages all communication with LLMs, including prompt construction and API-specific request formatting.",
-				"components": ["prompt-builder.ts", "chat-completion-handler.ts", "gemini.ts"]
-			},
-			"coreLogic": {
-				"file": "src/lib/core/",
-				"description": "Contains the primary business logic for the plugin's main features.",
-				"components": ["textTransformer.ts", "graphGenerator.ts"]
-			},
-			"editorIntegration": {
-				"file": "src/lib/editor/",
-				"description": "Manages all direct interaction with the CodeMirror 6 editor, primarily for the suggestion system.",
-				"components": ["suggestion-state.ts", "suggestion-handler.ts", "paragraph-utils.ts"]
-			},
-			"userInterface": {
-				"file": "src/ui/",
-				"description": "Contains all user-facing components, including modals, the settings tab, and the context panel view.",
-				"components": ["context-control-panel.ts", "settings.ts", "modals/*.ts"]
-			},
-			"dataAndConstants": {
-				"file": "src/lib/",
-				"description": "Defines core data structures, types, constants, and shared utilities.",
+		"designPattern": "Layered Service-Oriented Architecture",
+		"summary": "The plugin is structured into distinct layers: UI (Modals, Views, Settings), Core Logic (Orchestrators), Services (Model/Provider/Favorite Management), and LLM Handlers. This promotes high cohesion, low coupling, and excellent maintainability. It strictly adheres to Obsidian API best practices and leverages modern CodeMirror 6 features for its core functionality.",
+		"layers": [
+			{
+				"name": "UI Layer",
+				"description": "Handles all user interaction. Composed of Obsidian Views, Modals, and Setting Tabs. Communicates with the Core Logic layer to trigger actions and with the Service Layer to display data.",
 				"components": [
-					"settings-data.ts",
-					"constants.ts",
-					"provider-utils.ts",
-					"graph/types.ts",
-					"utils.ts"
+					"main.ts (Command Registration)",
+					"settings.ts",
+					"context-control-panel.ts",
+					"ui/modals/*"
 				]
+			},
+			{
+				"name": "Core Logic / Orchestration Layer",
+				"description": "Acts as the central nervous system, orchestrating workflows triggered by user commands. It bridges the UI and backend services, gathers necessary data, calls the appropriate LLM handler, and processes the results.",
+				"components": [
+					"lib/core/textTransformer.ts",
+					"lib/core/graphGenerator.ts",
+					"lib/editor/suggestion-handler.ts"
+				]
+			},
+			{
+				"name": "Service Layer",
+				"description": "Manages application-level resources and business logic, such as fetching, caching, and managing AI models and providers. Decouples the rest of the application from the specifics of data management.",
+				"components": [
+					"services/ModelService.ts",
+					"services/CustomProviderService.ts",
+					"services/FavoritesService.ts"
+				]
+			},
+			{
+				"name": "LLM Communication Layer",
+				"description": "Responsible for direct communication with AI model APIs. This layer contains prompt construction logic and provider-specific request/response handling, isolating API-specific details.",
+				"components": [
+					"llm/prompt-builder.ts",
+					"llm/chat-completion-handler.ts",
+					"llm/gemini.ts"
+				]
+			},
+			{
+				"name": "Editor Integration Layer (CodeMirror 6)",
+				"description": "The lowest level, interacting directly with the CodeMirror 6 editor state. It manages the state and visual representation of inline suggestions using StateFields and ViewPlugins.",
+				"components": ["lib/editor/suggestion-state.ts"]
 			}
-		},
-		"dependencyGraph": {
-			"main.ts": ["services/*", "ui/*", "lib/core/*", "lib/editor/*"],
-			"lib/core/*": [
-				"llm/*",
-				"lib/editor/suggestion-state.ts",
-				"lib/settings-data.ts",
-				"ui/context-control-panel.ts"
-			],
-			"llm/*": ["lib/settings-data.ts", "lib/constants.ts", "lib/core/textTransformer.ts"],
-			"services/*": ["main.ts", "lib/settings-data.ts"],
-			"ui/*": ["main.ts", "services/*", "lib/settings-data.ts"],
-			"lib/editor/suggestion-handler.ts": [
-				"lib/editor/suggestion-state.ts",
-				"lib/editor/paragraph-utils.ts"
-			]
-		}
-	},
-	"dataModel": {
-		"settings": {
-			"file": "src/lib/settings-data.ts",
-			"interface": "TextTransformerSettings",
-			"description": "The primary settings object saved to `data.json`. Stores all user configurations.",
-			"structure": {
-				"customProviders": "Array<CustomProvider>",
-				"selectedModelId": "string (e.g., 'openrouter//google/gemini-flash-1.5')",
-				"favoriteModels": "Array<FavoriteModel>",
-				"temperature": "number",
-				"max_tokens": "number",
-				"prompts": "Array<TextTransformerPrompt> (for transformations)",
-				"generationPrompts": "Array<TextTransformerPrompt> (for generation)",
-				"contextToggles": ["useWholeNoteContext", "useCustomContext", "useDynamicContext"],
-				"dynamicContextLineCount": "number",
-				"customContextText": "string",
-				"graphAssetPath": "string"
-			}
-		},
-		"domainModels": [
-			{
-				"interface": "Model",
-				"description": "In-memory representation of an AI model, enriched with provider and favorite status."
-			},
-			{
-				"interface": "CustomProvider",
-				"description": "Configuration for a user-defined API provider (e.g., OpenRouter, Ollama)."
-			},
-			{
-				"interface": "FavoriteModel",
-				"description": "Schema for storing a favorited model in settings."
-			},
-			{
-				"interface": "TextTransformerPrompt",
-				"description": "Defines a reusable prompt with a name, text, and metadata."
-			},
-			{
-				"interface": "SuggestionMark",
-				"file": "src/lib/editor/suggestion-state.ts",
-				"description": "Represents a single AI-suggested change ('added' or 'removed') within the editor state."
-			},
-			{
-				"interface": "LlmKnowledgeGraph",
-				"file": "src/lib/graph/types.ts",
-				"description": "The validated structure for the JSON object returned by the LLM for graph generation."
-			},
-			{
-				"interface": "GraphCanvasMetadata",
-				"file": "src/lib/graph/types.ts",
-				"description": "Metadata embedded as frontmatter in the generated `.canvas` file."
-			}
+		],
+		"keyPrinciples": [
+			"Separation of Concerns: Each module has a single, well-defined responsibility (e.g., `prompt-builder` only builds prompts, `ModelService` only manages models).",
+			"Modularity: Features like Knowledge Graph generation are encapsulated in their own modules (`graphGenerator.ts`).",
+			"State Management: Centralized settings are defined in `settings-data.ts` and managed via `main.ts`. Transient editor state is managed via a CodeMirror 6 `StateField` in `suggestion-state.ts`.",
+			"Extensibility: The custom provider framework allows adding new AI services without changing core logic.",
+			"Performance: Advanced techniques like model list virtualization (`ModelSelectionModal`) and stale-while-revalidate caching (`ModelService`) are used to ensure a responsive UI."
 		]
-	},
-	"stateManagement": {
-		"pluginSettings": {
-			"mechanism": "Obsidian `loadData`/`saveData` API.",
-			"managedBy": "`main.ts` (`loadSettings`, `saveSettings`).",
-			"description": "Handles persistence of all user configurations from the `TextTransformerSettings` interface."
-		},
-		"editorState": {
-			"mechanism": "CodeMirror 6 `StateField` (`suggestionStateField`).",
-			"managedBy": "`suggestion-state.ts`.",
-			"description": "Holds the array of active `SuggestionMark` objects directly within the editor's state, ensuring they are transactional and mapped correctly with document changes."
-		},
-		"runtimeState": {
-			"properties": ["`runtimeDebugMode` in `main.ts`"],
-			"description": "Non-persistent state, like the debug flag, held in the main plugin instance."
-		}
-	},
-	"llmIntegration": {
-		"promptEngineering": {
-			"file": "src/lib/llm/prompt-builder.ts",
-			"strategy": "A centralized `buildPromptComponents` function constructs prompts by assembling distinct parts: `systemInstructions`, `userContent`, and a `contextBlock`. This allows for flexible adaptation to different API requirements (e.g., OpenAI vs. Anthropic `system` parameter).",
-			"specializedPrompts": {
-				"transformation": "Includes the user's instruction and the original text explicitly marked.",
-				"generation": "Includes the user's ad-hoc prompt, with context indicating cursor position.",
-				"graphGeneration": "Uses a highly specific, detailed prompt with a strict JSON output format specification, examples, and rules."
-			}
-		},
-		"apiHandlers": [
-			{
-				"name": "OpenAI-Compatible",
-				"file": "src/llm/chat-completion-handler.ts",
-				"description": "Handles any API that follows the OpenAI `/chat/completions` format. Dynamically constructs the `messages` array, adapting to Anthropic's direct API and other variants. Manages headers (Bearer token, custom OpenRouter headers)."
-			},
-			{
-				"name": "Google Gemini",
-				"file": "src/llm/gemini.ts",
-				"description": "A dedicated handler for the Google Gemini API, which has a unique endpoint structure (URL includes model and API key) and request/response body format (`contents`, `systemInstruction`, `generationConfig`)."
-			}
-		],
-		"contextAssembly": {
-			"file": "src/lib/core/textTransformer.ts (`gatherContextForAI`)",
-			"description": "Dynamically assembles the context string based on user settings in the `ContextControlPanel`. It can include dynamic lines around the cursor/selection, the whole note, and custom text. It also resolves `[[wikilinks]]` in the custom context area to embed note content."
-		}
-	},
-	"userInterface": {
-		"mainView": {
-			"name": "ContextControlPanel",
-			"type": "ItemView (Side Panel)",
-			"file": "src/ui/context-control-panel.ts",
-			"description": "Provides controls for model selection, temperature, and context settings (Dynamic, Full Note, Custom). Features a `TextArea` for custom context with `[[wikilink]]` autocompletion support via `WikilinkSuggestModal`."
-		},
-		"modals": [
-			{
-				"name": "ModelSelectionModal",
-				"file": "src/ui/modals/ModelSelectionModal.ts",
-				"description": "A performant modal for browsing all available models. Implements a virtualized list to handle hundreds of models smoothly. Includes filtering by provider, text search, a favorites system, and a refresh mechanism."
-			},
-			{
-				"name": "CustomPromptModal",
-				"file": "src/ui/modals/custom-prompt-modal.ts",
-				"description": "An ad-hoc prompt entry modal for text generation. Features a 'Modular Prompt Constructor' allowing users to insert and combine pre-saved generation prompts."
-			},
-			{
-				"name": "PromptPaletteModal",
-				"file": "src/ui/modals/prompt-palette.ts",
-				"description": "An Obsidian `SuggestModal` for quickly selecting a transformation or generation prompt from a list."
-			},
-			{
-				"name": "CustomProviderModal",
-				"file": "src/ui/modals/CustomProviderModal.ts",
-				"description": "A form for adding or editing `CustomProvider` configurations. Includes quick-setup buttons for common services and performs a connection test on save."
-			},
-			{
-				"name": "WikilinkSuggestModal",
-				"file": "src/ui/modals/wikilink-suggest-modal.ts",
-				"description": "A `SuggestModal` triggered by typing `[[` in the custom context text area, for finding and inserting note links."
-			},
-			{
-				"name": "SingleInputModal",
-				"file": "src/ui/modals/single-input-modal.ts",
-				"description": "A generic modal for getting a single line of text from the user, used for naming new knowledge graphs."
-			}
-		],
-		"settingsTab": {
-			"name": "TextTransformerSettingsMenu",
-			"file": "src/ui/settings.ts",
-			"description": "A tabbed settings interface for comprehensive configuration.",
-			"tabs": {
-				"prompts": "Manage transformation and generation prompts (enable/disable, add, edit, delete).",
-				"providers": "Manage custom AI providers (add, edit, delete, enable/disable).",
-				"params": "Configure global LLM parameters (`max_tokens`) and features (`graphAssetPath`)."
-			}
-		},
-		"styling": {
-			"file": "styles.css",
-			"strategy": "Uses CSS variables for adaptive dark/light theme support. Styles are organized by component/feature. Defines distinct visual states for suggestions (`.text-transformer-added`, `.text-transformer-removed`) and their active/focused counterparts (`-active`)."
-		}
-	},
-	"editorIntegration": {
-		"suggestionEngine": {
-			"creation": {
-				"file": "src/lib/core/textTransformer.ts (`applyTransformationAsSuggestions`)",
-				"library": "`diffWordsWithSpace` from the `diff` package.",
-				"process": "The original text and the AI's response are diffed. The resulting `added` and `removed` parts are converted into an array of `SuggestionMark` objects. Special handling exists for newlines to create distinct marks for them."
-			},
-			"stateStorage": {
-				"file": "src/lib/editor/suggestion-state.ts",
-				"mechanism": "A CodeMirror `StateField` (`suggestionStateField`) stores the array of `SuggestionMark`s. Changes are dispatched via `StateEffect`s (`setSuggestionsEffect`, `resolveSuggestionEffect`, `clearAllSuggestionsEffect`)."
-			},
-			"rendering": {
-				"file": "src/lib/editor/suggestion-state.ts",
-				"mechanism": "A CodeMirror `ViewPlugin` (`SuggestionViewPluginClass`) reads the `suggestionStateField` and creates a `DecorationSet`. 'Added' text is rendered as a `WidgetType` (ghost text). 'Removed' text is rendered as a `Decoration.mark` (strikethrough). Active suggestions receive additional CSS classes for highlighting."
-			}
-		},
-		"suggestionLifecycle": {
-			"file": "src/lib/editor/suggestion-handler.ts",
-			"description": "Implements the logic for all suggestion-related commands.",
-			"commands": {
-				"focus": "`focusNextSuggestionCM6`, `focusPreviousSuggestionCM6` - Find the next/previous mark and move the editor cursor and viewport.",
-				"resolveSingle": "`resolveNextSuggestionCM6` - Resolves the suggestion at or after the cursor. Requires a double-tap: first to focus, second to resolve.",
-				"resolveBulk": "`resolveSuggestionsInSelectionCM6` - Resolves all suggestions within the current selection or paragraph. Includes logic to navigate to the next/previous paragraph with suggestions if the current one is empty.",
-				"clearAll": "`clearAllActiveSuggestionsCM6` - Rejects and removes all suggestions from the document."
-			},
-			"cursorManagement": "Resolution functions carefully calculate the final cursor position by mapping the original mark positions through a `ChangeSet` to account for document modifications."
-		}
 	},
 	"features": [
 		{
-			"name": "Context-Aware Text Transformation",
-			"description": "Applies a user-selected prompt to the current text selection or paragraph.",
-			"workflow": "User triggers command -> `PromptPaletteModal` -> `textTransformerTextCM6` -> `gatherContextForAI` -> `fetchAiTransformation` -> `applyTransformationAsSuggestions` -> Suggestions rendered by `ViewPlugin`."
+			"name": "Inline AI Suggestions (Transformation)",
+			"description": "Users can select text (or an entire paragraph) and apply a transformation prompt. The plugin displays the AI's changes as reviewable, inline additions (green ghost text) and removals (red strikethrough) without modifying the original document until accepted.",
+			"workflow": [
+				"User triggers `Transform selection/paragraph` command.",
+				"`textTransformerTextCM6` in `textTransformer.ts` determines the scope (selection/paragraph) and captures the original text.",
+				"`gatherContextForAI` assembles the context based on Context Panel settings.",
+				"`fetchAiTransformation` calls the appropriate LLM handler (`chat-completion-handler` or `gemini`).",
+				"`applyTransformationAsSuggestions` receives the AI's response, performs a diff against the original text using `diffWordsWithSpace`.",
+				"The diff is converted into an array of `SuggestionMark` objects.",
+				"A CodeMirror transaction is dispatched with a `setSuggestionsEffect` to update the `suggestionStateField` in `suggestion-state.ts`.",
+				"The `SuggestionViewPlugin` recomputes decorations, rendering the changes visually."
+			],
+			"files": [
+				"lib/core/textTransformer.ts",
+				"lib/editor/suggestion-state.ts",
+				"llm/prompt-builder.ts"
+			]
 		},
 		{
-			"name": "Context-Aware Text Generation",
-			"description": "Generates text at the cursor based on an ad-hoc prompt and surrounding context.",
-			"workflow": "User triggers command -> `PromptPaletteModal` (for prompt blocks) -> `CustomPromptModal` -> `generateTextAndApplyAsSuggestionCM6` -> `gatherContextForAI` -> API call -> Suggestions created and rendered."
+			"name": "Inline AI Suggestions (Generation)",
+			"description": "Users can invoke a generation prompt at the cursor. The AI's output is inserted as a non-intrusive, fully 'added' inline suggestion.",
+			"workflow": [
+				"User triggers `Prompt Based Context Aware Generation at Cursor` command.",
+				"`CustomPromptModal` opens for user input, potentially using modular prompts.",
+				"`generateTextAndApplyAsSuggestionCM6` is called with the final prompt.",
+				"Context is gathered via `gatherContextForAI`.",
+				"The appropriate LLM handler is called.",
+				"The entire response is parsed into one or more 'added' type `SuggestionMark`s.",
+				"A transaction with `setSuggestionsEffect` is dispatched to render the ghost text."
+			],
+			"files": ["lib/core/textTransformer.ts", "ui/modals/custom-prompt-modal.ts"]
+		},
+		{
+			"name": "Suggestion Management",
+			"description": "A full suite of keyboard-driven commands to navigate, accept, and reject suggestions individually, by paragraph, or all at once.",
+			"workflow": [
+				"User triggers a suggestion management command (e.g., `Accept next suggestion`).",
+				"Functions in `suggestion-handler.ts` (e.g., `resolveNextSuggestionCM6`) are called.",
+				"The handler locates the relevant `SuggestionMark`(s) in the `suggestionStateField`.",
+				"It constructs a CodeMirror transaction including text changes (if accepting) and a `resolveSuggestionEffect` or `clearAllSuggestionsEffect` to remove the mark(s) from the state.",
+				"The transaction is dispatched, updating both the document and the suggestion state.",
+				"Cursor is intelligently repositioned after the action."
+			],
+			"files": ["lib/editor/suggestion-handler.ts", "lib/editor/paragraph-utils.ts"]
+		},
+		{
+			"name": "Dynamic AI Provider Framework",
+			"description": "A robust, provider-agnostic system allowing users to connect to any OpenAI-compatible API, plus dedicated support for Google and Anthropic APIs. This includes local servers like Ollama and LM Studio.",
+			"workflow": [
+				"User adds a new provider via `CustomProviderModal` in the settings.",
+				"The `CustomProviderService` tests the connection by attempting to fetch models from the specified endpoint.",
+				"When the `ModelSelectionModal` is opened, the `ModelService` retrieves models from all enabled providers, utilizing a cache for performance.",
+				"`CustomProviderService` handles API-specific model list fetching and parsing.",
+				"When an AI request is made, the correct handler (`chat-completion-handler` or `gemini`) is chosen based on the selected model's provider endpoint."
+			],
+			"files": [
+				"services/ModelService.ts",
+				"services/CustomProviderService.ts",
+				"llm/chat-completion-handler.ts",
+				"llm/gemini.ts",
+				"ui/modals/CustomProviderModal.ts",
+				"ui/modals/ModelSelectionModal.ts"
+			]
 		},
 		{
 			"name": "Knowledge Graph Generation",
-			"description": "Analyzes context to generate an Obsidian Canvas file representing a knowledge graph.",
-			"workflow": "User triggers command -> `generateGraphAndCreateCanvas` -> `promptForBaseName` -> `gatherContextForAI` -> `fetchAndValidateGraphData` (uses `buildGraphPrompt`) -> `calculateLayout` (using `d3-force`) -> `constructCanvasJson` -> `app.vault.create`."
+			"description": "Generates an Obsidian Canvas file from note content, representing key entities and their relationships as a visually organized graph.",
+			"workflow": [
+				"User triggers `Generate knowledge graph` command.",
+				"`generateGraphAndCreateCanvas` in `graphGenerator.ts` orchestrates the process.",
+				"`promptForBaseName` gets the desired filename.",
+				"`gatherContextForAI` assembles the full context.",
+				"`fetchAndValidateGraphData` sends a specialized prompt (from `buildGraphPrompt`) to the LLM, requesting a specific JSON structure.",
+				"The response is parsed and strictly validated by `validateLlmResponse`.",
+				"`calculateNodeHeight` determines node dimensions based on content for proper layout.",
+				"`d3-force` is used via `calculateLayout` to perform a force-directed layout simulation.",
+				"`constructCanvasJson` builds the final `.canvas` file content.",
+				"The file is created, metadata is added to frontmatter, and a link is embedded in the active note."
+			],
+			"files": ["lib/core/graphGenerator.ts", "llm/prompt-builder.ts", "lib/graph/types.ts"]
 		},
 		{
-			"name": "Dynamic Model & Provider Management",
-			"description": "Allows users to configure and switch between hundreds of models from various local and remote providers.",
-			"workflow": "User configures providers in Settings -> `ModelService` fetches models from enabled providers (with caching) -> `ModelSelectionModal` displays models -> User selection updates `settings.selectedModelId`."
-		},
-		"Granular Suggestion Management",
-		"Comprehensive Prompt Management"
+			"name": "Context Control System",
+			"description": "A dedicated side panel (`ContextControlPanel`) gives the user fine-grained control over what contextual information is sent to the AI.",
+			"components": [
+				{
+					"type": "Dynamic Context",
+					"description": "Includes a configurable number of lines/paragraphs before and after the selection."
+				},
+				{
+					"type": "Section Context",
+					"description": "Intelligently includes content between the current Markdown header and the next one."
+				},
+				{
+					"type": "Full Note Context",
+					"description": "Sends the entire content of the active note."
+				},
+				{
+					"type": "Custom Context",
+					"description": "Allows arbitrary text and embedded notes (via `[[wikilinks]]`) to be sent as the primary context. The `getStructuredCustomContext` method handles resolving these links to their content."
+				}
+			],
+			"files": [
+				"ui/context-control-panel.ts",
+				"lib/core/textTransformer.ts (gatherContextForAI)"
+			]
+		}
 	],
+	"uiComponents": [
+		{
+			"name": "ContextControlPanel (ItemView)",
+			"file": "ui/context-control-panel.ts",
+			"description": "The main side panel for real-time interaction. It contains the model selector, temperature slider, and all context toggles. State is persisted in `plugin.settings` and the view updates reactively."
+		},
+		{
+			"name": "TextTransformerSettingsMenu (PluginSettingTab)",
+			"file": "ui/settings.ts",
+			"description": "A tabbed settings interface for managing Prompts, Model Providers, and global LLM Parameters. Features dynamic forms for adding/editing prompts and providers."
+		},
+		{
+			"name": "ModelSelectionModal (Modal)",
+			"file": "ui/modals/ModelSelectionModal.ts",
+			"description": "A highly-performant modal for browsing and selecting an AI model. It uses a virtualized list to efficiently display hundreds of models without UI lag. Includes filtering, search, and a favorites system."
+		},
+		{
+			"name": "CustomProviderModal (Modal)",
+			"file": "ui/modals/CustomProviderModal.ts",
+			"description": "A form for adding or editing custom AI provider configurations. Includes a quick-setup feature for common providers and a connection test on save."
+		},
+		{
+			"name": "CustomPromptModal (Modal)",
+			"file": "ui/modals/custom-prompt-modal.ts",
+			"description": "The main interface for ad-hoc generation. Features a large text area for prompt input and a dropdown to insert saved 'generation prompts', enabling modular prompt construction."
+		},
+		{
+			"name": "PromptPaletteModal (SuggestModal)",
+			"file": "ui/modals/prompt-palette.ts",
+			"description": "A command-palette-style modal for quickly selecting a transformation or generation prompt."
+		},
+		{
+			"name": "SingleInputModal (Modal)",
+			"file": "ui/modals/single-input-modal.ts",
+			"description": "A generic utility modal for capturing a single line of text input, used for naming the knowledge graph."
+		},
+		{
+			"name": "WikilinkSuggestModal (SuggestModal)",
+			"file": "ui/modals/wikilink-suggest-modal.ts",
+			"description": "An autocomplete suggester for notes in the vault, triggered by typing `[[` in the Custom Context text area."
+		}
+	],
+	"dataModel": {
+		"file": "lib/settings-data.ts",
+		"settingsObject": "TextTransformerSettings",
+		"schema": {
+			"customProviders": "Array<CustomProvider>: User-configured API providers (name, endpoint, key, etc.).",
+			"selectedModelId": "string: The canonical ID of the currently active model (e.g., 'openrouter//google/gemini-pro').",
+			"favoriteModels": "Array<FavoriteModel>: A list of models the user has favorited for quick access.",
+			"temperature": "number: The creativity/randomness setting for the LLM.",
+			"max_tokens": "number: The maximum number of tokens for an AI response.",
+			"prompts": "Array<TextTransformerPrompt>: A list of all transformation prompts (default and custom).",
+			"generationPrompts": "Array<TextTransformerPrompt>: A list of user-created, reusable prompts for generation tasks.",
+			"contextPanelState": {
+				"useWholeNoteContext": "boolean",
+				"useCustomContext": "boolean",
+				"useDynamicContext": "boolean",
+				"useHeaderContext": "boolean",
+				"dynamicContextLineCount": "number",
+				"customContextText": "string: The saved text from the custom context box."
+			},
+			"graphAssetPath": "string: The vault folder for storing generated `.canvas` files."
+		},
+		"transientState": {
+			"file": "lib/editor/suggestion-state.ts",
+			"description": "Editor-specific state managed by a CodeMirror 6 StateField, not persisted in settings.",
+			"schema": {
+				"suggestionStateField": "Array<SuggestionMark>: The live array of active inline suggestions for the current editor view. Each mark contains its position, type (add/remove), and content."
+			}
+		}
+	},
 	"commands": [
-		{ "id": "open-context-control-panel", "name": "Open AI Context Control Panel" },
+		{
+			"id": "open-context-control-panel",
+			"name": "Open AI Context Control Panel",
+			"description": "Activates and reveals the Context Control Panel in the right sidebar."
+		},
 		{
 			"id": "generate-text-with-ad-hoc-prompt-suggestion",
-			"name": "Prompt Based Context Aware Generation at Cursor"
+			"name": "Prompt Based Context Aware Generation at Cursor",
+			"description": "Opens a prompt palette, then the CustomPromptModal to allow the user to type a prompt and generate text as an inline suggestion at the cursor."
 		},
-		{ "id": "generate-knowledge-graph", "name": "Generate knowledge graph" },
-		{ "id": "textTransformer-selection-paragraph", "name": "Transform selection/paragraph" },
-		{ "id": "accept-suggestions-in-text", "name": "Accept suggestions in selection/paragraph" },
-		{ "id": "reject-suggestions-in-text", "name": "Reject suggestions in selection/paragraph" },
-		{ "id": "accept-next-suggestion", "name": "Accept next suggestion" },
-		{ "id": "reject-next-suggestion", "name": "Reject next suggestion" },
-		{ "id": "clear-all-suggestions", "name": "Clear all active suggestions (reject all)" },
-		{ "id": "focus-next-suggestion", "name": "Focus next suggestion" },
-		{ "id": "focus-previous-suggestion", "name": "Focus previous suggestion" }
+		{
+			"id": "generate-knowledge-graph",
+			"name": "Generate knowledge graph",
+			"description": "Initiates the process to analyze the current context and generate a new Obsidian Canvas file representing a knowledge graph."
+		},
+		{
+			"id": "textTransformer-selection-paragraph",
+			"name": "Transform selection/paragraph",
+			"description": "The primary transformation command. Opens the PromptPaletteModal for the user to select a transformation, then applies it to the current selection or paragraph as reviewable suggestions."
+		},
+		{
+			"id": "accept-suggestions-in-text",
+			"name": "Accept suggestions in selection/paragraph",
+			"description": "Accepts all suggestions within the current text selection or paragraph."
+		},
+		{
+			"id": "reject-suggestions-in-text",
+			"name": "Reject suggestions in selection/paragraph",
+			"description": "Rejects all suggestions within the current text selection or paragraph."
+		},
+		{
+			"id": "accept-next-suggestion",
+			"name": "Accept next suggestion",
+			"description": "Accepts the next suggestion relative to the cursor position. If the cursor is on a suggestion, it accepts that one."
+		},
+		{
+			"id": "reject-next-suggestion",
+			"name": "Reject next suggestion",
+			"description": "Rejects the next suggestion relative to the cursor position. If the cursor is on a suggestion, it rejects that one."
+		},
+		{
+			"id": "clear-all-suggestions",
+			"name": "Clear all active suggestions (reject all)",
+			"description": "Rejects and removes all active suggestions from the editor view."
+		},
+		{
+			"id": "focus-next-suggestion",
+			"name": "Focus next suggestion",
+			"description": "Moves the cursor to the beginning of the next suggestion in the document, wrapping around if necessary."
+		},
+		{
+			"id": "focus-previous-suggestion",
+			"name": "Focus previous suggestion",
+			"description": "Moves the cursor to the beginning of the previous suggestion in the document, wrapping around if necessary."
+		}
 	]
 }
