@@ -45,6 +45,12 @@ export default class TextTransformer extends Plugin {
 	modelService!: ModelService;
 	favoritesService!: FavoritesService;
 
+	// --- Generation State Management ---
+	// These properties manage the cancellation system for AI generation requests
+	private currentGenerationController: AbortController | null = null; // Controls request cancellation
+	private isGenerating = false; // Tracks if generation is in progress
+	private currentGenerationNotice: Notice | null = null; // Reference to current "Generating..." notice
+
 	override async onload(): Promise<void> {
 		// --- Initialize Services ---
 		this.customProviderService = new CustomProviderService(this);
@@ -270,8 +276,115 @@ export default class TextTransformer extends Plugin {
 	}
 
 	override onunload(): void {
+		// Cancel any ongoing generation before unloading (no notice needed)
+		this.cancelCurrentGeneration(false);
 		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		console.info(this.manifest.name + " Plugin unloaded.");
+	}
+
+	// --- Generation State Management Methods ---
+
+	/**
+	 * Starts a new generation operation and returns the AbortController for it.
+	 * Cancels any existing generation first.
+	 */
+	startGeneration(): AbortController {
+		// Cancel any existing generation (no notice needed for automatic cancellation)
+		this.cancelCurrentGeneration(false);
+
+		// Create new controller and update state
+		this.currentGenerationController = new AbortController();
+		this.isGenerating = true;
+
+		// Notify context panel to show stop button
+		this.updateContextPanelGenerationState(true);
+
+		return this.currentGenerationController;
+	}
+
+	/**
+	 * Cancels the current generation operation if one is running.
+	 * @param showNotice Whether to show the cancellation notice (true when user clicks stop button)
+	 */
+	cancelCurrentGeneration(showNotice = true): void {
+		if (this.currentGenerationController) {
+			this.currentGenerationController.abort();
+			this.currentGenerationController = null;
+		}
+		this.isGenerating = false;
+
+		// Hide the current generation notice
+		if (this.currentGenerationNotice) {
+			this.currentGenerationNotice.hide();
+			this.currentGenerationNotice = null;
+		}
+
+		// Show cancellation message only when explicitly requested (user clicks stop)
+		if (showNotice) {
+			new Notice("🛑 Generation cancelled by user.", 3000);
+		}
+
+		// Notify context panel to hide stop button
+		this.updateContextPanelGenerationState(false);
+	}
+
+	/**
+	 * Marks the current generation as completed and cleans up state.
+	 */
+	completeGeneration(): void {
+		this.currentGenerationController = null;
+		this.isGenerating = false;
+
+		// Clear the current generation notice
+		if (this.currentGenerationNotice) {
+			this.currentGenerationNotice.hide();
+			this.currentGenerationNotice = null;
+		}
+
+		// Notify context panel to hide stop button
+		this.updateContextPanelGenerationState(false);
+	}
+
+	/**
+	 * Sets the current generation notice so it can be managed during cancellation.
+	 */
+	setCurrentGenerationNotice(notice: Notice): void {
+		this.currentGenerationNotice = notice;
+	}
+
+	/**
+	 * Returns whether a generation is currently in progress.
+	 */
+	getIsGenerating(): boolean {
+		return this.isGenerating;
+	}
+
+	/**
+	 * Gets the current generation AbortController if one exists.
+	 */
+	getCurrentGenerationController(): AbortController | null {
+		return this.currentGenerationController;
+	}
+
+	/**
+	 * Updates the context panel's generation state UI.
+	 */
+	private updateContextPanelGenerationState(isGenerating: boolean): void {
+		const contextPanel = this.getContextPanel();
+		if (contextPanel) {
+			contextPanel.updateGenerationState(isGenerating);
+		}
+	}
+
+	/**
+	 * Gets the current context panel instance if it exists.
+	 */
+	getContextPanel(): ContextControlPanel | null {
+		const leaves = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		if (leaves.length > 0) {
+			return leaves[0].view as ContextControlPanel;
+		}
+		return null;
 	}
 
 	async saveSettings(): Promise<void> {
@@ -292,14 +405,6 @@ export default class TextTransformer extends Plugin {
 		this.settings.temperature = hint.default;
 
 		await this.saveSettings();
-	}
-
-	getContextPanel(): ContextControlPanel | null {
-		const leaf = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE)[0];
-		if (leaf?.view instanceof ContextControlPanel) {
-			return leaf.view;
-		}
-		return null;
 	}
 
 	private _createPromptObject(

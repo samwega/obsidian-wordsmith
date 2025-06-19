@@ -25,6 +25,9 @@ export interface ChatCompletionRequestParams {
 	// Optional parameters that depend on the task
 	oldText?: string;
 	assembledContext?: AssembledContextForLLM;
+
+	// Cancellation support
+	abortSignal?: AbortSignal;
 }
 
 export async function chatCompletionRequest(
@@ -43,6 +46,7 @@ export async function chatCompletionRequest(
 		additionalRequestBodyParams,
 		oldText = "", // Provide a safe default for generation tasks
 		assembledContext,
+		abortSignal,
 	} = params;
 
 	const { systemInstructions, userContent, contextBlock } = buildPromptComponents({
@@ -102,17 +106,30 @@ export async function chatCompletionRequest(
 			requestHeaders.authorization = `Bearer ${apiKey}`;
 		}
 
-		response = await requestUrl({
+		const requestOptions: Parameters<typeof requestUrl>[0] = {
 			url: apiUrl,
 			method: "POST",
 			headers: requestHeaders,
 			body: JSON.stringify(requestBody),
-		});
+		};
+
+		// Add abort signal if provided
+		if (abortSignal?.aborted) {
+			throw new Error("Request was cancelled");
+		}
+
+		response = await requestUrl(requestOptions);
 
 		if (plugin.runtimeDebugMode) {
 			console.debug("[WordSmith plugin] Chat Completion Response:", response);
 		}
 	} catch (error) {
+		// Handle cancellation
+		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
+			new Notice("Generation cancelled by user.", 3000);
+			return;
+		}
+
 		if ((error as { status: number }).status === 401) {
 			const msg = "API key is not valid. Please verify the key in the plugin settings.";
 			new Notice(msg, 6_000);

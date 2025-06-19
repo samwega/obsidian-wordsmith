@@ -12,8 +12,11 @@ import { App, Editor, Notice, normalizePath } from "obsidian";
 import type TextTransformer from "../../main";
 import { SingleInputModal, SingleInputModalOptions } from "../../ui/modals/single-input-modal";
 
-import { chatCompletionRequest } from "../../llm/chat-completion-handler";
-import { geminiRequest } from "../../llm/gemini";
+import {
+	type ChatCompletionRequestParams,
+	chatCompletionRequest,
+} from "../../llm/chat-completion-handler";
+import { type GeminiRequestParams, geminiRequest } from "../../llm/gemini";
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
 import { formatDateForFilename, getCmEditorView, logError } from "../utils";
@@ -311,6 +314,7 @@ function getGraphChatCompletionsRequestOptions(plugin: TextTransformer): {
 async function fetchAndValidateGraphData(
 	plugin: TextTransformer,
 	assembledContext: AssembledContextForLLM,
+	abortSignal?: AbortSignal,
 ): Promise<LlmKnowledgeGraph> {
 	const { settings } = plugin;
 	const { customProviders, selectedModelId } = settings;
@@ -335,26 +339,30 @@ async function fetchAndValidateGraphData(
 	const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 
 	if (isGeminiProvider) {
-		response = await geminiRequest(plugin, {
+		const geminiParams: GeminiRequestParams = {
 			settings,
 			prompt: adHocPrompt,
 			isGenerationTask: true,
 			provider,
 			modelApiId,
 			assembledContext,
-		});
+			...(abortSignal && { abortSignal }),
+		};
+		response = await geminiRequest(plugin, geminiParams);
 	} else {
 		const requestOptions = getGraphChatCompletionsRequestOptions(plugin);
 		if (!requestOptions) {
 			throw new Error("Could not construct valid request options for graph generation.");
 		}
-		response = await chatCompletionRequest(plugin, {
+		const chatParams: ChatCompletionRequestParams = {
 			settings,
 			prompt: adHocPrompt,
 			isGenerationTask: true,
 			assembledContext,
 			...requestOptions,
-		});
+			...(abortSignal && { abortSignal }),
+		};
+		response = await chatCompletionRequest(plugin, chatParams);
 	}
 
 	if (!response?.newText) {
@@ -468,21 +476,48 @@ export async function generateGraphAndCreateCanvas(
 		return;
 	}
 
+	const abortController = plugin.startGeneration();
 	const notice = new Notice("Gathering context and preparing graph data...", 0);
+	plugin.setCurrentGenerationNotice(notice);
+
 	try {
 		const gatheredContext = await gatherContextForAI(plugin, cm, "generation");
 
+		// Check if cancelled after context gathering
+		if (abortController.signal.aborted) {
+			notice.hide();
+			plugin.completeGeneration();
+			return;
+		}
+
 		notice.setMessage("Requesting graph data from AI...");
-		const validatedGraph = await fetchAndValidateGraphData(plugin, gatheredContext);
+		const validatedGraph = await fetchAndValidateGraphData(
+			plugin,
+			gatheredContext,
+			abortController.signal,
+		);
+
+		// Check if cancelled after API request
+		if (abortController.signal.aborted) {
+			notice.hide();
+			plugin.completeGeneration();
+			return;
+		}
 
 		notice.setMessage("Calculating graph layout...");
 		await createCanvasFileFromGraph(plugin, editor, baseName, validatedGraph);
 
 		notice.hide();
+		plugin.completeGeneration();
 	} catch (error) {
 		notice.hide();
-		const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-		new Notice(`Failed to generate graph: ${errorMessage}`, 8000);
-		logError(error);
+		plugin.completeGeneration();
+
+		// Don't log cancellation errors as they're expected
+		if (!abortController.signal.aborted) {
+			const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+			new Notice(`Failed to generate graph: ${errorMessage}`, 8000);
+			logError(error);
+		}
 	}
 }

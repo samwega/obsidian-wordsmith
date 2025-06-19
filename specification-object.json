@@ -146,7 +146,7 @@
 		},
 		{
 			"name": "Context Control System",
-			"description": "A dedicated side panel (`ContextControlPanel`) gives the user fine-grained control over what contextual information is sent to the AI.",
+			"description": "A dedicated side panel (`ContextControlPanel`) gives the user fine-grained control over what contextual information is sent to the AI. Includes generation cancellation controls for stopping ongoing AI requests.",
 			"components": [
 				{
 					"type": "Dynamic Context",
@@ -175,7 +175,7 @@
 		{
 			"name": "ContextControlPanel (ItemView)",
 			"file": "ui/context-control-panel.ts",
-			"description": "The main side panel for real-time interaction. It contains the model selector, temperature slider, and all context toggles. State is persisted in `plugin.settings` and the view updates reactively."
+			"description": "The main side panel for real-time interaction. It contains the model selector, temperature slider, stop generation button, and all context toggles. The stop button appears only during active AI generation and allows users to cancel ongoing requests. State is persisted in `plugin.settings` and the view updates reactively."
 		},
 		{
 			"name": "TextTransformerSettingsMenu (PluginSettingTab)",

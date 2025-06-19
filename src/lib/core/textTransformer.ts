@@ -7,8 +7,11 @@ import { Editor, Notice, TFile } from "obsidian";
 import type TextTransformer from "../../main";
 import { CONTEXT_CONTROL_VIEW_TYPE, ContextControlPanel } from "../../ui/context-control-panel";
 
-import { chatCompletionRequest } from "../../llm/chat-completion-handler";
-import { geminiRequest } from "../../llm/gemini";
+import {
+	type ChatCompletionRequestParams,
+	chatCompletionRequest,
+} from "../../llm/chat-completion-handler";
+import { type GeminiRequestParams, geminiRequest } from "../../llm/gemini";
 import {
 	AITaskScope,
 	AITaskType,
@@ -252,7 +255,11 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		enabled: true,
 	};
 
+	// Start generation and get abort controller
+	const abortController = plugin.startGeneration();
 	const notice = new Notice("🤖 Generating text...", 0);
+	plugin.setCurrentGenerationNotice(notice);
+
 	try {
 		let response: { newText: string } | undefined;
 
@@ -265,11 +272,13 @@ export async function generateTextAndApplyAsSuggestionCM6(
 				provider,
 				modelApiId,
 				assembledContext: additionalContextForAI,
+				abortSignal: abortController.signal,
 			});
 		} else {
 			const requestOptions = getChatCompletionsRequestOptions(plugin);
 			if (!requestOptions) {
 				notice.hide();
+				plugin.completeGeneration();
 				return;
 			}
 			response = await chatCompletionRequest(plugin, {
@@ -277,15 +286,24 @@ export async function generateTextAndApplyAsSuggestionCM6(
 				prompt: adHocPrompt,
 				isGenerationTask: true,
 				assembledContext: additionalContextForAI,
+				abortSignal: abortController.signal,
 				...requestOptions,
 			});
 		}
 
 		notice.hide();
+
+		// Check if generation was cancelled
+		if (abortController.signal.aborted) {
+			plugin.completeGeneration();
+			return;
+		}
+
 		const { newText: generatedText } = response || {};
 
 		if (!generatedText) {
 			new Notice("AI did not return any generated text.", 5000);
+			plugin.completeGeneration();
 			return;
 		}
 
@@ -337,9 +355,15 @@ export async function generateTextAndApplyAsSuggestionCM6(
 		});
 
 		new Notice("✅ Ad-hoc generation complete.", 5000);
+		plugin.completeGeneration();
 	} catch (error) {
 		notice.hide();
-		logError(error);
+		plugin.completeGeneration();
+
+		// Don't log cancellation errors as they're expected
+		if (!abortController.signal.aborted) {
+			logError(error);
+		}
 	}
 }
 
@@ -352,6 +376,7 @@ async function fetchAiTransformation(
 	prompt: TextTransformerPrompt,
 	originalText: string,
 	assembledContext: AssembledContextForLLM,
+	abortSignal?: AbortSignal,
 ): Promise<{ newText: string } | undefined> {
 	const { settings } = plugin;
 	const { customProviders, selectedModelId } = settings;
@@ -369,7 +394,7 @@ async function fetchAiTransformation(
 
 	const isGeminiProvider = provider.endpoint.includes("generativelanguage.googleapis.com");
 	if (isGeminiProvider) {
-		return geminiRequest(plugin, {
+		const geminiParams: GeminiRequestParams = {
 			settings,
 			prompt,
 			isGenerationTask: false,
@@ -377,21 +402,26 @@ async function fetchAiTransformation(
 			modelApiId,
 			oldText: originalText,
 			assembledContext,
-		});
+			...(abortSignal && { abortSignal }),
+		};
+		return geminiRequest(plugin, geminiParams);
 	}
 
 	const requestOptions = getChatCompletionsRequestOptions(plugin);
 	if (!requestOptions) {
 		return;
 	}
-	return chatCompletionRequest(plugin, {
+
+	const chatParams: ChatCompletionRequestParams = {
 		settings,
 		prompt,
 		isGenerationTask: false,
 		oldText: originalText,
 		assembledContext,
 		...requestOptions,
-	});
+		...(abortSignal && { abortSignal }),
+	};
+	return chatCompletionRequest(plugin, chatParams);
 }
 
 /**
@@ -568,7 +598,9 @@ export async function textTransformerTextCM6(
 	}
 
 	// 2. Prepare and Orchestrate
+	const abortController = plugin.startGeneration();
 	const notice = new Notice(`🤖 Transforming ${textScope.toLowerCase()}...`, 0);
+	plugin.setCurrentGenerationNotice(notice);
 	const fileBeforePath = file.path;
 
 	try {
@@ -595,24 +627,39 @@ export async function textTransformerTextCM6(
 			currentPrompt,
 			originalText,
 			additionalContextForAI,
+			abortController.signal,
 		);
 
 		notice.hide();
 
+		// Check if generation was cancelled
+		if (abortController.signal.aborted) {
+			plugin.completeGeneration();
+			return;
+		}
+
 		if (fileBeforePath !== plugin.app.workspace.getActiveFile()?.path) {
 			new Notice("⚠️ Active file changed during transformation. Aborting.", 5000);
+			plugin.completeGeneration();
 			return;
 		}
 
 		const { newText: newTextFromAI } = response || {};
 		if (!newTextFromAI) {
 			new Notice("AI did not return new text.", 5000);
+			plugin.completeGeneration();
 			return;
 		}
 
 		applyTransformationAsSuggestions(cm, originalText, newTextFromAI, rangeCm);
+		plugin.completeGeneration();
 	} catch (error) {
 		notice.hide();
-		logError(error);
+		plugin.completeGeneration();
+
+		// Don't log cancellation errors as they're expected
+		if (!abortController.signal.aborted) {
+			logError(error);
+		}
 	}
 }

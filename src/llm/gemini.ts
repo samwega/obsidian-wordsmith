@@ -21,6 +21,7 @@ export interface GeminiRequestParams {
 	modelApiId: string;
 	oldText?: string;
 	assembledContext?: AssembledContextForLLM;
+	abortSignal?: AbortSignal;
 }
 
 export async function geminiRequest(
@@ -36,6 +37,7 @@ export async function geminiRequest(
 		modelApiId,
 		oldText = "", // Provide a safe default for generation tasks
 		assembledContext,
+		abortSignal,
 	} = params;
 
 	if (!provider.apiKey) {
@@ -99,6 +101,11 @@ export async function geminiRequest(
 
 	let response: RequestUrlResponse;
 	try {
+		// Check if request was cancelled before making the call
+		if (abortSignal?.aborted) {
+			throw new Error("Request was cancelled");
+		}
+
 		response = await requestUrl({
 			url: requestUrlString,
 			method: "POST",
@@ -110,6 +117,12 @@ export async function geminiRequest(
 			console.debug("[WordSmith plugin] Gemini Response:", response);
 		}
 	} catch (error) {
+		// Handle cancellation
+		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
+			new Notice("Generation cancelled by user.", 3000);
+			return;
+		}
+
 		logError(error);
 		return;
 	}

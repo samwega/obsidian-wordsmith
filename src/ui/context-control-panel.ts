@@ -40,6 +40,11 @@ export class ContextControlPanel extends ItemView {
 	private customContextTextArea: TextAreaComponent | null = null;
 	private justInsertedLink = false;
 
+	// Stop generation button - UI components for cancelling ongoing AI requests
+	// @ts-ignore: TS6133 - Used for cleanup in onClose
+	private stopGenerationButton: ButtonComponent | null = null;
+	private stopGenerationContainer: HTMLDivElement | null = null;
+
 	constructor(leaf: WorkspaceLeaf, plugin: TextTransformer) {
 		super(leaf);
 		this.plugin = plugin;
@@ -60,6 +65,7 @@ export class ContextControlPanel extends ItemView {
 	async updateView(): Promise<void> {
 		await this.renderModelControls();
 		this.updateTemperatureSlider();
+		this.renderStopGenerationButton();
 	}
 
 	override async onOpen(): Promise<void> {
@@ -167,6 +173,56 @@ export class ContextControlPanel extends ItemView {
 
 		const header = this.contentEl.querySelector(".ccp-header-container");
 		header?.insertAdjacentElement("afterend", temperatureSetting.settingEl);
+	}
+
+	private renderStopGenerationButton(): void {
+		// Remove existing stop button if it exists
+		this.stopGenerationContainer?.remove();
+
+		// Create container for the stop button
+		this.stopGenerationContainer = this.contentEl.createDiv({
+			cls: "ccp-stop-generation-container",
+		});
+
+		// Create the stop button
+		this.stopGenerationButton = new ButtonComponent(this.stopGenerationContainer)
+			.setClass("ccp-stop-generation-button")
+			.setTooltip("Cancel current generation")
+			.onClick(() => {
+				this.plugin.cancelCurrentGeneration(true); // Show notice when user clicks
+			});
+
+		// Clear any default content and add our custom content
+		const buttonEl = this.stopGenerationButton.buttonEl;
+		buttonEl.empty();
+
+		// Add spinner icon
+		const spinnerEl = buttonEl.createDiv({
+			cls: "ccp-generation-spinner",
+		});
+		setIcon(spinnerEl, "loader-2");
+
+		// Add the "Stop" text
+		buttonEl.createSpan({ text: "Stop" });
+
+		// Position the container after the temperature slider
+		const temperatureSlider = this.contentEl.querySelector(".ccp-temperature-slider-setting");
+		if (temperatureSlider) {
+			temperatureSlider.insertAdjacentElement("afterend", this.stopGenerationContainer);
+		}
+
+		// Initially hide the button
+		this.stopGenerationContainer.style.display = "none";
+	}
+
+	/**
+	 * Updates the visibility of the stop generation button based on generation state.
+	 * Called by the main plugin when generation starts/stops.
+	 */
+	updateGenerationState(isGenerating: boolean): void {
+		if (this.stopGenerationContainer) {
+			this.stopGenerationContainer.style.display = isGenerating ? "block" : "none";
+		}
 	}
 
 	private _renderContextToggles(container: HTMLElement): void {
@@ -338,6 +394,8 @@ export class ContextControlPanel extends ItemView {
 		this.dynamicContextLinesSetting = null;
 		this.customContextTextAreaContainer = null;
 		this.customContextTextArea = null;
+		this.stopGenerationButton = null;
+		this.stopGenerationContainer = null;
 		return super.onClose();
 	}
 

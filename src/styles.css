@@ -407,6 +407,73 @@ body.theme-light .text-transformer-removed-active {
 	resize: vertical;
 }
 
+/* --- Stop Generation Button --- */
+.ccp-stop-generation-container {
+	margin-top: 8px;
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 6px 12px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.ccp-stop-generation-button {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+	border-radius: var(--radius-s);
+	padding: 4px 8px;
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease-in-out;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 24px;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+.ccp-stop-generation-button:hover {
+	background-color: var(--interactive-accent-hover);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ccp-stop-generation-button:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ccp-generation-spinner {
+	width: 16px;
+	height: 16px;
+	color: var(--text-accent);
+	animation: spin 1s linear infinite;
+	flex-shrink: 0;
+}
+
+.ccp-stop-generation-button .lucide {
+	width: 12px;
+	height: 12px;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
 /* --- Provider Management (Settings) --- */
 .tt-quick-setup-container {
 	margin-bottom: 20px;
