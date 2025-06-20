@@ -1,6 +1,7 @@
 // src/llm/gemini.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { AssembledContextForLLM } from "../lib/core/textTransformer";
+import { getMaxOutputTokensForModel } from "../lib/provider-utils";
 import type {
 	CustomProvider,
 	TextTransformerPrompt,
@@ -68,6 +69,12 @@ export async function geminiRequest(
 	const cleanModelId = modelApiId.startsWith("google/") ? modelApiId.slice(7) : modelApiId;
 	const requestUrlString = `${provider.endpoint}/${cleanModelId}:generateContent?key=${provider.apiKey}`;
 
+	// Cap max_tokens at the model's actual limit to prevent API errors
+	const modelMaxTokens = getMaxOutputTokensForModel(plugin, modelApiId);
+	const effectiveMaxTokens = modelMaxTokens
+		? Math.min(settings.max_tokens, modelMaxTokens)
+		: settings.max_tokens;
+
 	const requestBody: {
 		contents: { role: string; parts: { text: string }[] }[];
 		systemInstruction?: { parts: { text: string }[] };
@@ -77,7 +84,7 @@ export async function geminiRequest(
 		contents: [{ role: "user", parts: [{ text: finalUserContent }] }],
 		generationConfig: {
 			temperature: settings.temperature,
-			maxOutputTokens: settings.max_tokens,
+			maxOutputTokens: effectiveMaxTokens,
 		},
 		safetySettings: [
 			{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -97,6 +104,11 @@ export async function geminiRequest(
 	if (plugin.runtimeDebugMode) {
 		console.debug("[WordSmith plugin] Gemini Request Body:", requestBody);
 		console.debug("[WordSmith plugin] Gemini Request URL:", requestUrlString);
+		if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
+			console.debug(
+				`[WordSmith plugin] Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelApiId}`,
+			);
+		}
 	}
 
 	let response: RequestUrlResponse;
@@ -181,16 +193,21 @@ export async function geminiRequest(
 	}
 
 	if (plugin.runtimeDebugMode) {
+		let finishReasonDescription: string;
+		if (finishReason === "STOP") {
+			finishReasonDescription = "(NATURAL COMPLETION)";
+		} else if (finishReason === "MAX_TOKENS") {
+			finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
+		} else if (finishReason === "RECITATION") {
+			finishReasonDescription = "(TRUNCATED BY CONTENT POLICY)";
+		} else {
+			finishReasonDescription = `(${finishReason})`;
+		}
+
 		console.debug(
 			"[WordSmith plugin] Gemini finish reason:",
 			finishReason,
-			finishReason === "STOP"
-				? "(NATURAL COMPLETION)"
-				: finishReason === "MAX_TOKENS"
-					? "(TRUNCATED BY TOKEN LIMIT)"
-					: finishReason === "RECITATION"
-						? "(TRUNCATED BY CONTENT POLICY)"
-						: `(${finishReason})`,
+			finishReasonDescription,
 		);
 		console.debug("[WordSmith plugin] Gemini response length:", newText.length, "characters");
 	}

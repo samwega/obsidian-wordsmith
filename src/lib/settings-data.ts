@@ -8,6 +8,7 @@ export interface Model {
 	providerId: string; // The provider's unique ID (from CustomProvider.id)
 	description?: string;
 	contextLength?: number;
+	maxOutputTokens?: number; // Maximum output tokens for this model
 	isFavorite?: boolean; // Enriched by FavoritesService
 }
 

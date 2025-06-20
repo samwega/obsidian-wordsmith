@@ -1,5 +1,11 @@
+import type TextTransformer from "../main";
 // src/lib/provider-utils.ts
-import { KNOWN_MODEL_HINTS, ModelTemperatureHint, UNKNOWN_MODEL_HINT } from "./settings-data";
+import {
+	KNOWN_MODEL_HINTS,
+	Model,
+	ModelTemperatureHint,
+	UNKNOWN_MODEL_HINT,
+} from "./settings-data";
 
 export interface ProviderInfo {
 	symbol: string;
@@ -71,4 +77,25 @@ export function getTemperatureHintForModel(modelId: string | null): ModelTempera
 	const longestKey = matchingKeys.reduce((a, b) => (a.length > b.length ? a : b));
 
 	return KNOWN_MODEL_HINTS[longestKey];
+}
+
+/**
+ * Gets the maximum output tokens for a model from the stored model data.
+ * @param plugin The plugin instance to access model data
+ * @param modelId The canonical model ID (e.g., 'openrouter//eva-qwen-2.5-72b')
+ * @returns The maximum output tokens for the model, or null if not found
+ */
+export function getMaxOutputTokensForModel(
+	plugin: TextTransformer,
+	modelId: string | null,
+): number | null {
+	if (!modelId || !plugin.modelService) {
+		return null;
+	}
+
+	// Get all models from cache (non-blocking)
+	const allModels = plugin.modelService.getCachedModels();
+	const model = allModels.find((m: Model) => m.id === modelId);
+
+	return model?.maxOutputTokens || null;
 }

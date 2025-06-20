@@ -103,6 +103,18 @@ export class ModelService {
 	}
 
 	/**
+	 * Gets all cached models without triggering any network requests.
+	 * @returns Array of cached models from all providers
+	 */
+	getCachedModels(): Model[] {
+		const allModels: Model[] = [];
+		for (const cacheEntry of this.modelCache.values()) {
+			allModels.push(...cacheEntry.models);
+		}
+		return allModels;
+	}
+
+	/**
 	 * Clears the entire model cache.
 	 */
 	clearCache(): void {

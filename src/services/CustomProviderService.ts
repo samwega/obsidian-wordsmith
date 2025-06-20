@@ -13,6 +13,11 @@ interface ApiModel {
 	ownedBy?: string;
 	contextLength?: number;
 	description?: string;
+	// biome-ignore lint/style/useNamingConvention: API response uses snake_case
+	top_provider?: {
+		// biome-ignore lint/style/useNamingConvention: API response uses snake_case
+		max_completion_tokens?: number;
+	};
 }
 
 interface GeminiModelListResponse {
@@ -57,13 +62,14 @@ export class CustomProviderService {
 			};
 
 			if (apiModel.contextLength !== undefined) {
-				// Corrected casing
-				model.contextLength = apiModel.contextLength; // Corrected casing
+				model.contextLength = apiModel.contextLength;
 			}
 			if (apiModel.description !== undefined) {
 				model.description = apiModel.description;
 			}
-			// owned_by is not currently part of the Model interface, so no mapping for it here.
+			if (apiModel.top_provider?.max_completion_tokens !== undefined) {
+				model.maxOutputTokens = apiModel.top_provider.max_completion_tokens;
+			}
 
 			return model;
 		});

@@ -1,6 +1,7 @@
 // src/llm/chat-completion-handler.ts
 import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { AssembledContextForLLM } from "../lib/core/textTransformer";
+import { getMaxOutputTokensForModel } from "../lib/provider-utils";
 import { TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
 import { logError } from "../lib/utils";
 import type TextTransformer from "../main";
@@ -75,12 +76,18 @@ export async function chatCompletionRequest(
 		messages.push({ role: "user", content: combinedContent });
 	}
 
+	// Cap max_tokens at the model's actual limit to prevent API errors
+	const modelMaxTokens = getMaxOutputTokensForModel(plugin, modelId);
+	const effectiveMaxTokens = modelMaxTokens
+		? Math.min(settings.max_tokens, modelMaxTokens)
+		: settings.max_tokens;
+
 	const requestBody: { [key: string]: unknown } = {
 		model: modelId,
 		messages: messages,
 		temperature: settings.temperature,
 		// biome-ignore lint/style/useNamingConvention: API requires snake_case
-		max_tokens: settings.max_tokens,
+		max_tokens: effectiveMaxTokens,
 		...(additionalRequestBodyParams || {}),
 	};
 
@@ -90,6 +97,11 @@ export async function chatCompletionRequest(
 
 	if (plugin.runtimeDebugMode) {
 		console.debug("[WordSmith plugin] Chat Completion Request Body:", requestBody);
+		if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
+			console.debug(
+				`[WordSmith plugin] Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelId}`,
+			);
+		}
 	}
 
 	let response: RequestUrlResponse;
@@ -181,14 +193,19 @@ export async function chatCompletionRequest(
 	}
 
 	if (plugin.runtimeDebugMode) {
+		let finishReasonDescription: string;
+		if (finishReason === "stop") {
+			finishReasonDescription = "(NATURAL COMPLETION)";
+		} else if (finishReason === "length" || finishReason === "max_tokens") {
+			finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
+		} else {
+			finishReasonDescription = `(${finishReason?.toUpperCase()})`;
+		}
+
 		console.debug(
 			"[WordSmith plugin] Response finish reason:",
 			finishReason,
-			finishReason === "stop"
-				? "(NATURAL COMPLETION)"
-				: finishReason === "length" || finishReason === "max_tokens"
-					? "(TRUNCATED BY TOKEN LIMIT)"
-					: `(${finishReason?.toUpperCase()})`,
+			finishReasonDescription,
 		);
 		console.debug("[WordSmith plugin] Response length:", newText.length, "characters");
 	}
