@@ -100,6 +100,7 @@ export async function geminiRequest(
 	}
 
 	let response: RequestUrlResponse;
+
 	try {
 		// Check if request was cancelled before making the call
 		if (abortSignal?.aborted) {
@@ -117,20 +118,81 @@ export async function geminiRequest(
 			console.debug("[WordSmith plugin] Gemini Response:", response);
 		}
 	} catch (error) {
-		// Handle cancellation
+		// Handle user cancellation
 		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
 			new Notice("Generation cancelled by user.", 3000);
+			if (plugin.runtimeDebugMode) {
+				console.debug(
+					"[WordSmith plugin] Gemini finish reason: CANCELLED (user clicked stop button)",
+				);
+				console.debug(
+					"[WordSmith plugin] This is NOT a natural completion - user manually cancelled",
+				);
+			}
 			return;
 		}
 
+		// Handle other errors
 		logError(error);
 		return;
 	}
 
-	const newText = response.json?.candidates?.[0]?.content?.parts?.[0]?.text;
-	if (newText === undefined) {
+	const candidate = response.json?.candidates?.[0];
+	const newText = candidate?.content?.parts?.[0]?.text;
+	const finishReason = candidate?.finishReason;
+
+	if (newText === undefined || newText === null || newText === "") {
+		// Add debug info to understand what's in the response
+		if (plugin.runtimeDebugMode) {
+			console.debug("[WordSmith plugin] Failed to extract text from Gemini response");
+			console.debug("[WordSmith plugin] newText value:", newText);
+			console.debug("[WordSmith plugin] Candidate:", candidate);
+			console.debug("[WordSmith plugin] Content:", candidate?.content);
+			console.debug("[WordSmith plugin] Parts:", candidate?.content?.parts);
+			console.debug("[WordSmith plugin] finishReason:", finishReason);
+		}
+
+		// If it's a MAX_TOKENS case, don't treat it as an error
+		if (finishReason === "MAX_TOKENS" || finishReason === "RECITATION") {
+			return; // Return undefined, not an error
+		}
+
 		logError(response.json || "Gemini response was empty or malformed.");
 		return;
+	}
+
+	// Check for truncation indicators in Gemini response
+
+	if (finishReason === "MAX_TOKENS" || finishReason === "RECITATION") {
+		const reasonText =
+			finishReason === "MAX_TOKENS" ? "token limit" : "content policy (recitation)";
+		new Notice(
+			`⚠️ Response was truncated due to ${reasonText}. Current limit: ${settings.max_tokens} tokens. Consider increasing the Max Output Tokens setting.`,
+			8000,
+		);
+		if (plugin.runtimeDebugMode) {
+			console.warn("[WordSmith] Gemini response truncated:", {
+				finishReason,
+				maxTokens: settings.max_tokens,
+				responseLength: newText.length,
+				modelApiId,
+			});
+		}
+	}
+
+	if (plugin.runtimeDebugMode) {
+		console.debug(
+			"[WordSmith plugin] Gemini finish reason:",
+			finishReason,
+			finishReason === "STOP"
+				? "(NATURAL COMPLETION)"
+				: finishReason === "MAX_TOKENS"
+					? "(TRUNCATED BY TOKEN LIMIT)"
+					: finishReason === "RECITATION"
+						? "(TRUNCATED BY CONTENT POLICY)"
+						: `(${finishReason})`,
+		);
+		console.debug("[WordSmith plugin] Gemini response length:", newText.length, "characters");
 	}
 
 	return { newText };

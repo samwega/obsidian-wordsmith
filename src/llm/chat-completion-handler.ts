@@ -93,6 +93,7 @@ export async function chatCompletionRequest(
 	}
 
 	let response: RequestUrlResponse;
+
 	try {
 		const requestHeaders: Record<string, string> = {
 			"content-type": "application/json",
@@ -124,12 +125,21 @@ export async function chatCompletionRequest(
 			console.debug("[WordSmith plugin] Chat Completion Response:", response);
 		}
 	} catch (error) {
-		// Handle cancellation
+		// Handle user cancellation
 		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
 			new Notice("Generation cancelled by user.", 3000);
+			if (plugin.runtimeDebugMode) {
+				console.debug(
+					"[WordSmith plugin] Response finish reason: CANCELLED (user clicked stop button)",
+				);
+				console.debug(
+					"[WordSmith plugin] This is NOT a natural completion - user manually cancelled",
+				);
+			}
 			return;
 		}
 
+		// Handle other errors
 		if ((error as { status: number }).status === 401) {
 			const msg = "API key is not valid. Please verify the key in the plugin settings.";
 			new Notice(msg, 6_000);
@@ -143,9 +153,44 @@ export async function chatCompletionRequest(
 		? response.json?.content?.[0]?.text
 		: response.json?.choices?.[0].message.content;
 
+	// Check for truncation indicators
+	const finishReason = isDirectAnthropicApi
+		? response.json?.stop_reason
+		: response.json?.choices?.[0]?.finish_reason;
+
 	if (newText === undefined) {
 		logError(response.json || "API response was empty or malformed.");
 		return;
+	}
+
+	// Check for truncation indicators
+
+	if (finishReason === "length" || finishReason === "max_tokens") {
+		new Notice(
+			`⚠️ Response was truncated due to token limit. Current limit: ${settings.max_tokens} tokens. Consider increasing the Max Output Tokens setting.`,
+			8000,
+		);
+		if (plugin.runtimeDebugMode) {
+			console.warn("[WordSmith] Response truncated due to token limit:", {
+				finishReason,
+				maxTokens: settings.max_tokens,
+				responseLength: newText.length,
+				modelId,
+			});
+		}
+	}
+
+	if (plugin.runtimeDebugMode) {
+		console.debug(
+			"[WordSmith plugin] Response finish reason:",
+			finishReason,
+			finishReason === "stop"
+				? "(NATURAL COMPLETION)"
+				: finishReason === "length" || finishReason === "max_tokens"
+					? "(TRUNCATED BY TOKEN LIMIT)"
+					: `(${finishReason?.toUpperCase()})`,
+		);
+		console.debug("[WordSmith plugin] Response length:", newText.length, "characters");
 	}
 
 	return { newText };
