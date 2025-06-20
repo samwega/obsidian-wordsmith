@@ -110,13 +110,14 @@
 		},
 		{
 			"name": "Dynamic AI Provider Framework",
-			"description": "A robust, provider-agnostic system allowing users to connect to any OpenAI-compatible API, plus dedicated support for Google and Anthropic APIs. This includes local servers like Ollama and LM Studio.",
+			"description": "A robust, provider-agnostic system allowing users to connect to any OpenAI-compatible API, plus dedicated support for Google and Anthropic APIs. This includes local servers like Ollama and LM Studio. The system automatically captures and respects model-specific output token limits to prevent API errors.",
 			"workflow": [
 				"User adds a new provider via `CustomProviderModal` in the settings.",
 				"The `CustomProviderService` tests the connection by attempting to fetch models from the specified endpoint.",
 				"When the `ModelSelectionModal` is opened, the `ModelService` retrieves models from all enabled providers, utilizing a cache for performance.",
-				"`CustomProviderService` handles API-specific model list fetching and parsing.",
-				"When an AI request is made, the correct handler (`chat-completion-handler` or `gemini`) is chosen based on the selected model's provider endpoint."
+				"`CustomProviderService` handles API-specific model list fetching and parsing, capturing max output token limits from provider responses.",
+				"When an AI request is made, the system automatically caps the user's max_tokens setting at the model's actual limit to prevent API errors.",
+				"The correct handler (`chat-completion-handler` or `gemini`) is chosen based on the selected model's provider endpoint."
 			],
 			"files": [
 				"services/ModelService.ts",
