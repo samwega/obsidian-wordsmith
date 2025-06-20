@@ -257,7 +257,7 @@ export async function generateTextAndApplyAsSuggestionCM6(
 
 	// Start generation and get abort controller
 	const abortController = plugin.startGeneration();
-	const notice = new Notice("🤖 Generating text...", 0);
+	const notice = new Notice("🧠 Generating text...", 0);
 	plugin.setCurrentGenerationNotice(notice);
 
 	try {
@@ -599,7 +599,7 @@ export async function textTransformerTextCM6(
 
 	// 2. Prepare and Orchestrate
 	const abortController = plugin.startGeneration();
-	const notice = new Notice(`🤖 Transforming ${textScope.toLowerCase()}...`, 0);
+	const notice = new Notice(`🧠 Transforming ${textScope.toLowerCase()}...`, 0);
 	plugin.setCurrentGenerationNotice(notice);
 	const fileBeforePath = file.path;
 
