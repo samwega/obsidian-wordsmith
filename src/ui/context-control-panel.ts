@@ -196,14 +196,14 @@ export class ContextControlPanel extends ItemView {
 		const buttonEl = this.stopGenerationButton.buttonEl;
 		buttonEl.empty();
 
+		// Add the "Stop" text
+		buttonEl.createSpan({ text: "Stop" });
+
 		// Add spinner icon
 		const spinnerEl = buttonEl.createDiv({
 			cls: "ccp-generation-spinner",
 		});
-		setIcon(spinnerEl, "loader-2");
-
-		// Add the "Stop" text
-		buttonEl.createSpan({ text: "Stop" });
+		setIcon(spinnerEl, "cog");
 
 		// Position the container after the temperature slider
 		const temperatureSlider = this.contentEl.querySelector(".ccp-temperature-slider-setting");
