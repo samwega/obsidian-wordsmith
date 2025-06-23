@@ -85,13 +85,11 @@ export default class TextTransformer extends Plugin {
 			callback: (): void => {
 				this.activateView();
 			},
-			icon: "settings-2",
 		});
 
 		this.addCommand({
 			id: "generate-text-with-ad-hoc-prompt-suggestion",
 			name: "Prompt Based Context Aware Generation at Cursor",
-			icon: "wand-2",
 			editorCallback: (editor: Editor): void => {
 				const savedPrompts = this.settings.generationPrompts.filter((p) => p.enabled);
 
@@ -124,7 +122,6 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "generate-knowledge-graph",
 			name: "Generate knowledge graph",
-			icon: "brain-circuit",
 			editorCallback: async (editor: Editor): Promise<void> => {
 				await generateGraphAndCreateCanvas(this, editor);
 			},
@@ -173,7 +170,6 @@ export default class TextTransformer extends Plugin {
 					}).open();
 				});
 			},
-			icon: "crown",
 		});
 
 		this.addCommand({
@@ -187,7 +183,6 @@ export default class TextTransformer extends Plugin {
 					new Notice("No active file.");
 				}
 			},
-			icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-suggestions-in-text",
@@ -200,7 +195,6 @@ export default class TextTransformer extends Plugin {
 					new Notice("No active file.");
 				}
 			},
-			icon: "x",
 		});
 		this.addCommand({
 			id: "accept-next-suggestion",
@@ -213,7 +207,6 @@ export default class TextTransformer extends Plugin {
 					new Notice("No active file.");
 				}
 			},
-			icon: "check-check",
 		});
 		this.addCommand({
 			id: "reject-next-suggestion",
@@ -226,7 +219,6 @@ export default class TextTransformer extends Plugin {
 					new Notice("No active file.");
 				}
 			},
-			icon: "x",
 		});
 		this.addCommand({
 			id: "clear-all-suggestions",
@@ -239,7 +231,6 @@ export default class TextTransformer extends Plugin {
 					new Notice("No active file.");
 				}
 			},
-			icon: "trash-2",
 		});
 
 		this.addCommand({
@@ -248,7 +239,6 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor: Editor): void => {
 				focusNextSuggestionCM6(this, editor);
 			},
-			icon: "arrow-down-circle",
 		});
 
 		this.addCommand({
@@ -257,7 +247,6 @@ export default class TextTransformer extends Plugin {
 			editorCallback: (editor: Editor): void => {
 				focusPreviousSuggestionCM6(this, editor);
 			},
-			icon: "arrow-up-circle",
 		});
 	}
 
