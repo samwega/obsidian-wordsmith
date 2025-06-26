@@ -26,8 +26,6 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		this.addTransformationPromptButton = null;
 		this.addGenerationPromptButton = null;
 
-		containerEl.createEl("h2", { text: "WordSmith Settings" });
-
 		this._renderTabs(containerEl);
 
 		const tabContentEl = containerEl.createDiv({ cls: "tt-settings-tab-content" });
@@ -73,7 +71,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderProviderManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Model Providers" });
+		containerEl.createEl("h3", { text: "Model providers" });
 		const desc = containerEl.createEl("p", { cls: "setting-item-description" });
 		desc.setText(
 			"Connect to any API endpoint, including local servers like Ollama or LM Studio.",
@@ -140,10 +138,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "LLM Parameters" });
+		containerEl.createEl("h3", { text: "LLM parameters" });
 
 		new Setting(containerEl)
-			.setName("Max Output Tokens")
+			.setName("Max output tokens")
 			.setDesc(
 				"Set the maximum number of tokens the AI can generate in a single response. Higher values allow for longer, more complex outputs (like knowledge graphs) but may increase cost and latency.",
 			)
@@ -159,7 +157,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Knowledge Graphs Asset Path")
+			.setName("Knowledge graphs asset path")
 			.setDesc("The vault subfolder where generated .canvas files will be stored.")
 			.addText((text) => {
 				text
@@ -174,7 +172,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Debug Mode (Runtime Only)")
+			.setName("Debug mode (runtime only)")
 			.setDesc(
 				"Enable verbose logging to the developer console for troubleshooting. This state is NOT saved and resets on reload.",
 			)
@@ -302,7 +300,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Prompt Management" });
+		containerEl.createEl("h3", { text: "Prompt management" });
 		const promptManagementWrapper = containerEl.createDiv({
 			cls: "prompt-management-section-container",
 		});
@@ -312,7 +310,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 
 		if (defaultPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", {
-				text: "Preset Transformation Prompts",
+				text: "Preset transformation prompts",
 				cls: "tt-prompt-section-title",
 			});
 			const defaultPromptsGrid = promptManagementWrapper.createEl("div", {
@@ -326,7 +324,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		if (customPrompts.length > 0) {
 			promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 			promptManagementWrapper.createEl("div", {
-				text: "User Transformation Prompts",
+				text: "User transformation prompts",
 				cls: "tt-prompt-section-title",
 			});
 			const customPromptsGrid = promptManagementWrapper.createEl("div", {
@@ -356,7 +354,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		promptManagementWrapper.createEl("div", { cls: "tt-prompt-divider" });
 
 		promptManagementWrapper.createEl("div", {
-			text: "User Generation Prompts",
+			text: "User generation prompts",
 			cls: "tt-prompt-section-title",
 		});
 		const generationPromptsGrid = promptManagementWrapper.createEl("div", {

@@ -3,7 +3,7 @@
 	"type": "module",
 	"description": "AI-powered context-aware writing assistant: instantly improve, translate, generate, restructure, and refine text with inline suggestions, granular review, custom prompts, multiple AI providers, seamless, keyboard-first workflow.",
 	"author": "Alexander Glavan",
-	"version": "3.2.2",
+	"version": "3.2.3",
 	"keywords": [],
 	"license": "MIT",
 	"main": "main.js",

@@ -187,7 +187,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "structure",
-		name: "Refine Structure",
+		name: "Refine structure",
 		text: "[AI ROLE]: Expert editor.\n[TASK]: Refine the structure of the following text, in ways compatible with Obsidian Markdown (#headers, - bullet and 1. numbered lists, **bold**, *italics*, etc.)\n[RULE]: Make the minimal changes which  enhance comprehension;\n[RULE]: IMPORTANT: don't overdo it! Minimal is preferable.",
 		isDefault: true,
 		enabled: true,
@@ -203,7 +203,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "mind-the-context",
-		name: "Do Context Tasks",
+		name: "Do context tasks",
 		text: "[AI ROLE]:  Professional editor.\n[TASK]: You will receive a text selection, and a context which may contain instructions or indications. Do to the text whatever the context says.",
 		isDefault: true,
 		enabled: true,
@@ -227,7 +227,7 @@ export const DEFAULT_TEXT_TRANSFORMER_PROMPTS: TextTransformerPrompt[] = [
 	},
 	{
 		id: "cleanup",
-		name: "Cleanup Text/Chat",
+		name: "Cleanup text/chat",
 		text: "[AI ROLE]: Professional proofreader.\n[TASK]: Turn the following text or conversation into something that would flow well if read by text-to-speech, but without changing the content and meaning. Clean up the text received, which MAY contain chat conversations. Remove timestamps. Multiple consecutive messages from one speaker can be concatenated it they makes sense as a single paragraph or sentence. Don't change what the speakers say, but you can clean up the syntax and punctuation, expanding an `ic`, an `idk`, etc. Preserve emojis and numerals. Don't add empty lines between messages.\n[CASE]: If it's a chat between at least two different names (& if date is present): write [### YYYY-MM-DD Conversation] as a title. Below the title, goes the cleaned up conversation.\n[CASE]: If there's only one speaker: do not add title/date, only write the [Name: ] once at the beginning of the first line.",
 		isDefault: true,
 		enabled: true,
