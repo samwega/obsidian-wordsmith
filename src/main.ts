@@ -89,7 +89,7 @@ export default class TextTransformer extends Plugin {
 
 		this.addCommand({
 			id: "generate-text-with-ad-hoc-prompt-suggestion",
-			name: "Prompt Based Context Aware Generation at Cursor",
+			name: "Prompt based context aware generation at cursor",
 			editorCallback: (editor: Editor): void => {
 				const savedPrompts = this.settings.generationPrompts.filter((p) => p.enabled);
 
@@ -267,7 +267,8 @@ export default class TextTransformer extends Plugin {
 	override onunload(): void {
 		// Cancel any ongoing generation before unloading (no notice needed)
 		this.cancelCurrentGeneration(false);
-		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		// Obsidian handles detaching leaves for registered views automatically on unload.
+		// Manually detaching here is redundant and can interfere with the app's cleanup process.
 		console.info(this.manifest.name + " Plugin unloaded.");
 	}
 

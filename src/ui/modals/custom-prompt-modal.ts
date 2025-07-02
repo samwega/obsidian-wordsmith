@@ -33,7 +33,7 @@ export class CustomPromptModal extends Modal {
 		contentEl.empty();
 
 		contentEl.createEl("h3", {
-			text: "Context Aware Generator",
+			text: "Context aware generator",
 			cls: "custom-prompt-modal-title",
 		});
 
@@ -64,7 +64,7 @@ export class CustomPromptModal extends Modal {
 
 		// --- NEW "Insert Prompt" Dropdown ---
 		const insertPromptSetting = new Setting(contentEl)
-			.setName("Modular Generation User Prompt Constructor")
+			.setName("Modular generation user prompt constructor")
 			.setDesc(
 				"You can compose your prompt out of multiple saved generation prompts, like LEGO blocks.",
 			);

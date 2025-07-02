@@ -41,7 +41,6 @@ export class ContextControlPanel extends ItemView {
 	private justInsertedLink = false;
 
 	// Stop generation button - UI components for cancelling ongoing AI requests
-	// @ts-ignore: TS6133 - Used for cleanup in onClose
 	private stopGenerationButton: ButtonComponent | null = null;
 	private stopGenerationContainer: HTMLDivElement | null = null;
 
@@ -226,7 +225,7 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	private _renderContextToggles(container: HTMLElement): void {
-		const titleEl = container.createEl("h4", { text: "Include Context:", cls: "ccp-subtitle" });
+		const titleEl = container.createEl("h4", { text: "Include context:", cls: "ccp-subtitle" });
 		titleEl.setAttribute(
 			"aria-label",
 			"Configure what contextual information is sent to the AI with your text.",

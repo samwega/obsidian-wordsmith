@@ -65,9 +65,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		};
 
-		renderTabButton("Prompt Management", "prompts", tabsContainer);
-		renderTabButton("Model Providers", "providers", tabsContainer);
-		renderTabButton("LLM Parameters", "params", tabsContainer);
+		renderTabButton("Prompt management", "prompts", tabsContainer);
+		renderTabButton("Model providers", "providers", tabsContainer);
+		renderTabButton("LLM parameters", "params", tabsContainer);
 	}
 
 	private _renderProviderManagementSection(containerEl: HTMLElement): void {
@@ -90,7 +90,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				.addButton((button) => {
 					button
 						.setButtonText("Edit")
-						.setTooltip("Edit Provider Settings")
+						.setTooltip("Edit provider settings")
 						.onClick(() => {
 							new CustomProviderModal(this.app, {
 								plugin: this.plugin,
@@ -123,7 +123,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		});
 
 		new Setting(containerEl).addButton((button) =>
-			button.setButtonText("Add Provider").onClick(() => {
+			button.setButtonText("Add provider").onClick(() => {
 				new CustomProviderModal(this.app, {
 					plugin: this.plugin,
 					provider: null,
@@ -336,10 +336,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		}
 
 		this.addTransformationPromptButton = new Setting(promptManagementWrapper)
-			.setName("Add New Transformation Prompt")
+			.setName("Add new transformation prompt")
 			.setDesc("Create a new custom prompt for transforming selected text.")
 			.addButton((button) => {
-				button.setButtonText("Add New Prompt").onClick(() => {
+				button.setButtonText("Add new prompt").onClick(() => {
 					if (this.addPromptForm) this._closePromptForm();
 					this.addPromptForm = this._createAddPromptForm("prompts");
 					this.addTransformationPromptButton?.settingEl.insertAdjacentElement(
@@ -365,10 +365,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		);
 
 		this.addGenerationPromptButton = new Setting(promptManagementWrapper)
-			.setName("Add New Generation Prompt")
+			.setName("Add new generation prompt")
 			.setDesc("Create a new reusable prompt for ad-hoc text generation.")
 			.addButton((button) => {
-				button.setButtonText("Add New Prompt").onClick(() => {
+				button.setButtonText("Add new prompt").onClick(() => {
 					if (this.addPromptForm) this._closePromptForm();
 					this.addPromptForm = this._createAddPromptForm("generationPrompts");
 					this.addGenerationPromptButton?.settingEl.insertAdjacentElement(

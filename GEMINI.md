@@ -99,3 +99,16 @@ The plugin follows a **Layered Service-Oriented Architecture** to ensure high co
 -   `Prompt Based Context Aware Generation at Cursor`: Opens a modal to generate text from a custom prompt.
 -   `Generate knowledge graph`: Creates a `.canvas` file from the current note's context.
 -   `Accept/Reject/Focus/Clear` commands: A full suite for managing inline suggestions.
+
+## Obsidian Plugin Guidelines Compliance
+- `Always use sentence case in UI`
+- Use window.setTimeout, window.clearTimeout, window.setInterval, window.clearInterval instead of their versions without window. Use number instead of NodeJs.Timeout.
+- Use setHeading instead of a <h1>, <h2>
+- Use the appropriate callback type for commands
+- Prefer the Vault API over the Adapter API
+- Avoid using innerHTML
+- No hardcoded styling
+- prefer async/await over Promise
+- Avoid unnecessary logging to console
+- Use createDiv(), createSpan(), createEl(), createFragment() instead.
+- Don't detach leaves in onunload

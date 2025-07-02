@@ -36,7 +36,7 @@ export class ModelSelectionModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("h2", { text: "Browse Models" });
+		contentEl.createEl("h2", { text: "Browse models" });
 
 		this.renderFilters(contentEl);
 		this.setupVirtualList(contentEl);
@@ -83,7 +83,7 @@ export class ModelSelectionModal extends Modal {
 		const filterContainer = container.createDiv({ cls: "tt-model-filters" });
 		const filterGrid = filterContainer.createDiv({ cls: "tt-model-filters-grid" });
 
-		const providerFilterSetting = new Setting(filterGrid).setName("Filter by Provider");
+		const providerFilterSetting = new Setting(filterGrid).setName("Filter by provider");
 
 		const searchSetting = new Setting(filterGrid).setName("Search").addText((text) => {
 			this.searchInput = text;
@@ -111,7 +111,7 @@ export class ModelSelectionModal extends Modal {
 
 		const refreshButtonWrapper = filterContainer.createDiv({ cls: "tt-refresh-button-wrapper" });
 		new ButtonComponent(refreshButtonWrapper)
-			.setButtonText("Refresh Model List")
+			.setButtonText("Refresh model list")
 			.setTooltip("Bypass cache and fetch the latest models from all providers")
 			.onClick(async () => {
 				const notice = new Notice("Refreshing model list...", 0);

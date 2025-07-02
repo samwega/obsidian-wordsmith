@@ -66,7 +66,7 @@ function promptForBaseName(app: App): Promise<string | null> {
 		const defaultDateName = `${formatDateForFilename(new Date())} `;
 		const modalOptions: SingleInputModalOptions = {
 			title: "Enter a name for the knowledge graph canvas",
-			placeholder: "My Knowledge Graph",
+			placeholder: "My knowledge graph",
 			initialValue: defaultDateName,
 			onSubmit: (result) => resolve(result),
 			onCancel: () => resolve(null),
@@ -329,7 +329,7 @@ async function fetchAndValidateGraphData(
 	const promptComponents = buildGraphPrompt({ assembledContext });
 	const adHocPrompt: (typeof settings.prompts)[number] = {
 		id: "graph-generation",
-		name: "Graph Generation",
+		name: "Graph generation",
 		text: promptComponents.userContent,
 		isDefault: false,
 		enabled: true,
