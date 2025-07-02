@@ -44,17 +44,36 @@ function calculateNodeHeight(text: string, width: number): number {
 	tempDiv.style.padding = `${CANVAS_NODE_PADDING}px`;
 	tempDiv.style.boxSizing = "content-box";
 	tempDiv.style.wordWrap = "break-word";
-	tempDiv.style.whiteSpace = "pre-wrap";
 	tempDiv.style.fontFamily = "var(--font-text)";
 	tempDiv.style.fontSize = "var(--font-text-size)";
 	tempDiv.style.lineHeight = "var(--line-height-normal)";
-	const htmlContent = text
-		.replace(
-			/^## (.*)$/gm,
-			'<div style="font-size: var(--h2-size); font-weight: var(--h2-weight); margin-bottom: 0.5em;">$1</div>',
-		)
-		.replace(/\n\n/g, "<p></p>");
-	tempDiv.innerHTML = htmlContent;
+
+	// The original code used `white-space: pre-wrap` and then manipulated an HTML string.
+	// To avoid `innerHTML`, we build the DOM programmatically.
+	// We will simulate the `pre-wrap` behavior by creating elements for each line.
+	const lines = text.split("\n");
+
+	for (const line of lines) {
+		const h2Match = line.match(/^## (.*)/);
+		if (h2Match) {
+			const h2Div = document.createElement("div");
+			h2Div.style.fontSize = "var(--h2-size)";
+			h2Div.style.fontWeight = "var(--h2-weight)";
+			h2Div.style.marginBottom = "0.5em";
+			h2Div.textContent = h2Match[1]; // Use textContent for safety
+			tempDiv.appendChild(h2Div);
+		} else {
+			// For all other lines, including empty ones, create a paragraph.
+			// This correctly handles single newlines (as paragraph breaks) and text lines.
+			const p = document.createElement("p");
+			// Use a non-breaking space for empty lines to ensure they have height
+			p.textContent = line || "\u00A0";
+			// Remove default paragraph margins to mimic pre-wrap behavior more closely
+			p.style.margin = "0";
+			tempDiv.appendChild(p);
+		}
+	}
+
 	document.body.appendChild(tempDiv);
 	const height = tempDiv.scrollHeight;
 	document.body.removeChild(tempDiv);
