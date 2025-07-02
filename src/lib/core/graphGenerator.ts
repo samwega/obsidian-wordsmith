@@ -405,7 +405,7 @@ async function createCanvasFileFromGraph(
 	const finalFilename = generateUniqueFilename(baseName);
 	const filePath = normalizePath(`${settings.graphAssetPath}/${finalFilename}`);
 
-	if (!(await app.vault.adapter.exists(settings.graphAssetPath))) {
+	if (!app.vault.getAbstractFileByPath(settings.graphAssetPath)) {
 		await app.vault.createFolder(settings.graphAssetPath);
 	}
 	const newFile = await app.vault.create(filePath, canvasJsonString);
