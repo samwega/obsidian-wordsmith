@@ -34,9 +34,8 @@ export class ModelSelectionModal extends Modal {
 	override onOpen(): void {
 		this.modalEl.addClass("tt-model-selection-modal");
 		const { contentEl } = this;
+		this.setTitle("Browse models");
 		contentEl.empty();
-
-		contentEl.createEl("h2", { text: "Browse models" });
 
 		this.renderFilters(contentEl);
 		this.setupVirtualList(contentEl);

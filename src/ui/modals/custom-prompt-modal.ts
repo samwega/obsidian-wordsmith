@@ -32,10 +32,8 @@ export class CustomPromptModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("h3", {
-			text: "Context aware generator",
-			cls: "custom-prompt-modal-title",
-		});
+		this.titleEl.setText("Context aware generator");
+		this.titleEl.addClass("custom-prompt-modal-title");
 
 		const textArea = new TextAreaComponent(contentEl)
 			.setValue(this.promptText)

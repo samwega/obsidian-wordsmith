@@ -71,7 +71,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderProviderManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Model providers" });
+		new Setting(containerEl).setName("Model providers").setHeading();
 		const desc = containerEl.createEl("p", { cls: "setting-item-description" });
 		desc.setText(
 			"Connect to any API endpoint, including local servers like Ollama or LM Studio.",
@@ -138,7 +138,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "LLM parameters" });
+		new Setting(containerEl).setName("LLM parameters").setHeading();
 
 		new Setting(containerEl)
 			.setName("Max output tokens")
@@ -300,7 +300,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Prompt management" });
+		new Setting(containerEl).setName("Prompt management").setHeading();
 		const promptManagementWrapper = containerEl.createDiv({
 			cls: "prompt-management-section-container",
 		});

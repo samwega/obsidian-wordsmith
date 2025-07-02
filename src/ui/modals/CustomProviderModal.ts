@@ -78,10 +78,11 @@ export class CustomProviderModal extends Modal {
 
 	override onOpen(): void {
 		const { contentEl } = this;
-		contentEl.empty();
-
 		const title = this.isEditMode ? "Edit custom provider" : "Add custom provider";
-		contentEl.createEl("h2", { text: title });
+		this.setTitle(title);
+
+		// This is crucial to clear the modal body before re-rendering.
+		contentEl.empty();
 
 		this.renderQuickSetup(contentEl);
 		this.renderForm(contentEl);
