@@ -1,5 +1,5 @@
 // src/main.ts
-import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import { Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import { SuggestionAction } from "./lib/constants";
 import { generateGraphAndCreateCanvas } from "./lib/core/graphGenerator";
@@ -130,106 +130,125 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
-			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this.settings.prompts.filter(
-					(p) => p.enabled && p.showInPromptPalette !== false,
-				);
-				if (enabledPrompts.length === 0) {
-					new Notice(
-						"No enabled prompts (for palette). Please configure prompts in WordSmith settings.",
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
+				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					const activeFile = ctx.file; // Capture the narrowed type
+					const enabledPrompts = this.settings.prompts.filter(
+						(p) => p.enabled && p.showInPromptPalette !== false,
 					);
-					return;
-				}
-				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile) {
-					new Notice("No active file to transform text in.");
-					return;
-				}
+					if (enabledPrompts.length === 0) {
+						new Notice(
+							"No enabled prompts (for palette). Please configure prompts in WordSmith settings.",
+						);
+						return;
+					}
 
-				if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
-					await textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
-					return;
-				}
+					if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
+						textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
+						return;
+					}
 
-				return new Promise<void>((resolve, reject) => {
 					new PromptPaletteModal(this.app, {
 						prompts: enabledPrompts,
 						onChoose: async (prompt: TextTransformerPrompt): Promise<void> => {
-							try {
-								await textTransformerTextCM6(this, editor, prompt, activeFile);
-								resolve();
-							} catch (error) {
-								console.error("Error transforming text:", error);
-								new Notice("Error during text transformation.");
-								reject(error);
-							}
-						},
-						onCancel: (): void => {
-							resolve();
+							await textTransformerTextCM6(this, editor, prompt, activeFile);
 						},
 					}).open();
-				});
+				}
+				return;
 			},
 		});
 
 		this.addCommand({
 			id: "accept-suggestions-in-text",
 			name: "Accept suggestions in selection/paragraph",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.accept);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveSuggestionsInSelectionCM6(this, editor, ctx.file, SuggestionAction.accept);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "reject-suggestions-in-text",
 			name: "Reject suggestions in selection/paragraph",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.reject);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveSuggestionsInSelectionCM6(this, editor, ctx.file, SuggestionAction.reject);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "accept-next-suggestion",
 			name: "Accept next suggestion",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.accept);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveNextSuggestionCM6(this, editor, ctx.file, SuggestionAction.accept);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "reject-next-suggestion",
 			name: "Reject next suggestion",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.reject);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveNextSuggestionCM6(this, editor, ctx.file, SuggestionAction.reject);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "clear-all-suggestions",
 			name: "Clear all active suggestions (reject all)",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					clearAllActiveSuggestionsCM6(this, editor, activeFile);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					clearAllActiveSuggestionsCM6(this, editor, ctx.file);
+				}
+				return;
 			},
 		});
 
