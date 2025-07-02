@@ -81,7 +81,7 @@ export default class TextTransformer extends Plugin {
 	private _registerCommands(): void {
 		this.addCommand({
 			id: "open-context-control-panel",
-			name: "Open AI Context Control Panel",
+			name: "Open AI context control panel",
 			callback: (): void => {
 				this.activateView();
 			},
@@ -95,7 +95,7 @@ export default class TextTransformer extends Plugin {
 
 				const emptyPrompt: TextTransformerPrompt = {
 					id: "empty-prompt-sentinel",
-					name: "Start with an Empty Prompt",
+					name: "Start with an empty prompt",
 					text: "",
 					isDefault: true,
 					enabled: true,

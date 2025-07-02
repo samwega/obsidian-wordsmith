@@ -117,7 +117,7 @@ export class CustomPromptModal extends Modal {
 			});
 
 		new ButtonComponent(buttonContainer)
-			.setButtonText("Generate at Cursor")
+			.setButtonText("Generate at cursor")
 			.setCta()
 			.onClick(() => {
 				this.submitForm();
