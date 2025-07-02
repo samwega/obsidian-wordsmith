@@ -41,7 +41,7 @@ export class ModelSelectionModal extends Modal {
 		this.renderFilters(contentEl);
 		this.setupVirtualList(contentEl);
 
-		setTimeout(() => {
+		window.setTimeout(() => {
 			this.searchInput?.inputEl.focus();
 		}, 0);
 
@@ -89,7 +89,7 @@ export class ModelSelectionModal extends Modal {
 			this.searchInput = text;
 			text.setPlaceholder("e.g., Llama, GPT, OpenRouter...").onChange((value) => {
 				if (this.searchDebounceTimer) {
-					clearTimeout(this.searchDebounceTimer);
+					window.clearTimeout(this.searchDebounceTimer);
 				}
 				this.searchDebounceTimer = window.setTimeout(() => {
 					this.searchQuery = value.toLowerCase();
@@ -127,13 +127,13 @@ export class ModelSelectionModal extends Modal {
 					this.populateProviderFilter();
 					this.applyFiltersAndRender();
 					notice.setMessage("✅ Models refreshed.");
-					setTimeout(() => notice.hide(), 2000);
+					window.setTimeout(() => notice.hide(), 2000);
 				} catch (error) {
 					console.error("[WordSmith] Error refreshing models:", error);
 					this.listItemsEl.empty();
 					this.listItemsEl.setText("Failed to refresh models.");
 					notice.setMessage("Failed to refresh models.");
-					setTimeout(() => notice.hide(), 3000);
+					window.setTimeout(() => notice.hide(), 3000);
 				}
 			});
 	}
@@ -280,7 +280,7 @@ export class ModelSelectionModal extends Modal {
 	override onClose(): void {
 		super.onClose();
 		if (this.searchDebounceTimer) {
-			clearTimeout(this.searchDebounceTimer);
+			window.clearTimeout(this.searchDebounceTimer);
 		}
 	}
 }

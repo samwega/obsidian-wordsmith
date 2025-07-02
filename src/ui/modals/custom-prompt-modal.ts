@@ -51,7 +51,7 @@ export class CustomPromptModal extends Modal {
 		textArea.inputEl.classList.add("custom-prompt-modal-textarea");
 
 		// Delay focus to ensure modal is fully rendered
-		setTimeout(() => {
+		window.setTimeout(() => {
 			textArea.inputEl.focus();
 		}, 50);
 
@@ -92,7 +92,7 @@ export class CustomPromptModal extends Modal {
 					this.promptText = newText; // Update internal state
 
 					// Move cursor to the end and focus
-					setTimeout(() => {
+					window.setTimeout(() => {
 						textArea.inputEl.focus();
 						textArea.inputEl.selectionStart = newText.length;
 						textArea.inputEl.selectionEnd = newText.length;
