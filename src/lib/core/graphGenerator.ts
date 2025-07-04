@@ -34,9 +34,8 @@ type LayoutNode = LlmKnowledgeGraph["nodes"][number] & {
 	y?: number;
 };
 
-function calculateNodeHeight(text: string, width: number): number {
-	const tempDiv = document.createElement("div");
-	tempDiv.className = "wordsmith-height-calculator";
+function calculateNodeHeight(container: HTMLElement, text: string, width: number): number {
+	const tempDiv = container.createDiv({ cls: "wordsmith-height-calculator" });
 	tempDiv.style.width = `${width}px`; // Dynamic width must stay inline
 
 	const lines = text.split("\n");
@@ -44,21 +43,16 @@ function calculateNodeHeight(text: string, width: number): number {
 	for (const line of lines) {
 		const h2Match = line.match(/^## (.*)/);
 		if (h2Match) {
-			const h2Div = document.createElement("div");
-			h2Div.className = "wordsmith-height-calculator-h2";
+			const h2Div = tempDiv.createDiv({ cls: "wordsmith-height-calculator-h2" });
 			h2Div.textContent = h2Match[1];
-			tempDiv.appendChild(h2Div);
 		} else {
-			const p = document.createElement("p");
-			p.className = "wordsmith-height-calculator-p";
+			const p = tempDiv.createEl("p", { cls: "wordsmith-height-calculator-p" });
 			p.textContent = line || "\u00A0"; // Use non-breaking space for empty lines
-			tempDiv.appendChild(p);
 		}
 	}
 
-	document.body.appendChild(tempDiv);
 	const height = tempDiv.scrollHeight;
-	document.body.removeChild(tempDiv);
+	tempDiv.remove(); // Clean up the temporary element
 	return Math.max(height, 60);
 }
 
@@ -397,7 +391,11 @@ async function createCanvasFileFromGraph(
 	const nodesWithDimensions: LayoutNode[] = graph.nodes.map((node) => ({
 		...node,
 		width: CANVAS_NODE_WIDTH,
-		height: calculateNodeHeight(`## ${node.label}\n\n${node.description}`, CANVAS_NODE_WIDTH),
+		height: calculateNodeHeight(
+			app.workspace.containerEl,
+			`## ${node.label}\n\n${node.description}`,
+			CANVAS_NODE_WIDTH,
+		),
 	}));
 
 	const nodesWithLayout = calculateLayout(nodesWithDimensions, graph.edges);
