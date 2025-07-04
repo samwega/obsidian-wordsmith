@@ -412,7 +412,7 @@ async function createCanvasFileFromGraph(
 	// --- REFACTOR START ---
 	// Extract complex async calls and potentially null values into variables
 	// to simplify the final object creation for the type checker.
-	const contextPanel = plugin.getContextPanel();
+	const contextPanel = await plugin.getContextPanel();
 	const structuredCustomContext = contextPanel
 		? await contextPanel.getStructuredCustomContext()
 		: null;

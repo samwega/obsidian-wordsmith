@@ -306,7 +306,7 @@ export default class TextTransformer extends Plugin {
 		this.currentGenerationController = new AbortController();
 		this.isGenerating = true;
 
-		// Notify context panel to show stop button
+		// Notify context panel to show stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(true);
 
 		return this.currentGenerationController;
@@ -334,7 +334,7 @@ export default class TextTransformer extends Plugin {
 			new Notice("🛑 Generation cancelled by user.", 3000);
 		}
 
-		// Notify context panel to hide stop button
+		// Notify context panel to hide stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(false);
 	}
 
@@ -351,7 +351,7 @@ export default class TextTransformer extends Plugin {
 			this.currentGenerationNotice = null;
 		}
 
-		// Notify context panel to hide stop button
+		// Notify context panel to hide stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(false);
 	}
 
@@ -379,20 +379,25 @@ export default class TextTransformer extends Plugin {
 	/**
 	 * Updates the context panel's generation state UI.
 	 */
-	private updateContextPanelGenerationState(isGenerating: boolean): void {
-		const contextPanel = this.getContextPanel();
+	private async updateContextPanelGenerationState(isGenerating: boolean): Promise<void> {
+		const contextPanel = await this.getContextPanel();
 		if (contextPanel) {
 			contextPanel.updateGenerationState(isGenerating);
 		}
 	}
 
 	/**
-	 * Gets the current context panel instance if it exists.
+	 * Gets the current context panel instance if it exists, ensuring it is fully loaded.
 	 */
-	getContextPanel(): ContextControlPanel | null {
+	async getContextPanel(): Promise<ContextControlPanel | null> {
 		const leaves = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		if (leaves.length > 0) {
-			return leaves[0].view as ContextControlPanel;
+			const leaf = leaves[0];
+			// As of Obsidian 1.7.2, views can be deferred. We must load it first.
+			await leaf.loadIfDeferred();
+			if (leaf.view instanceof ContextControlPanel) {
+				return leaf.view;
+			}
 		}
 		return null;
 	}
