@@ -1,5 +1,6 @@
 // src/services/ModelService.ts
 import type { CustomProvider, Model } from "../lib/settings-data";
+import { log } from "../lib/utils";
 import type TextTransformer from "../main";
 import { CustomProviderService } from "./CustomProviderService";
 
@@ -72,7 +73,7 @@ export class ModelService {
 			(async () => {
 				if (this.plugin.runtimeDebugMode) {
 					const providerNames = providersToRefresh.map((p) => p.name).join(", ");
-					console.log(`[WordSmith] Background refreshing models for: ${providerNames}`);
+					log(this.plugin, `Background refreshing models for: ${providerNames}`);
 				}
 
 				const refreshPromises = providersToRefresh.map(async (provider) => {
@@ -91,7 +92,7 @@ export class ModelService {
 				await Promise.allSettled(refreshPromises);
 
 				if (this.plugin.runtimeDebugMode) {
-					console.log("[WordSmith] Background model refresh process finished.");
+					log(this.plugin, "Background model refresh process finished.");
 				}
 			})();
 		}

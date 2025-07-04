@@ -1,6 +1,47 @@
 // src/lib/utils.ts
 import { EditorView } from "@codemirror/view";
 import { Editor, Notice, Platform } from "obsidian";
+import type TextTransformer from "../main";
+
+/**
+ * Logs a standard message to the console if debug mode is enabled.
+ * @param plugin The plugin instance to check for debug mode.
+ * @param args The message and other data to log.
+ */
+export function log(plugin: TextTransformer, ...args: unknown[]): void {
+	if (!plugin.runtimeDebugMode) return;
+	console.log("[WordSmith plugin]", ...args);
+}
+
+/**
+ * Logs a debug message to the console if debug mode is enabled.
+ * @param plugin The plugin instance to check for debug mode.
+ * @param args The message and other data to log.
+ */
+export function logDebug(plugin: TextTransformer, ...args: unknown[]): void {
+	if (!plugin.runtimeDebugMode) return;
+	console.debug("[WordSmith plugin]", ...args);
+}
+
+/**
+ * Logs an info message to the console if debug mode is enabled.
+ * @param plugin The plugin instance to check for debug mode.
+ * @param args The message and other data to log.
+ */
+export function logInfo(plugin: TextTransformer, ...args: unknown[]): void {
+	if (!plugin.runtimeDebugMode) return;
+	console.info("[WordSmith plugin]", ...args);
+}
+
+/**
+ * Logs a warning message to the console if debug mode is enabled.
+ * @param plugin The plugin instance to check for debug mode.
+ * @param args The message and other data to log.
+ */
+export function logWarn(plugin: TextTransformer, ...args: unknown[]): void {
+	if (!plugin.runtimeDebugMode) return;
+	console.warn("[WordSmith plugin]", ...args);
+}
 
 /**
  * Retrieves the CodeMirror 6 EditorView instance from an Obsidian Editor.
@@ -32,6 +73,7 @@ export function formatDateForFilename(date: Date): string {
 
 /**
  * Logs an error to the console and displays a user-friendly notice.
+ * This function ALWAYS logs to the console, regardless of debug mode.
  * @param error The error object or message to log.
  */
 export function logError(error: unknown): void {

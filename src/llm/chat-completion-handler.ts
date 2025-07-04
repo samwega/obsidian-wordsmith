@@ -3,7 +3,7 @@ import { Notice, RequestUrlResponse, requestUrl } from "obsidian";
 import { AssembledContextForLLM } from "../lib/core/textTransformer";
 import { getMaxOutputTokensForModel } from "../lib/provider-utils";
 import { TextTransformerPrompt, TextTransformerSettings } from "../lib/settings-data";
-import { logError } from "../lib/utils";
+import { logDebug, logError, logWarn } from "../lib/utils";
 import type TextTransformer from "../main";
 import { buildPromptComponents } from "./prompt-builder";
 
@@ -95,13 +95,12 @@ export async function chatCompletionRequest(
 		requestBody.system = systemMessageContent;
 	}
 
-	if (plugin.runtimeDebugMode) {
-		console.debug("[WordSmith plugin] Chat Completion Request Body:", requestBody);
-		if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
-			console.debug(
-				`[WordSmith plugin] Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelId}`,
-			);
-		}
+	logDebug(plugin, "Chat Completion Request Body:", requestBody);
+	if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
+		logDebug(
+			plugin,
+			`Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelId}`,
+		);
 	}
 
 	let response: RequestUrlResponse;
@@ -133,21 +132,13 @@ export async function chatCompletionRequest(
 
 		response = await requestUrl(requestOptions);
 
-		if (plugin.runtimeDebugMode) {
-			console.debug("[WordSmith plugin] Chat Completion Response:", response);
-		}
+		logDebug(plugin, "Chat Completion Response:", response);
 	} catch (error) {
 		// Handle user cancellation
 		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
 			new Notice("Generation cancelled by user.", 3000);
-			if (plugin.runtimeDebugMode) {
-				console.debug(
-					"[WordSmith plugin] Response finish reason: CANCELLED (user clicked stop button)",
-				);
-				console.debug(
-					"[WordSmith plugin] This is NOT a natural completion - user manually cancelled",
-				);
-			}
+			logDebug(plugin, "Response finish reason: CANCELLED (user clicked stop button)");
+			logDebug(plugin, "This is NOT a natural completion - user manually cancelled");
 			return;
 		}
 
@@ -182,33 +173,25 @@ export async function chatCompletionRequest(
 			`⚠️ Response was truncated due to token limit. Current limit: ${settings.max_tokens} tokens. Consider increasing the Max Output Tokens setting.`,
 			8000,
 		);
-		if (plugin.runtimeDebugMode) {
-			console.warn("[WordSmith] Response truncated due to token limit:", {
-				finishReason,
-				maxTokens: settings.max_tokens,
-				responseLength: newText.length,
-				modelId,
-			});
-		}
-	}
-
-	if (plugin.runtimeDebugMode) {
-		let finishReasonDescription: string;
-		if (finishReason === "stop") {
-			finishReasonDescription = "(NATURAL COMPLETION)";
-		} else if (finishReason === "length" || finishReason === "max_tokens") {
-			finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
-		} else {
-			finishReasonDescription = `(${finishReason?.toUpperCase()})`;
-		}
-
-		console.debug(
-			"[WordSmith plugin] Response finish reason:",
+		logWarn(plugin, "Response truncated due to token limit:", {
 			finishReason,
-			finishReasonDescription,
-		);
-		console.debug("[WordSmith plugin] Response length:", newText.length, "characters");
+			maxTokens: settings.max_tokens,
+			responseLength: newText.length,
+			modelId,
+		});
 	}
+
+	let finishReasonDescription: string;
+	if (finishReason === "stop") {
+		finishReasonDescription = "(NATURAL COMPLETION)";
+	} else if (finishReason === "length" || finishReason === "max_tokens") {
+		finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
+	} else {
+		finishReasonDescription = `(${finishReason?.toUpperCase()})`;
+	}
+
+	logDebug(plugin, "Response finish reason:", finishReason, finishReasonDescription);
+	logDebug(plugin, "Response length:", newText.length, "characters");
 
 	return { newText };
 }

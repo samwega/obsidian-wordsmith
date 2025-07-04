@@ -1,6 +1,7 @@
 // src/ui/settings.ts
 import { PluginSettingTab, Setting } from "obsidian";
 import { DEFAULT_SETTINGS, TextTransformerPrompt } from "../lib/settings-data";
+import { log } from "../lib/utils";
 import type TextTransformer from "../main";
 import { CustomProviderModal } from "./modals/CustomProviderModal";
 
@@ -178,11 +179,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			)
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.runtimeDebugMode).onChange((value) => {
-					this.plugin.runtimeDebugMode = value;
 					if (value) {
-						console.log("WordSmith: Debug mode enabled (runtime only).");
+						this.plugin.runtimeDebugMode = value;
+						log(this.plugin, "Debug mode enabled (runtime only).");
 					} else {
-						console.log("WordSmith: Debug mode disabled (runtime only).");
+						// Log before changing the flag so the message is not suppressed
+						log(this.plugin, "Debug mode disabled (runtime only).");
+						this.plugin.runtimeDebugMode = value;
 					}
 				});
 			});

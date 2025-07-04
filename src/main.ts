@@ -23,6 +23,7 @@ import {
 	TextTransformerPrompt,
 	TextTransformerSettings,
 } from "./lib/settings-data";
+import { log, logInfo } from "./lib/utils";
 
 // --- Service Imports ---
 import { CustomProviderService } from "./services/CustomProviderService";
@@ -75,7 +76,7 @@ export default class TextTransformer extends Plugin {
 
 		this._registerCommands();
 
-		console.info(this.manifest.name + " Plugin loaded successfully.");
+		logInfo(this, `${this.manifest.name} Plugin loaded successfully.`);
 	}
 
 	private _registerCommands(): void {
@@ -288,7 +289,7 @@ export default class TextTransformer extends Plugin {
 		this.cancelCurrentGeneration(false);
 		// Obsidian handles detaching leaves for registered views automatically on unload.
 		// Manually detaching here is redundant and can interfere with the app's cleanup process.
-		console.info(this.manifest.name + " Plugin unloaded.");
+		logInfo(this, `${this.manifest.name} Plugin unloaded.`);
 	}
 
 	// --- Generation State Management Methods ---
@@ -453,7 +454,7 @@ export default class TextTransformer extends Plugin {
 				}
 			});
 			if (wasMigrated && this.runtimeDebugMode) {
-				console.log("WordSmith: Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
+				log(this, "Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
 			}
 		}
 

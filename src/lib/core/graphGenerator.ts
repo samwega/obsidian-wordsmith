@@ -19,7 +19,7 @@ import {
 import { type GeminiRequestParams, geminiRequest } from "../../llm/gemini";
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
-import { formatDateForFilename, getCmEditorView, logError } from "../utils";
+import { formatDateForFilename, getCmEditorView, logDebug, logError } from "../utils";
 import { AssembledContextForLLM, gatherContextForAI } from "./textTransformer";
 
 const CANVAS_NODE_WIDTH = 480;
@@ -364,9 +364,7 @@ async function fetchAndValidateGraphData(
 		throw new Error("AI did not return any data for the graph.");
 	}
 
-	if (plugin.runtimeDebugMode) {
-		console.debug("[WordSmith plugin] Graph Generation: Raw LLM Response Text", response.newText);
-	}
+	logDebug(plugin, "Graph Generation: Raw LLM Response Text", response.newText);
 
 	const rawResponseText = response.newText.trim();
 	const jsonRegex = /```json\n([\s\S]*?)\n```/;
