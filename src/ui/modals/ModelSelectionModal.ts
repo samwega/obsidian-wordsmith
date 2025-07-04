@@ -116,7 +116,7 @@ export class ModelSelectionModal extends Modal {
 				const notice = new Notice("Refreshing model list...", 0);
 				// Show loading state *inside* the virtual list structure
 				this.listItemsEl.empty();
-				this.listSizerEl.style.height = "0px";
+				this.listSizerEl.style.setProperty("--virtual-list-height", "0px");
 				this.listItemsEl.createEl("p", { text: "Refreshing..." });
 				try {
 					this.allModels = await this.plugin.modelService.getModels(true);
@@ -188,7 +188,7 @@ export class ModelSelectionModal extends Modal {
 
 	private renderVisibleItems(): void {
 		const totalItems = this.filteredModels.length;
-		this.listSizerEl.style.height = `${totalItems * ITEM_HEIGHT}px`;
+		this.listSizerEl.style.setProperty("--virtual-list-height", `${totalItems * ITEM_HEIGHT}px`);
 
 		// Always clear the currently rendered items before adding new ones
 		this.listItemsEl.empty();
@@ -207,7 +207,10 @@ export class ModelSelectionModal extends Modal {
 			Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + VISIBLE_ITEMS_BUFFER,
 		);
 
-		this.listItemsEl.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
+		this.listItemsEl.style.setProperty(
+			"--virtual-list-transform-y",
+			`${startIndex * ITEM_HEIGHT}px`,
+		);
 
 		for (let i = startIndex; i < endIndex; i++) {
 			const model = this.filteredModels[i];

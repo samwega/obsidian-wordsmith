@@ -23,7 +23,6 @@ import { formatDateForFilename, getCmEditorView, logError } from "../utils";
 import { AssembledContextForLLM, gatherContextForAI } from "./textTransformer";
 
 const CANVAS_NODE_WIDTH = 480;
-const CANVAS_NODE_PADDING = 30;
 const D3_SIMULATION_TICKS = 400;
 const CANVAS_COLLISION_PADDING = 50;
 const INITIAL_SPREAD_FACTOR = 1000;
@@ -37,39 +36,22 @@ type LayoutNode = LlmKnowledgeGraph["nodes"][number] & {
 
 function calculateNodeHeight(text: string, width: number): number {
 	const tempDiv = document.createElement("div");
-	tempDiv.style.visibility = "hidden";
-	tempDiv.style.position = "absolute";
-	tempDiv.style.left = "-9999px";
-	tempDiv.style.width = `${width - CANVAS_NODE_PADDING * 2}px`;
-	tempDiv.style.padding = `${CANVAS_NODE_PADDING}px`;
-	tempDiv.style.boxSizing = "content-box";
-	tempDiv.style.wordWrap = "break-word";
-	tempDiv.style.fontFamily = "var(--font-text)";
-	tempDiv.style.fontSize = "var(--font-text-size)";
-	tempDiv.style.lineHeight = "var(--line-height-normal)";
+	tempDiv.className = "wordsmith-height-calculator";
+	tempDiv.style.width = `${width}px`; // Dynamic width must stay inline
 
-	// The original code used `white-space: pre-wrap` and then manipulated an HTML string.
-	// To avoid `innerHTML`, we build the DOM programmatically.
-	// We will simulate the `pre-wrap` behavior by creating elements for each line.
 	const lines = text.split("\n");
 
 	for (const line of lines) {
 		const h2Match = line.match(/^## (.*)/);
 		if (h2Match) {
 			const h2Div = document.createElement("div");
-			h2Div.style.fontSize = "var(--h2-size)";
-			h2Div.style.fontWeight = "var(--h2-weight)";
-			h2Div.style.marginBottom = "0.5em";
-			h2Div.textContent = h2Match[1]; // Use textContent for safety
+			h2Div.className = "wordsmith-height-calculator-h2";
+			h2Div.textContent = h2Match[1];
 			tempDiv.appendChild(h2Div);
 		} else {
-			// For all other lines, including empty ones, create a paragraph.
-			// This correctly handles single newlines (as paragraph breaks) and text lines.
 			const p = document.createElement("p");
-			// Use a non-breaking space for empty lines to ensure they have height
-			p.textContent = line || "\u00A0";
-			// Remove default paragraph margins to mimic pre-wrap behavior more closely
-			p.style.margin = "0";
+			p.className = "wordsmith-height-calculator-p";
+			p.textContent = line || "\u00A0"; // Use non-breaking space for empty lines
 			tempDiv.appendChild(p);
 		}
 	}

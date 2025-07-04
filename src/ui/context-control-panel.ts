@@ -211,7 +211,7 @@ export class ContextControlPanel extends ItemView {
 		}
 
 		// Initially hide the button
-		this.stopGenerationContainer.style.display = "none";
+		this.stopGenerationContainer.addClass("is-hidden");
 	}
 
 	/**
@@ -220,7 +220,7 @@ export class ContextControlPanel extends ItemView {
 	 */
 	updateGenerationState(isGenerating: boolean): void {
 		if (this.stopGenerationContainer) {
-			this.stopGenerationContainer.style.display = isGenerating ? "block" : "none";
+			this.stopGenerationContainer.classList.toggle("is-hidden", !isGenerating);
 		}
 	}
 
