@@ -87,7 +87,7 @@ class GhostTextWidget extends WidgetType {
 	}
 
 	toDOM(): HTMLElement {
-		const span = createEl("span");
+		const span = document.createElement("span");
 		span.textContent = this.displayText;
 		span.className = this.className;
 		span.setAttribute("spellcheck", "false");

@@ -192,7 +192,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
-		const form = createDiv({ cls: "add-prompt-form tt-edit-prompt-form" });
+		const form = document.createElement("div");
+		form.addClasses(["add-prompt-form", "tt-edit-prompt-form"]);
 
 		const nameInput = form.createEl("input", {
 			type: "text",
@@ -243,7 +244,8 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _createAddPromptForm(targetArray: "prompts" | "generationPrompts"): HTMLDivElement {
-		const form = createDiv({ cls: "add-prompt-form tt-add-prompt-form" });
+		const form = document.createElement("div");
+		form.addClasses(["add-prompt-form", "tt-add-prompt-form"]);
 
 		const nameInput = form.createEl("input", {
 			type: "text",
