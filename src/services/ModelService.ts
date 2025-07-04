@@ -75,20 +75,18 @@ export class ModelService {
 					console.log(`[WordSmith] Background refreshing models for: ${providerNames}`);
 				}
 
-				const refreshPromises = providersToRefresh.map((provider) =>
-					this.customProviderService
-						.getModels(provider)
-						.then((models) => {
-							this.modelCache.set(provider.id, { timestamp: Date.now(), models });
-						})
-						.catch((error) => {
-							// Errors are logged in the service. This just prevents the background task from crashing.
-							console.error(
-								`[WordSmith] Background refresh for ${provider.name} failed.`,
-								error,
-							);
-						}),
-				);
+				const refreshPromises = providersToRefresh.map(async (provider) => {
+					try {
+						const models = await this.customProviderService.getModels(provider);
+						this.modelCache.set(provider.id, { timestamp: Date.now(), models });
+					} catch (error) {
+						// Errors are logged in the service. This just prevents the background task from crashing.
+						console.error(
+							`[WordSmith] Background refresh for ${provider.name} failed.`,
+							error,
+						);
+					}
+				});
 
 				await Promise.allSettled(refreshPromises);
 

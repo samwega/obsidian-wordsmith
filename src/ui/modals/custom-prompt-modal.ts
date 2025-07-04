@@ -122,13 +122,15 @@ export class CustomPromptModal extends Modal {
 			});
 	}
 
-	private submitForm(): void {
+	private async submitForm(): Promise<void> {
 		if (this.promptText.trim()) {
 			if (this.plugin.settings.saveToClipboard) {
-				navigator.clipboard.writeText(this.promptText).catch((err) => {
+				try {
+					await navigator.clipboard.writeText(this.promptText);
+				} catch (err) {
 					console.error("Failed to copy prompt to clipboard:", err);
 					new Notice("Failed to copy prompt to clipboard.");
-				});
+				}
 			}
 			this.onSubmit(this.promptText);
 			this.close();
