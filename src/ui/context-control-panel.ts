@@ -225,7 +225,8 @@ export class ContextControlPanel extends ItemView {
 	}
 
 	private _renderContextToggles(container: HTMLElement): void {
-		const titleEl = container.createEl("h4", { text: "Include context:", cls: "ccp-subtitle" });
+		const titleEl = container.createDiv({ cls: "ccp-subtitle" });
+		titleEl.setText("Include context:");
 		titleEl.setAttribute(
 			"aria-label",
 			"Configure what contextual information is sent to the AI with your text.",
