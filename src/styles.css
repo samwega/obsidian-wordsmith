@@ -423,6 +423,10 @@ body.theme-light .text-transformer-removed-active {
 	/* box-sizing: border-box; */
 }
 
+.ccp-stop-generation-container.is-hidden {
+	display: none;
+}
+
 .ccp-stop-generation-button {
 	background-color: var(--interactive-accent);
 	color: var(--text-on-accent);
@@ -561,7 +565,7 @@ body.theme-light .text-transformer-removed-active {
 .tt-virtual-list-sizer {
 	position: relative;
 	width: 100%;
-	height: 0; /* Will be set by JS */
+	height: var(--virtual-list-height, 0px);
 }
 
 .tt-virtual-list-items {
@@ -569,6 +573,7 @@ body.theme-light .text-transformer-removed-active {
 	top: 0;
 	left: 0;
 	width: 100%;
+	transform: translateY(var(--virtual-list-transform-y, 0px));
 }
 
 .tt-model-list-item {
@@ -689,4 +694,27 @@ body.theme-light .text-transformer-removed-active {
 .wordsmith-model-selector-short-tag {
 	color: var(--text-muted);
 	margin-right: 4px;
+}
+
+/* --- For graphGenerator.ts height calculation --- */
+.wordsmith-height-calculator {
+	visibility: hidden;
+	position: absolute;
+	left: -9999px;
+	padding: 30px;
+	box-sizing: content-box;
+	word-wrap: break-word;
+	font-family: var(--font-text);
+	font-size: var(--font-text-size);
+	line-height: var(--line-height-normal);
+}
+
+.wordsmith-height-calculator-h2 {
+	font-size: var(--h2-size);
+	font-weight: var(--h2-weight);
+	margin-bottom: 0.5em;
+}
+
+.wordsmith-height-calculator-p {
+	margin: 0;
 }

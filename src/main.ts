@@ -1,5 +1,5 @@
 // src/main.ts
-import { Editor, Notice, Plugin, WorkspaceLeaf } from "obsidian";
+import { Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin, WorkspaceLeaf } from "obsidian";
 
 import { SuggestionAction } from "./lib/constants";
 import { generateGraphAndCreateCanvas } from "./lib/core/graphGenerator";
@@ -23,6 +23,7 @@ import {
 	TextTransformerPrompt,
 	TextTransformerSettings,
 } from "./lib/settings-data";
+import { log, logInfo } from "./lib/utils";
 
 // --- Service Imports ---
 import { CustomProviderService } from "./services/CustomProviderService";
@@ -35,7 +36,7 @@ import { CustomPromptModal } from "./ui/modals/custom-prompt-modal";
 import { PromptPaletteModal } from "./ui/modals/prompt-palette";
 import { TextTransformerSettingsMenu } from "./ui/settings";
 
-// biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
+// Required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
 	settings!: TextTransformerSettings;
 	runtimeDebugMode = false;
@@ -75,13 +76,13 @@ export default class TextTransformer extends Plugin {
 
 		this._registerCommands();
 
-		console.info(this.manifest.name + " Plugin loaded successfully.");
+		logInfo(this, `${this.manifest.name} Plugin loaded successfully.`);
 	}
 
 	private _registerCommands(): void {
 		this.addCommand({
 			id: "open-context-control-panel",
-			name: "Open AI Context Control Panel",
+			name: "Open AI context control panel",
 			callback: (): void => {
 				this.activateView();
 			},
@@ -89,13 +90,13 @@ export default class TextTransformer extends Plugin {
 
 		this.addCommand({
 			id: "generate-text-with-ad-hoc-prompt-suggestion",
-			name: "Prompt Based Context Aware Generation at Cursor",
+			name: "Prompt based context aware generation at cursor",
 			editorCallback: (editor: Editor): void => {
 				const savedPrompts = this.settings.generationPrompts.filter((p) => p.enabled);
 
 				const emptyPrompt: TextTransformerPrompt = {
 					id: "empty-prompt-sentinel",
-					name: "Start with an Empty Prompt",
+					name: "Start with an empty prompt",
 					text: "",
 					isDefault: true,
 					enabled: true,
@@ -130,106 +131,125 @@ export default class TextTransformer extends Plugin {
 		this.addCommand({
 			id: "textTransformer-selection-paragraph",
 			name: "Transform selection/paragraph",
-			editorCallback: async (editor: Editor): Promise<void> => {
-				const enabledPrompts = this.settings.prompts.filter(
-					(p) => p.enabled && p.showInPromptPalette !== false,
-				);
-				if (enabledPrompts.length === 0) {
-					new Notice(
-						"No enabled prompts (for palette). Please configure prompts in WordSmith settings.",
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
+				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					const activeFile = ctx.file; // Capture the narrowed type
+					const enabledPrompts = this.settings.prompts.filter(
+						(p) => p.enabled && p.showInPromptPalette !== false,
 					);
-					return;
-				}
-				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile) {
-					new Notice("No active file to transform text in.");
-					return;
-				}
+					if (enabledPrompts.length === 0) {
+						new Notice(
+							"No enabled prompts (for palette). Please configure prompts in WordSmith settings.",
+						);
+						return;
+					}
 
-				if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
-					await textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
-					return;
-				}
+					if (enabledPrompts.length === 1 && !this.settings.alwaysShowPromptSelection) {
+						textTransformerTextCM6(this, editor, enabledPrompts[0], activeFile);
+						return;
+					}
 
-				return new Promise<void>((resolve, reject) => {
 					new PromptPaletteModal(this.app, {
 						prompts: enabledPrompts,
 						onChoose: async (prompt: TextTransformerPrompt): Promise<void> => {
-							try {
-								await textTransformerTextCM6(this, editor, prompt, activeFile);
-								resolve();
-							} catch (error) {
-								console.error("Error transforming text:", error);
-								new Notice("Error during text transformation.");
-								reject(error);
-							}
-						},
-						onCancel: (): void => {
-							resolve();
+							await textTransformerTextCM6(this, editor, prompt, activeFile);
 						},
 					}).open();
-				});
+				}
+				return;
 			},
 		});
 
 		this.addCommand({
 			id: "accept-suggestions-in-text",
 			name: "Accept suggestions in selection/paragraph",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.accept);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveSuggestionsInSelectionCM6(this, editor, ctx.file, SuggestionAction.accept);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "reject-suggestions-in-text",
 			name: "Reject suggestions in selection/paragraph",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveSuggestionsInSelectionCM6(this, editor, activeFile, SuggestionAction.reject);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveSuggestionsInSelectionCM6(this, editor, ctx.file, SuggestionAction.reject);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "accept-next-suggestion",
 			name: "Accept next suggestion",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.accept);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveNextSuggestionCM6(this, editor, ctx.file, SuggestionAction.accept);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "reject-next-suggestion",
 			name: "Reject next suggestion",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					resolveNextSuggestionCM6(this, editor, activeFile, SuggestionAction.reject);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					resolveNextSuggestionCM6(this, editor, ctx.file, SuggestionAction.reject);
+				}
+				return;
 			},
 		});
 		this.addCommand({
 			id: "clear-all-suggestions",
 			name: "Clear all active suggestions (reject all)",
-			editorCallback: (editor): void => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					clearAllActiveSuggestionsCM6(this, editor, activeFile);
-				} else {
-					new Notice("No active file.");
+			editorCheckCallback: (
+				checking: boolean,
+				editor: Editor,
+				ctx: MarkdownView | MarkdownFileInfo,
+			): boolean | undefined => {
+				if (checking) {
+					return ctx instanceof MarkdownView && !!ctx.file;
 				}
+				if (ctx instanceof MarkdownView && ctx.file) {
+					clearAllActiveSuggestionsCM6(this, editor, ctx.file);
+				}
+				return;
 			},
 		});
 
@@ -251,7 +271,10 @@ export default class TextTransformer extends Plugin {
 	}
 
 	async activateView(): Promise<void> {
-		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		const existingLeaves = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		for (const leaf of existingLeaves) {
+			leaf.detach();
+		}
 		const leaf = this.app.workspace.getRightLeaf(false);
 		if (leaf) {
 			await leaf.setViewState({
@@ -267,8 +290,9 @@ export default class TextTransformer extends Plugin {
 	override onunload(): void {
 		// Cancel any ongoing generation before unloading (no notice needed)
 		this.cancelCurrentGeneration(false);
-		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
-		console.info(this.manifest.name + " Plugin unloaded.");
+		// Obsidian handles detaching leaves for registered views automatically on unload.
+		// Manually detaching here is redundant and can interfere with the app's cleanup process.
+		logInfo(this, `${this.manifest.name} Plugin unloaded.`);
 	}
 
 	// --- Generation State Management Methods ---
@@ -285,7 +309,7 @@ export default class TextTransformer extends Plugin {
 		this.currentGenerationController = new AbortController();
 		this.isGenerating = true;
 
-		// Notify context panel to show stop button
+		// Notify context panel to show stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(true);
 
 		return this.currentGenerationController;
@@ -313,7 +337,7 @@ export default class TextTransformer extends Plugin {
 			new Notice("🛑 Generation cancelled by user.", 3000);
 		}
 
-		// Notify context panel to hide stop button
+		// Notify context panel to hide stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(false);
 	}
 
@@ -330,7 +354,7 @@ export default class TextTransformer extends Plugin {
 			this.currentGenerationNotice = null;
 		}
 
-		// Notify context panel to hide stop button
+		// Notify context panel to hide stop button (fire-and-forget)
 		this.updateContextPanelGenerationState(false);
 	}
 
@@ -358,20 +382,25 @@ export default class TextTransformer extends Plugin {
 	/**
 	 * Updates the context panel's generation state UI.
 	 */
-	private updateContextPanelGenerationState(isGenerating: boolean): void {
-		const contextPanel = this.getContextPanel();
+	private async updateContextPanelGenerationState(isGenerating: boolean): Promise<void> {
+		const contextPanel = await this.getContextPanel();
 		if (contextPanel) {
 			contextPanel.updateGenerationState(isGenerating);
 		}
 	}
 
 	/**
-	 * Gets the current context panel instance if it exists.
+	 * Gets the current context panel instance if it exists, ensuring it is fully loaded.
 	 */
-	getContextPanel(): ContextControlPanel | null {
+	async getContextPanel(): Promise<ContextControlPanel | null> {
 		const leaves = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
 		if (leaves.length > 0) {
-			return leaves[0].view as ContextControlPanel;
+			const leaf = leaves[0];
+			// As of Obsidian 1.7.2, views can be deferred. We must load it first.
+			await leaf.loadIfDeferred();
+			if (leaf.view instanceof ContextControlPanel) {
+				return leaf.view;
+			}
 		}
 		return null;
 	}
@@ -433,7 +462,7 @@ export default class TextTransformer extends Plugin {
 				}
 			});
 			if (wasMigrated && this.runtimeDebugMode) {
-				console.log("WordSmith: Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
+				log(this, "Migrated legacy 'Google/Gemini' provider name to 'AI Studio'.");
 			}
 		}
 

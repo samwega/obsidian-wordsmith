@@ -14,27 +14,11 @@ fi
 
 echo "Running pre-commit checks..."
 
-# Run Biome check
-echo "Running Biome check..."
-npx @biomejs/biome check --write
-if [ $? -ne 0 ]; then
-  echo "Biome check failed. Please fix the issues before committing."
-  exit 1
-fi
-
 # Run TypeScript check
 echo "Running TypeScript check..."
 npx tsc --noEmit --skipLibCheck --strict
 if [ $? -ne 0 ]; then
   echo "TypeScript check failed. Please fix the issues before committing."
-  exit 1
-fi
-
-# Run Markdownlint check
-echo "Running Markdownlint check..."
-npx markdownlint-cli -c .markdownlint.json "**/*.md"
-if [ $? -ne 0 ]; then
-  echo "Markdownlint check failed. Please fix the issues before committing."
   exit 1
 fi
 

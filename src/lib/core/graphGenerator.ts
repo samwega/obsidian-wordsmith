@@ -19,11 +19,10 @@ import {
 import { type GeminiRequestParams, geminiRequest } from "../../llm/gemini";
 import { buildGraphPrompt } from "../../llm/prompt-builder";
 import type { GraphCanvasMetadata, LlmKnowledgeGraph } from "../graph/types";
-import { formatDateForFilename, getCmEditorView, logError } from "../utils";
+import { formatDateForFilename, getCmEditorView, logDebug, logError } from "../utils";
 import { AssembledContextForLLM, gatherContextForAI } from "./textTransformer";
 
 const CANVAS_NODE_WIDTH = 480;
-const CANVAS_NODE_PADDING = 30;
 const D3_SIMULATION_TICKS = 400;
 const CANVAS_COLLISION_PADDING = 50;
 const INITIAL_SPREAD_FACTOR = 1000;
@@ -35,29 +34,25 @@ type LayoutNode = LlmKnowledgeGraph["nodes"][number] & {
 	y?: number;
 };
 
-function calculateNodeHeight(text: string, width: number): number {
-	const tempDiv = document.createElement("div");
-	tempDiv.style.visibility = "hidden";
-	tempDiv.style.position = "absolute";
-	tempDiv.style.left = "-9999px";
-	tempDiv.style.width = `${width - CANVAS_NODE_PADDING * 2}px`;
-	tempDiv.style.padding = `${CANVAS_NODE_PADDING}px`;
-	tempDiv.style.boxSizing = "content-box";
-	tempDiv.style.wordWrap = "break-word";
-	tempDiv.style.whiteSpace = "pre-wrap";
-	tempDiv.style.fontFamily = "var(--font-text)";
-	tempDiv.style.fontSize = "var(--font-text-size)";
-	tempDiv.style.lineHeight = "var(--line-height-normal)";
-	const htmlContent = text
-		.replace(
-			/^## (.*)$/gm,
-			'<div style="font-size: var(--h2-size); font-weight: var(--h2-weight); margin-bottom: 0.5em;">$1</div>',
-		)
-		.replace(/\n\n/g, "<p></p>");
-	tempDiv.innerHTML = htmlContent;
-	document.body.appendChild(tempDiv);
+function calculateNodeHeight(container: HTMLElement, text: string, width: number): number {
+	const tempDiv = container.createDiv({ cls: "wordsmith-height-calculator" });
+	tempDiv.style.width = `${width}px`; // Dynamic width must stay inline
+
+	const lines = text.split("\n");
+
+	for (const line of lines) {
+		const h2Match = line.match(/^## (.*)/);
+		if (h2Match) {
+			const h2Div = tempDiv.createDiv({ cls: "wordsmith-height-calculator-h2" });
+			h2Div.textContent = h2Match[1];
+		} else {
+			const p = tempDiv.createEl("p", { cls: "wordsmith-height-calculator-p" });
+			p.textContent = line || "\u00A0"; // Use non-breaking space for empty lines
+		}
+	}
+
 	const height = tempDiv.scrollHeight;
-	document.body.removeChild(tempDiv);
+	tempDiv.remove(); // Clean up the temporary element
 	return Math.max(height, 60);
 }
 
@@ -66,7 +61,7 @@ function promptForBaseName(app: App): Promise<string | null> {
 		const defaultDateName = `${formatDateForFilename(new Date())} `;
 		const modalOptions: SingleInputModalOptions = {
 			title: "Enter a name for the knowledge graph canvas",
-			placeholder: "My Knowledge Graph",
+			placeholder: "My knowledge graph",
 			initialValue: defaultDateName,
 			onSubmit: (result) => resolve(result),
 			onCancel: () => resolve(null),
@@ -329,7 +324,7 @@ async function fetchAndValidateGraphData(
 	const promptComponents = buildGraphPrompt({ assembledContext });
 	const adHocPrompt: (typeof settings.prompts)[number] = {
 		id: "graph-generation",
-		name: "Graph Generation",
+		name: "Graph generation",
 		text: promptComponents.userContent,
 		isDefault: false,
 		enabled: true,
@@ -369,9 +364,7 @@ async function fetchAndValidateGraphData(
 		throw new Error("AI did not return any data for the graph.");
 	}
 
-	if (plugin.runtimeDebugMode) {
-		console.debug("[WordSmith plugin] Graph Generation: Raw LLM Response Text", response.newText);
-	}
+	logDebug(plugin, "Graph Generation: Raw LLM Response Text", response.newText);
 
 	const rawResponseText = response.newText.trim();
 	const jsonRegex = /```json\n([\s\S]*?)\n```/;
@@ -396,7 +389,11 @@ async function createCanvasFileFromGraph(
 	const nodesWithDimensions: LayoutNode[] = graph.nodes.map((node) => ({
 		...node,
 		width: CANVAS_NODE_WIDTH,
-		height: calculateNodeHeight(`## ${node.label}\n\n${node.description}`, CANVAS_NODE_WIDTH),
+		height: calculateNodeHeight(
+			app.workspace.containerEl,
+			`## ${node.label}\n\n${node.description}`,
+			CANVAS_NODE_WIDTH,
+		),
 	}));
 
 	const nodesWithLayout = calculateLayout(nodesWithDimensions, graph.edges);
@@ -405,7 +402,7 @@ async function createCanvasFileFromGraph(
 	const finalFilename = generateUniqueFilename(baseName);
 	const filePath = normalizePath(`${settings.graphAssetPath}/${finalFilename}`);
 
-	if (!(await app.vault.adapter.exists(settings.graphAssetPath))) {
+	if (!app.vault.getAbstractFileByPath(settings.graphAssetPath)) {
 		await app.vault.createFolder(settings.graphAssetPath);
 	}
 	const newFile = await app.vault.create(filePath, canvasJsonString);
@@ -415,7 +412,7 @@ async function createCanvasFileFromGraph(
 	// --- REFACTOR START ---
 	// Extract complex async calls and potentially null values into variables
 	// to simplify the final object creation for the type checker.
-	const contextPanel = plugin.getContextPanel();
+	const contextPanel = await plugin.getContextPanel();
 	const structuredCustomContext = contextPanel
 		? await contextPanel.getStructuredCustomContext()
 		: null;

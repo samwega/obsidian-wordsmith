@@ -1,6 +1,7 @@
 // src/ui/settings.ts
 import { PluginSettingTab, Setting } from "obsidian";
 import { DEFAULT_SETTINGS, TextTransformerPrompt } from "../lib/settings-data";
+import { log } from "../lib/utils";
 import type TextTransformer from "../main";
 import { CustomProviderModal } from "./modals/CustomProviderModal";
 
@@ -65,13 +66,13 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			});
 		};
 
-		renderTabButton("Prompt Management", "prompts", tabsContainer);
-		renderTabButton("Model Providers", "providers", tabsContainer);
-		renderTabButton("LLM Parameters", "params", tabsContainer);
+		renderTabButton("Prompt management", "prompts", tabsContainer);
+		renderTabButton("Model providers", "providers", tabsContainer);
+		renderTabButton("LLM parameters", "params", tabsContainer);
 	}
 
 	private _renderProviderManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Model providers" });
+		new Setting(containerEl).setName("Model providers").setHeading();
 		const desc = containerEl.createEl("p", { cls: "setting-item-description" });
 		desc.setText(
 			"Connect to any API endpoint, including local servers like Ollama or LM Studio.",
@@ -90,7 +91,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 				.addButton((button) => {
 					button
 						.setButtonText("Edit")
-						.setTooltip("Edit Provider Settings")
+						.setTooltip("Edit provider settings")
 						.onClick(() => {
 							new CustomProviderModal(this.app, {
 								plugin: this.plugin,
@@ -123,7 +124,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		});
 
 		new Setting(containerEl).addButton((button) =>
-			button.setButtonText("Add Provider").onClick(() => {
+			button.setButtonText("Add provider").onClick(() => {
 				new CustomProviderModal(this.app, {
 					plugin: this.plugin,
 					provider: null,
@@ -138,7 +139,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderApiModelSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "LLM parameters" });
+		new Setting(containerEl).setName("LLM parameters").setHeading();
 
 		new Setting(containerEl)
 			.setName("Max output tokens")
@@ -178,37 +179,41 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			)
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.runtimeDebugMode).onChange((value) => {
-					this.plugin.runtimeDebugMode = value;
 					if (value) {
-						console.log("WordSmith: Debug mode enabled (runtime only).");
+						this.plugin.runtimeDebugMode = value;
+						log(this.plugin, "Debug mode enabled (runtime only).");
 					} else {
-						console.log("WordSmith: Debug mode disabled (runtime only).");
+						// Log before changing the flag so the message is not suppressed
+						log(this.plugin, "Debug mode disabled (runtime only).");
+						this.plugin.runtimeDebugMode = value;
 					}
 				});
 			});
 	}
 
 	private _createEditPromptForm(prompt: TextTransformerPrompt): HTMLDivElement {
-		const form = document.createElement("div");
-		form.className = "add-prompt-form tt-edit-prompt-form";
+		const form = createDiv();
+		form.addClasses(["add-prompt-form", "tt-edit-prompt-form"]);
 
-		const nameInput = form.appendChild(document.createElement("input"));
-		nameInput.type = "text";
+		const nameInput = form.createEl("input", {
+			type: "text",
+			placeholder: "Prompt name",
+			cls: "tt-prompt-form-input",
+		});
 		nameInput.value = prompt.name;
-		nameInput.placeholder = "Prompt name";
-		nameInput.classList.add("tt-prompt-form-input");
 
-		const textInput = form.appendChild(document.createElement("textarea"));
+		const textInput = form.createEl("textarea", {
+			placeholder: "Prompt text",
+			cls: "tt-prompt-form-textarea",
+		});
 		textInput.value = prompt.text;
-		textInput.placeholder = "Prompt text";
-		textInput.classList.add("tt-prompt-form-textarea");
 
-		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.classList.add("tt-edit-prompt-button-row");
+		const buttonRow = form.createDiv({ cls: "tt-edit-prompt-button-row" });
 
-		const saveBtn = buttonRow.appendChild(document.createElement("button"));
-		saveBtn.textContent = "Save";
-		saveBtn.classList.add("tt-edit-prompt-save-button");
+		const saveBtn = buttonRow.createEl("button", {
+			text: "Save",
+			cls: "tt-edit-prompt-save-button",
+		});
 		saveBtn.onclick = async (): Promise<void> => {
 			const newName = nameInput.value.trim();
 			const newText = textInput.value.trim();
@@ -228,9 +233,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			this.display();
 		};
 
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.classList.add("tt-edit-prompt-cancel-button");
+		const cancelBtn = buttonRow.createEl("button", {
+			text: "Cancel",
+			cls: "tt-edit-prompt-cancel-button",
+		});
 		cancelBtn.onclick = (): void => {
 			this._closePromptForm();
 		};
@@ -238,26 +244,28 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _createAddPromptForm(targetArray: "prompts" | "generationPrompts"): HTMLDivElement {
-		const form = document.createElement("div");
-		form.className = "add-prompt-form tt-add-prompt-form";
+		const form = createDiv();
+		form.addClasses(["add-prompt-form", "tt-add-prompt-form"]);
 
-		const nameInput = form.appendChild(document.createElement("input"));
-		nameInput.type = "text";
-		nameInput.placeholder = "Prompt name";
-		nameInput.classList.add("tt-prompt-form-input");
+		const nameInput = form.createEl("input", {
+			type: "text",
+			placeholder: "Prompt name",
+			cls: "tt-prompt-form-input",
+		});
 
-		const textInput = form.appendChild(document.createElement("textarea"));
-		textInput.placeholder = "Prompt text";
+		const textInput = form.createEl("textarea", {
+			placeholder: "Prompt text",
+			cls: "tt-prompt-form-textarea",
+		});
 		textInput.value =
 			"[AI ROLE]: Professional editor.\n[TASK]: You will receive a text selection. [replace this with your prompt; replace the role too if you want].";
-		textInput.classList.add("tt-prompt-form-textarea");
 
-		const buttonRow = form.appendChild(document.createElement("div"));
-		buttonRow.classList.add("tt-add-prompt-button-row");
+		const buttonRow = form.createDiv({ cls: "tt-add-prompt-button-row" });
 
-		const saveBtn = buttonRow.appendChild(document.createElement("button"));
-		saveBtn.textContent = "Save";
-		saveBtn.classList.add("tt-add-prompt-save-button");
+		const saveBtn = buttonRow.createEl("button", {
+			text: "Save",
+			cls: "tt-add-prompt-save-button",
+		});
 		saveBtn.onclick = async (): Promise<void> => {
 			const name = nameInput.value.trim();
 			const text = textInput.value.trim();
@@ -283,9 +291,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 			this.display();
 		};
 
-		const cancelBtn = buttonRow.appendChild(document.createElement("button"));
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.classList.add("tt-add-prompt-cancel-button");
+		const cancelBtn = buttonRow.createEl("button", {
+			text: "Cancel",
+			cls: "tt-add-prompt-cancel-button",
+		});
 		cancelBtn.onclick = (): void => {
 			this._closePromptForm();
 		};
@@ -300,7 +309,7 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 	}
 
 	private _renderPromptManagementSection(containerEl: HTMLElement): void {
-		containerEl.createEl("h3", { text: "Prompt management" });
+		new Setting(containerEl).setName("Prompt management").setHeading();
 		const promptManagementWrapper = containerEl.createDiv({
 			cls: "prompt-management-section-container",
 		});
@@ -336,10 +345,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		}
 
 		this.addTransformationPromptButton = new Setting(promptManagementWrapper)
-			.setName("Add New Transformation Prompt")
+			.setName("Add new transformation prompt")
 			.setDesc("Create a new custom prompt for transforming selected text.")
 			.addButton((button) => {
-				button.setButtonText("Add New Prompt").onClick(() => {
+				button.setButtonText("Add new prompt").onClick(() => {
 					if (this.addPromptForm) this._closePromptForm();
 					this.addPromptForm = this._createAddPromptForm("prompts");
 					this.addTransformationPromptButton?.settingEl.insertAdjacentElement(
@@ -365,10 +374,10 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		);
 
 		this.addGenerationPromptButton = new Setting(promptManagementWrapper)
-			.setName("Add New Generation Prompt")
+			.setName("Add new generation prompt")
 			.setDesc("Create a new reusable prompt for ad-hoc text generation.")
 			.addButton((button) => {
-				button.setButtonText("Add New Prompt").onClick(() => {
+				button.setButtonText("Add new prompt").onClick(() => {
 					if (this.addPromptForm) this._closePromptForm();
 					this.addPromptForm = this._createAddPromptForm("generationPrompts");
 					this.addGenerationPromptButton?.settingEl.insertAdjacentElement(
@@ -387,9 +396,9 @@ export class TextTransformerSettingsMenu extends PluginSettingTab {
 		index: number,
 	): void {
 		const setting = new Setting(gridContainer);
-		setting.settingEl.classList.add("tt-prompt-item");
-		if (index % 2 === 0) setting.settingEl.classList.add("tt-grid-item-left");
-		else setting.settingEl.classList.add("tt-grid-item-right");
+		setting.settingEl.addClass("tt-prompt-item");
+		if (index % 2 === 0) setting.settingEl.addClass("tt-grid-item-left");
+		else setting.settingEl.addClass("tt-grid-item-right");
 
 		if (prompt.id === "translate") {
 			setting.setName("Translate to:");

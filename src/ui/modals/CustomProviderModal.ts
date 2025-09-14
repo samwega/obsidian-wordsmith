@@ -78,10 +78,11 @@ export class CustomProviderModal extends Modal {
 
 	override onOpen(): void {
 		const { contentEl } = this;
-		contentEl.empty();
+		const title = this.isEditMode ? "Edit custom provider" : "Add custom provider";
+		this.setTitle(title);
 
-		const title = this.isEditMode ? "Edit Custom Provider" : "Add Custom Provider";
-		contentEl.createEl("h2", { text: title });
+		// This is crucial to clear the modal body before re-rendering.
+		contentEl.empty();
 
 		this.renderQuickSetup(contentEl);
 		this.renderForm(contentEl);
@@ -91,7 +92,7 @@ export class CustomProviderModal extends Modal {
 	private renderQuickSetup(container: HTMLElement): void {
 		const quickSetupContainer = container.createDiv({ cls: "tt-quick-setup-container" });
 		quickSetupContainer.createEl("p", {
-			text: "Quick Setup",
+			text: "Quick setup",
 			cls: "tt-quick-setup-title",
 		});
 
@@ -101,7 +102,7 @@ export class CustomProviderModal extends Modal {
 				this.nameInput.setValue(provider.name);
 				this.endpointInput.setValue(provider.endpoint);
 				this.apiKeyInput.setPlaceholder(
-					provider.apiKeyRequired ? "API Key is required" : "API Key is optional",
+					provider.apiKeyRequired ? "API key is required" : "API key is optional",
 				);
 				this.apiKeyInput.inputEl.focus();
 			});
@@ -109,17 +110,17 @@ export class CustomProviderModal extends Modal {
 	}
 
 	private renderForm(container: HTMLElement): void {
-		new Setting(container).setName("Provider Name").addText((text) => {
+		new Setting(container).setName("Provider name").addText((text) => {
 			this.nameInput = text;
-			text.setPlaceholder("e.g., My Ollama Server").setValue(this.provider.name);
+			text.setPlaceholder("e.g., My Ollama server").setValue(this.provider.name);
 		});
 
-		new Setting(container).setName("API Endpoint URL").addText((text) => {
+		new Setting(container).setName("API endpoint URL").addText((text) => {
 			this.endpointInput = text;
 			text.setPlaceholder("e.g., http://localhost:11434/v1").setValue(this.provider.endpoint);
 		});
 
-		new Setting(container).setName("API Key").addText((text) => {
+		new Setting(container).setName("API key").addText((text) => {
 			this.apiKeyInput = text;
 			text.inputEl.type = "password";
 			text.setPlaceholder("Optional for some local providers").setValue(this.provider.apiKey);
@@ -130,7 +131,7 @@ export class CustomProviderModal extends Modal {
 		const setting = new Setting(container);
 		setting.addButton((button) =>
 			button
-				.setButtonText(this.isEditMode ? "Save Changes" : "Add Provider")
+				.setButtonText(this.isEditMode ? "Save changes" : "Add provider")
 				.setCta()
 				.onClick(() => this.handleSave()),
 		);
@@ -142,7 +143,7 @@ export class CustomProviderModal extends Modal {
 		const apiKey = this.apiKeyInput.getValue().trim();
 
 		if (!name || !endpoint) {
-			new Notice("Provider Name and API Endpoint are required.");
+			new Notice("Provider name and API endpoint are required.");
 			return;
 		}
 

@@ -1,6 +1,10 @@
 import "obsidian";
 
 declare module "obsidian" {
+	interface App {
+		requireApiVersion(version: string): boolean;
+	}
+
 	interface Editor {
 		cm: {
 			coordsAtPos: (

@@ -7,7 +7,7 @@ import type {
 	TextTransformerPrompt,
 	TextTransformerSettings,
 } from "../lib/settings-data";
-import { logError } from "../lib/utils";
+import { logDebug, logError, logWarn } from "../lib/utils";
 import type TextTransformer from "../main";
 import { buildPromptComponents } from "./prompt-builder";
 
@@ -101,14 +101,13 @@ export async function geminiRequest(
 		};
 	}
 
-	if (plugin.runtimeDebugMode) {
-		console.debug("[WordSmith plugin] Gemini Request Body:", requestBody);
-		console.debug("[WordSmith plugin] Gemini Request URL:", requestUrlString);
-		if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
-			console.debug(
-				`[WordSmith plugin] Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelApiId}`,
-			);
-		}
+	logDebug(plugin, "Gemini Request Body:", requestBody);
+	logDebug(plugin, "Gemini Request URL:", requestUrlString);
+	if (modelMaxTokens && settings.max_tokens > modelMaxTokens) {
+		logDebug(
+			plugin,
+			`Max tokens capped: user setting ${settings.max_tokens} → model limit ${modelMaxTokens} for ${modelApiId}`,
+		);
 	}
 
 	let response: RequestUrlResponse;
@@ -126,21 +125,13 @@ export async function geminiRequest(
 			body: JSON.stringify(requestBody),
 		});
 
-		if (plugin.runtimeDebugMode) {
-			console.debug("[WordSmith plugin] Gemini Response:", response);
-		}
+		logDebug(plugin, "Gemini Response:", response);
 	} catch (error) {
 		// Handle user cancellation
 		if (abortSignal?.aborted || (error as Error).message === "Request was cancelled") {
 			new Notice("Generation cancelled by user.", 3000);
-			if (plugin.runtimeDebugMode) {
-				console.debug(
-					"[WordSmith plugin] Gemini finish reason: CANCELLED (user clicked stop button)",
-				);
-				console.debug(
-					"[WordSmith plugin] This is NOT a natural completion - user manually cancelled",
-				);
-			}
+			logDebug(plugin, "Gemini finish reason: CANCELLED (user clicked stop button)");
+			logDebug(plugin, "This is NOT a natural completion - user manually cancelled");
 			return;
 		}
 
@@ -155,14 +146,12 @@ export async function geminiRequest(
 
 	if (newText === undefined || newText === null || newText === "") {
 		// Add debug info to understand what's in the response
-		if (plugin.runtimeDebugMode) {
-			console.debug("[WordSmith plugin] Failed to extract text from Gemini response");
-			console.debug("[WordSmith plugin] newText value:", newText);
-			console.debug("[WordSmith plugin] Candidate:", candidate);
-			console.debug("[WordSmith plugin] Content:", candidate?.content);
-			console.debug("[WordSmith plugin] Parts:", candidate?.content?.parts);
-			console.debug("[WordSmith plugin] finishReason:", finishReason);
-		}
+		logDebug(plugin, "Failed to extract text from Gemini response");
+		logDebug(plugin, "newText value:", newText);
+		logDebug(plugin, "Candidate:", candidate);
+		logDebug(plugin, "Content:", candidate?.content);
+		logDebug(plugin, "Parts:", candidate?.content?.parts);
+		logDebug(plugin, "finishReason:", finishReason);
 
 		// If it's a MAX_TOKENS case, don't treat it as an error
 		if (finishReason === "MAX_TOKENS" || finishReason === "RECITATION") {
@@ -182,35 +171,27 @@ export async function geminiRequest(
 			`⚠️ Response was truncated due to ${reasonText}. Current limit: ${settings.max_tokens} tokens. Consider increasing the Max Output Tokens setting.`,
 			8000,
 		);
-		if (plugin.runtimeDebugMode) {
-			console.warn("[WordSmith] Gemini response truncated:", {
-				finishReason,
-				maxTokens: settings.max_tokens,
-				responseLength: newText.length,
-				modelApiId,
-			});
-		}
-	}
-
-	if (plugin.runtimeDebugMode) {
-		let finishReasonDescription: string;
-		if (finishReason === "STOP") {
-			finishReasonDescription = "(NATURAL COMPLETION)";
-		} else if (finishReason === "MAX_TOKENS") {
-			finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
-		} else if (finishReason === "RECITATION") {
-			finishReasonDescription = "(TRUNCATED BY CONTENT POLICY)";
-		} else {
-			finishReasonDescription = `(${finishReason})`;
-		}
-
-		console.debug(
-			"[WordSmith plugin] Gemini finish reason:",
+		logWarn(plugin, "Gemini response truncated:", {
 			finishReason,
-			finishReasonDescription,
-		);
-		console.debug("[WordSmith plugin] Gemini response length:", newText.length, "characters");
+			maxTokens: settings.max_tokens,
+			responseLength: newText.length,
+			modelApiId,
+		});
 	}
+
+	let finishReasonDescription: string;
+	if (finishReason === "STOP") {
+		finishReasonDescription = "(NATURAL COMPLETION)";
+	} else if (finishReason === "MAX_TOKENS") {
+		finishReasonDescription = "(TRUNCATED BY TOKEN LIMIT)";
+	} else if (finishReason === "RECITATION") {
+		finishReasonDescription = "(TRUNCATED BY CONTENT POLICY)";
+	} else {
+		finishReasonDescription = `(${finishReason})`;
+	}
+
+	logDebug(plugin, "Gemini finish reason:", finishReason, finishReasonDescription);
+	logDebug(plugin, "Gemini response length:", newText.length, "characters");
 
 	return { newText };
 }

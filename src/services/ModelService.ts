@@ -1,5 +1,6 @@
 // src/services/ModelService.ts
 import type { CustomProvider, Model } from "../lib/settings-data";
+import { log } from "../lib/utils";
 import type TextTransformer from "../main";
 import { CustomProviderService } from "./CustomProviderService";
 
@@ -72,28 +73,26 @@ export class ModelService {
 			(async () => {
 				if (this.plugin.runtimeDebugMode) {
 					const providerNames = providersToRefresh.map((p) => p.name).join(", ");
-					console.log(`[WordSmith] Background refreshing models for: ${providerNames}`);
+					log(this.plugin, `Background refreshing models for: ${providerNames}`);
 				}
 
-				const refreshPromises = providersToRefresh.map((provider) =>
-					this.customProviderService
-						.getModels(provider)
-						.then((models) => {
-							this.modelCache.set(provider.id, { timestamp: Date.now(), models });
-						})
-						.catch((error) => {
-							// Errors are logged in the service. This just prevents the background task from crashing.
-							console.error(
-								`[WordSmith] Background refresh for ${provider.name} failed.`,
-								error,
-							);
-						}),
-				);
+				const refreshPromises = providersToRefresh.map(async (provider) => {
+					try {
+						const models = await this.customProviderService.getModels(provider);
+						this.modelCache.set(provider.id, { timestamp: Date.now(), models });
+					} catch (error) {
+						// Errors are logged in the service. This just prevents the background task from crashing.
+						console.error(
+							`[WordSmith] Background refresh for ${provider.name} failed.`,
+							error,
+						);
+					}
+				});
 
 				await Promise.allSettled(refreshPromises);
 
 				if (this.plugin.runtimeDebugMode) {
-					console.log("[WordSmith] Background model refresh process finished.");
+					log(this.plugin, "Background model refresh process finished.");
 				}
 			})();
 		}

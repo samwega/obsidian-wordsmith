@@ -41,7 +41,6 @@ export class ContextControlPanel extends ItemView {
 	private justInsertedLink = false;
 
 	// Stop generation button - UI components for cancelling ongoing AI requests
-	// @ts-ignore: TS6133 - Used for cleanup in onClose
 	private stopGenerationButton: ButtonComponent | null = null;
 	private stopGenerationContainer: HTMLDivElement | null = null;
 
@@ -212,7 +211,7 @@ export class ContextControlPanel extends ItemView {
 		}
 
 		// Initially hide the button
-		this.stopGenerationContainer.style.display = "none";
+		this.stopGenerationContainer.addClass("is-hidden");
 	}
 
 	/**
@@ -221,12 +220,13 @@ export class ContextControlPanel extends ItemView {
 	 */
 	updateGenerationState(isGenerating: boolean): void {
 		if (this.stopGenerationContainer) {
-			this.stopGenerationContainer.style.display = isGenerating ? "block" : "none";
+			this.stopGenerationContainer.classList.toggle("is-hidden", !isGenerating);
 		}
 	}
 
 	private _renderContextToggles(container: HTMLElement): void {
-		const titleEl = container.createEl("h4", { text: "Include Context:", cls: "ccp-subtitle" });
+		const titleEl = container.createDiv({ cls: "ccp-subtitle" });
+		titleEl.setText("Include context:");
 		titleEl.setAttribute(
 			"aria-label",
 			"Configure what contextual information is sent to the AI with your text.",
@@ -445,7 +445,7 @@ export class ContextControlPanel extends ItemView {
 		}
 
 		let match: RegExpExecArray | null = null;
-		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while loop condition for brevity
+		// Intentional assignment in while loop condition for brevity
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];

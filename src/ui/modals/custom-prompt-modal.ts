@@ -32,10 +32,8 @@ export class CustomPromptModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("h3", {
-			text: "Context Aware Generator",
-			cls: "custom-prompt-modal-title",
-		});
+		this.titleEl.setText("Context aware generator");
+		this.titleEl.addClass("custom-prompt-modal-title");
 
 		const textArea = new TextAreaComponent(contentEl)
 			.setValue(this.promptText)
@@ -51,7 +49,7 @@ export class CustomPromptModal extends Modal {
 		textArea.inputEl.classList.add("custom-prompt-modal-textarea");
 
 		// Delay focus to ensure modal is fully rendered
-		setTimeout(() => {
+		window.setTimeout(() => {
 			textArea.inputEl.focus();
 		}, 50);
 
@@ -64,7 +62,7 @@ export class CustomPromptModal extends Modal {
 
 		// --- NEW "Insert Prompt" Dropdown ---
 		const insertPromptSetting = new Setting(contentEl)
-			.setName("Modular Generation User Prompt Constructor")
+			.setName("Modular generation user prompt constructor")
 			.setDesc(
 				"You can compose your prompt out of multiple saved generation prompts, like LEGO blocks.",
 			);
@@ -92,7 +90,7 @@ export class CustomPromptModal extends Modal {
 					this.promptText = newText; // Update internal state
 
 					// Move cursor to the end and focus
-					setTimeout(() => {
+					window.setTimeout(() => {
 						textArea.inputEl.focus();
 						textArea.inputEl.selectionStart = newText.length;
 						textArea.inputEl.selectionEnd = newText.length;
@@ -117,20 +115,22 @@ export class CustomPromptModal extends Modal {
 			});
 
 		new ButtonComponent(buttonContainer)
-			.setButtonText("Generate at Cursor")
+			.setButtonText("Generate at cursor")
 			.setCta()
 			.onClick(() => {
 				this.submitForm();
 			});
 	}
 
-	private submitForm(): void {
+	private async submitForm(): Promise<void> {
 		if (this.promptText.trim()) {
 			if (this.plugin.settings.saveToClipboard) {
-				navigator.clipboard.writeText(this.promptText).catch((err) => {
+				try {
+					await navigator.clipboard.writeText(this.promptText);
+				} catch (err) {
 					console.error("Failed to copy prompt to clipboard:", err);
 					new Notice("Failed to copy prompt to clipboard.");
-				});
+				}
 			}
 			this.onSubmit(this.promptText);
 			this.close();

@@ -16,7 +16,7 @@ const result = await esbuild
 		banner: { js: banner + "\n" },
 		outfile: "main.js",
 		bundle: true,
-		// biome-ignore format: no need to inspect this regularly
+		// No need to inspect this regularly
 		external: [
 			"obsidian",
 			"electron",

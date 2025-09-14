@@ -34,14 +34,13 @@ export class ModelSelectionModal extends Modal {
 	override onOpen(): void {
 		this.modalEl.addClass("tt-model-selection-modal");
 		const { contentEl } = this;
+		this.setTitle("Browse models");
 		contentEl.empty();
-
-		contentEl.createEl("h2", { text: "Browse Models" });
 
 		this.renderFilters(contentEl);
 		this.setupVirtualList(contentEl);
 
-		setTimeout(() => {
+		window.setTimeout(() => {
 			this.searchInput?.inputEl.focus();
 		}, 0);
 
@@ -83,13 +82,13 @@ export class ModelSelectionModal extends Modal {
 		const filterContainer = container.createDiv({ cls: "tt-model-filters" });
 		const filterGrid = filterContainer.createDiv({ cls: "tt-model-filters-grid" });
 
-		const providerFilterSetting = new Setting(filterGrid).setName("Filter by Provider");
+		const providerFilterSetting = new Setting(filterGrid).setName("Filter by provider");
 
 		const searchSetting = new Setting(filterGrid).setName("Search").addText((text) => {
 			this.searchInput = text;
 			text.setPlaceholder("e.g., Llama, GPT, OpenRouter...").onChange((value) => {
 				if (this.searchDebounceTimer) {
-					clearTimeout(this.searchDebounceTimer);
+					window.clearTimeout(this.searchDebounceTimer);
 				}
 				this.searchDebounceTimer = window.setTimeout(() => {
 					this.searchQuery = value.toLowerCase();
@@ -111,13 +110,13 @@ export class ModelSelectionModal extends Modal {
 
 		const refreshButtonWrapper = filterContainer.createDiv({ cls: "tt-refresh-button-wrapper" });
 		new ButtonComponent(refreshButtonWrapper)
-			.setButtonText("Refresh Model List")
+			.setButtonText("Refresh model list")
 			.setTooltip("Bypass cache and fetch the latest models from all providers")
 			.onClick(async () => {
 				const notice = new Notice("Refreshing model list...", 0);
 				// Show loading state *inside* the virtual list structure
 				this.listItemsEl.empty();
-				this.listSizerEl.style.height = "0px";
+				this.listSizerEl.style.setProperty("--virtual-list-height", "0px");
 				this.listItemsEl.createEl("p", { text: "Refreshing..." });
 				try {
 					this.allModels = await this.plugin.modelService.getModels(true);
@@ -127,13 +126,13 @@ export class ModelSelectionModal extends Modal {
 					this.populateProviderFilter();
 					this.applyFiltersAndRender();
 					notice.setMessage("✅ Models refreshed.");
-					setTimeout(() => notice.hide(), 2000);
+					window.setTimeout(() => notice.hide(), 2000);
 				} catch (error) {
 					console.error("[WordSmith] Error refreshing models:", error);
 					this.listItemsEl.empty();
 					this.listItemsEl.setText("Failed to refresh models.");
 					notice.setMessage("Failed to refresh models.");
-					setTimeout(() => notice.hide(), 3000);
+					window.setTimeout(() => notice.hide(), 3000);
 				}
 			});
 	}
@@ -189,7 +188,7 @@ export class ModelSelectionModal extends Modal {
 
 	private renderVisibleItems(): void {
 		const totalItems = this.filteredModels.length;
-		this.listSizerEl.style.height = `${totalItems * ITEM_HEIGHT}px`;
+		this.listSizerEl.style.setProperty("--virtual-list-height", `${totalItems * ITEM_HEIGHT}px`);
 
 		// Always clear the currently rendered items before adding new ones
 		this.listItemsEl.empty();
@@ -208,7 +207,10 @@ export class ModelSelectionModal extends Modal {
 			Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + VISIBLE_ITEMS_BUFFER,
 		);
 
-		this.listItemsEl.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
+		this.listItemsEl.style.setProperty(
+			"--virtual-list-transform-y",
+			`${startIndex * ITEM_HEIGHT}px`,
+		);
 
 		for (let i = startIndex; i < endIndex; i++) {
 			const model = this.filteredModels[i];
@@ -218,8 +220,9 @@ export class ModelSelectionModal extends Modal {
 	}
 
 	private _renderItem(model: Model): HTMLElement {
-		const modelEl = document.createElement("div");
-		modelEl.className = "tt-model-list-item";
+		const modelEl = createDiv();
+		modelEl.addClass("tt-model-list-item");
+
 		if (model.isFavorite) modelEl.addClass("is-favorite");
 		if (this.plugin.settings.selectedModelId === model.id) modelEl.addClass("is-selected");
 
@@ -268,9 +271,6 @@ export class ModelSelectionModal extends Modal {
 		modelEl.addEventListener("click", async () => {
 			this.plugin.settings.selectedModelId = model.id;
 			await this.plugin.updateTemperatureForModel(model.id);
-			if (!this.plugin.favoritesService.isFavorite(model.id)) {
-				await this.plugin.favoritesService.addFavorite(model);
-			}
 			this.close();
 		});
 
@@ -280,7 +280,7 @@ export class ModelSelectionModal extends Modal {
 	override onClose(): void {
 		super.onClose();
 		if (this.searchDebounceTimer) {
-			clearTimeout(this.searchDebounceTimer);
+			window.clearTimeout(this.searchDebounceTimer);
 		}
 	}
 }

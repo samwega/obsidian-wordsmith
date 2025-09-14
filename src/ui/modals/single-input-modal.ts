@@ -30,9 +30,8 @@ export class SingleInputModal extends Modal {
 
 	override onOpen(): void {
 		const { contentEl } = this;
+		this.setTitle(this.inputTitle);
 		contentEl.empty();
-
-		contentEl.createEl("h2", { text: this.inputTitle });
 
 		new Setting(contentEl).setName("Name").addText((text) => {
 			text
@@ -47,7 +46,7 @@ export class SingleInputModal extends Modal {
 					this.submit();
 				}
 			});
-			setTimeout(() => text.inputEl.focus(), 0);
+			window.setTimeout(() => text.inputEl.focus(), 0) as number;
 		});
 
 		new Setting(contentEl).addButton((btn) =>
