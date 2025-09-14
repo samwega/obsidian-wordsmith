@@ -46,7 +46,7 @@ export class SingleInputModal extends Modal {
 					this.submit();
 				}
 			});
-			window.setTimeout(() => text.inputEl.focus(), 0);
+			window.setTimeout(() => text.inputEl.focus(), 0) as number;
 		});
 
 		new Setting(contentEl).addButton((btn) =>
