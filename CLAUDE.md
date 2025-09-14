@@ -12,7 +12,7 @@ Use the `just` command runner for development tasks:
 
 - **Build for development**: `just build-and-reload` - Builds the plugin and copies to test vault, then reloads Obsidian
 - **Build only**: `node .esbuild.mjs` - Compiles TypeScript to main.js using esbuild
-- **Code quality checks**: `just check-all` - Runs Biome linting, TypeScript compilation, and Markdownlint
+- **Code quality checks**: `just check-all` - Runs TypeScript compilation
   - Individual checks: `just check-tsc-qf` (TypeScript only)
 - **Bundle analysis**: `just analyze` - Generates bundle size analysis
 - **Release**: `just release` - Automated versioning and release process
@@ -41,7 +41,6 @@ Use the `just` command runner for development tasks:
 
 ### Build System
 - **Bundler**: esbuild with TypeScript compilation to ES2022
-- **Linting**: Biome with comprehensive rules (all rules enabled with specific overrides)
 - **Type checking**: Strict TypeScript configuration based on strictest.json
 - **Obsidian compatibility**: Excludes Obsidian and CodeMirror modules from bundle
 
@@ -50,6 +49,36 @@ The plugin uses hot-reloading during development via the `just build-and-reload`
 
 ### Testing and Quality
 - TypeScript strict mode with comprehensive checks
-- Biome linting with nearly all rules enabled
-- Markdownlint for documentation consistency
 - Bundle analysis for performance monitoring
+
+## Obsidian Plugin Submission Guidelines
+
+**CRITICAL**: Always follow these guidelines to avoid plugin store rejection:
+
+### UI Guidelines
+- **Always use sentence case in UI** - Use "Open file" not "Open File"
+- **Use `setHeading()` for settings headings** - Use the Obsidian API method instead of `<h1>`, `<h2>`, etc.
+- **No hardcoded styling** - Move all styles to CSS files, avoid JavaScript styling
+- **Proper callback types for commands** - Use the appropriate callback type for command registration
+
+### DOM and JavaScript Guidelines
+- **Use window prefixes for timing functions** - Use `window.setTimeout`, `window.clearTimeout`, `window.setInterval`, `window.clearInterval` instead of their versions without window. Use `number` instead of `NodeJs.Timeout`
+- **Avoid `innerHTML`** - Use Obsidian's DOM creation methods instead: `createDiv()`, `createSpan()`, `createEl()`, `createFragment()`
+- **Prefer Vault API over Adapter API** - Use official Obsidian APIs when available
+- **Prefer async/await over Promise** - Use modern async patterns
+
+### Security and Best Practices
+- **Avoid unnecessary logging to console** - Remove debug logging before submission
+- **Don't detach leaves in onunload** - Proper cleanup without detaching UI elements
+- **Understanding deferred views** - Handle view lifecycle properly
+- **Register DOM events properly** - Use `this.registerDomEvent()` for cleanup
+- **Register intervals properly** - Use `this.registerInterval()` for automatic cleanup
+
+### Common Rejection Patterns
+- Using `innerHTML`, `outerHTML` or similar APIs (security risk)
+- Hardcoded styles in JavaScript instead of CSS
+- Not using sentence case in UI text
+- Using `<h1>`, `<h2>` instead of `setHeading()`
+- Leaving debug console.log statements
+- Not properly cleaning up DOM events or intervals
+- Using Node.js timeout types instead of browser types

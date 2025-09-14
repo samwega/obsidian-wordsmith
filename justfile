@@ -25,6 +25,15 @@ build:
 typecheck:
     npx tsc --noEmit --skipLibCheck --strict
 
+check-all:
+    #!/usr/bin/env zsh
+    echo "Running TypeScript checks..."
+    npx tsc --noEmit --skipLibCheck --strict
+    echo "TypeScript checks passed!"
+
+check-tsc-qf:
+    npx tsc --noEmit --skipLibCheck --strict
+
 release:
     node .release.mjs
 

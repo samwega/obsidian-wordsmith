@@ -36,7 +36,7 @@ import { CustomPromptModal } from "./ui/modals/custom-prompt-modal";
 import { PromptPaletteModal } from "./ui/modals/prompt-palette";
 import { TextTransformerSettingsMenu } from "./ui/settings";
 
-// biome-ignore lint/style/noDefaultExport: required for Obsidian plugins to work
+// Required for Obsidian plugins to work
 export default class TextTransformer extends Plugin {
 	settings!: TextTransformerSettings;
 	runtimeDebugMode = false;

@@ -13,9 +13,9 @@ interface ApiModel {
 	ownedBy?: string;
 	contextLength?: number;
 	description?: string;
-	// biome-ignore lint/style/useNamingConvention: API response uses snake_case
+	// API response uses snake_case
 	top_provider?: {
-		// biome-ignore lint/style/useNamingConvention: API response uses snake_case
+		// API response uses snake_case
 		max_completion_tokens?: number;
 	};
 }

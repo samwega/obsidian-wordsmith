@@ -86,7 +86,7 @@ export async function chatCompletionRequest(
 		model: modelId,
 		messages: messages,
 		temperature: settings.temperature,
-		// biome-ignore lint/style/useNamingConvention: API requires snake_case
+		// API requires snake_case
 		max_tokens: effectiveMaxTokens,
 		...(additionalRequestBodyParams || {}),
 	};

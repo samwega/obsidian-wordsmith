@@ -124,7 +124,7 @@ export interface TextTransformerSettings {
 
 	// LLM parameters
 	temperature: number;
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	// OpenAI API requires snake_case
 	max_tokens: number;
 
 	// Prompt management
@@ -256,7 +256,7 @@ export const DEFAULT_SETTINGS: TextTransformerSettings = {
 	selectedModelId: "",
 	favoriteModels: [],
 	temperature: 1.0,
-	// biome-ignore lint/style/useNamingConvention: OpenAI API requires snake_case
+	// OpenAI API requires snake_case
 	max_tokens: 8192,
 
 	prompts: JSON.parse(JSON.stringify(DEFAULT_TEXT_TRANSFORMER_PROMPTS)),

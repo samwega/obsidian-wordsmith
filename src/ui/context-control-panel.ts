@@ -445,7 +445,7 @@ export class ContextControlPanel extends ItemView {
 		}
 
 		let match: RegExpExecArray | null = null;
-		// biome-ignore lint/suspicious/noAssignInExpressions: Intentional assignment in while loop condition for brevity
+		// Intentional assignment in while loop condition for brevity
 		while ((match = wikilinkRegex.exec(textToProcess)) !== null) {
 			const originalWikilink = match[0];
 			const linkFullText = match[1];
