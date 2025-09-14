@@ -12,15 +12,12 @@
 		"url": "git+https://github.com/samwega/obsidian-wordsmith.git"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
 		"@codemirror/view": "latest",
 		"@types/d3-force": "^3.0.10",
 		"@types/diff": "^7.0.2",
 		"@types/node": "^22.5.5",
 		"builtin-modules": "^3.2.0",
 		"esbuild": "^0.25.1",
-		"knip": "^5.30.2",
-		"markdownlint-cli": "latest",
 		"obsidian": "latest",
 		"tslib": "2.6.2",
 		"typescript": "^5.8.3"
