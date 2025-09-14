@@ -271,9 +271,6 @@ export class ModelSelectionModal extends Modal {
 		modelEl.addEventListener("click", async () => {
 			this.plugin.settings.selectedModelId = model.id;
 			await this.plugin.updateTemperatureForModel(model.id);
-			if (!this.plugin.favoritesService.isFavorite(model.id)) {
-				await this.plugin.favoritesService.addFavorite(model);
-			}
 			this.close();
 		});
 
