@@ -271,7 +271,10 @@ export default class TextTransformer extends Plugin {
 	}
 
 	async activateView(): Promise<void> {
-		this.app.workspace.detachLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		const existingLeaves = this.app.workspace.getLeavesOfType(CONTEXT_CONTROL_VIEW_TYPE);
+		for (const leaf of existingLeaves) {
+			leaf.detach();
+		}
 		const leaf = this.app.workspace.getRightLeaf(false);
 		if (leaf) {
 			await leaf.setViewState({

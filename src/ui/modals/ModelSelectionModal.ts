@@ -220,7 +220,7 @@ export class ModelSelectionModal extends Modal {
 	}
 
 	private _renderItem(model: Model): HTMLElement {
-		const modelEl = document.createElement("div");
+		const modelEl = createDiv();
 		modelEl.addClass("tt-model-list-item");
 
 		if (model.isFavorite) modelEl.addClass("is-favorite");
