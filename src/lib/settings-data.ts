@@ -61,6 +61,9 @@ export const KNOWN_MODEL_HINTS: Record<string, ModelTemperatureHint> = {
 	claude: { min: 0.0, max: 1.0, default: 1.0 },
 	"claude-sonnet-4": { min: 0.0, max: 1.0, default: 0.8 },
 	"claude-opus": { min: 0.0, max: 1.0, default: 0.8 },
+	"claude-opus-4-1": { min: 0.0, max: 1.0, default: 0.8 },
+	"claude-3-5-sonnet-20241022": { min: 0.0, max: 1.0, default: 0.8 },
+	"claude-3-7-sonnet": { min: 0.0, max: 1.0, default: 0.8 },
 
 	// Google
 	gemini: { min: 0.0, max: 2.0, default: 0.7 },
@@ -69,6 +72,7 @@ export const KNOWN_MODEL_HINTS: Record<string, ModelTemperatureHint> = {
 	// OpenAI
 	"gpt-4": { min: 0.0, max: 2.0, default: 0.7 },
 	"gpt-4o": { min: 0.0, max: 2.0, default: 0.8 },
+	"gpt-4.1": { min: 0.0, max: 2.0, default: 0.8 },
 	"o4-mini": { min: 0.0, max: 2.0, default: 0.7 },
 	o3: { min: 0.0, max: 2.0, default: 0.7 },
 

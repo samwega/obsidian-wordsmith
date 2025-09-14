@@ -85,11 +85,15 @@ export async function chatCompletionRequest(
 	const requestBody: { [key: string]: unknown } = {
 		model: modelId,
 		messages: messages,
-		temperature: settings.temperature,
 		// API requires snake_case
 		max_tokens: effectiveMaxTokens,
 		...(additionalRequestBodyParams || {}),
 	};
+
+	// GPT-5 doesn't support temperature parameter
+	if (!modelId.includes("gpt-5")) {
+		requestBody.temperature = settings.temperature;
+	}
 
 	if (isDirectAnthropicApi && systemMessageContent) {
 		requestBody.system = systemMessageContent;
